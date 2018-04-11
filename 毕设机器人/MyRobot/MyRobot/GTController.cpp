@@ -64,7 +64,7 @@ short CGTController::EnableController(void)   //###################注释完成
 	Rtn = GT_Open();	//再打开  打开
 	if (Rtn != 0)
 	{
-		AfxMessageBox(_T("调用GT_Close()出错"));
+		AfxMessageBox(_T("打开运动控制卡出错！"));
 		exit(1);  //退出应用程序，关闭当前进程
 	}
 
