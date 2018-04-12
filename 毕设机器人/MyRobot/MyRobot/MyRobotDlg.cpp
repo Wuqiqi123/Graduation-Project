@@ -227,8 +227,8 @@ void CMyRobotDlg::OnBnClickedButtonHome()
 	// TODO:  在此添加控件通知处理程序代码
 //	CWaitCursor wc;
 //	Robot->Home();
-	for (int i = 0; i<Robot->m_JointNumber; i++)
-		Robot->m_JointArray[i].LastJointPosition = 0;
+//	for (int i = 0; i<Robot->m_JointNumber; i++)
+	//	Robot->m_JointArray[i].LastJointPosition = 0;
 }
 
 
