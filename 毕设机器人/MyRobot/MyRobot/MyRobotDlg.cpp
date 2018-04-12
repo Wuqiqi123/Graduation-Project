@@ -225,10 +225,17 @@ void CMyRobotDlg::OnBnClickedServoOn()
 void CMyRobotDlg::OnBnClickedButtonHome()
 {
 	// TODO:  在此添加控件通知处理程序代码
+<<<<<<< HEAD
 	CWaitCursor wc;
 	Robot->Home();
 	for (int i = 0; i<Robot->m_JointNumber; i++)
 		Robot->m_JointArray[i].LastJointPosition = 0;
+=======
+//	CWaitCursor wc;
+//	Robot->Home();
+//	for (int i = 0; i<Robot->m_JointNumber; i++)
+	//	Robot->m_JointArray[i].LastJointPosition = 0;
+>>>>>>> 9ae3259032778596f8612381d760e2f854d0675e
 }
 
 
