@@ -21,7 +21,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 		double GoalPos[4],GoalVel[4];
 		for (int i = 0; i < pImpedence->m_Robot->m_JointNumber; i++)
 		{
-			GoalPos[i] = pImpedence->m_thetaImpedPara[i].Next+2;   //在这里直接加上一点多余的东西，防止减速
+			GoalPos[i] = (pImpedence->m_thetaImpedPara[i].Next)+2;   //在这里直接加上一点多余的东西，防止减速
 			GoalVel[i] = pImpedence->m_angularVelImpedPara[i].Next;
 		}
 		pImpedence->m_Robot->JointsTMove(GoalPos, GoalVel);
@@ -37,6 +37,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 
 CImpedance::CImpedance(CRobotBase *Robot)
 {
+	m_Robot = Robot;
 	m_M = 0;
 	m_K = 0.5;   //单位是 N/mm
 	m_B = 0.01;
@@ -121,12 +122,12 @@ bool CImpedance::StartImpedanceController()
 
 	GT_SetIntrTm(250);  //设置定时器的定时长度为250*200us = 50ms
 	GT_TmrIntr();   //向主机申请定时中断
-	GT_GetIntr(&Status);
-	if (&Status != 0)
-	{
-		AfxMessageBox(_T("定时器中断设置出错!"), MB_OK);
-		exit(1);
-	}
+	//GT_GetIntr(&Status);
+//	if (&Status != 0)
+	//{
+	//	AfxMessageBox(_T("定时器中断设置出错!"), MB_OK);
+//		exit(1);
+//	}
 	GT_SetIntSyncEvent(hSyncEvent);//为PCI控制卡设置中断同步事件，当该参数为NULL时，该函数复位以前的设置值
 	stopflag = false;
 	m_hControlThread = CreateThread(NULL, 0, ThreadProc, (LPVOID)(this), 0, NULL);  //构造定时器函数，立即激活该函数,将阻抗控制对象的指针赋作为该线程函数的参数
@@ -178,6 +179,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendence(void)
 	for (int i = 0; i < 3; i++)
 	{
 		m_angularVelImpedPara[i].Next = (Torque[i] - m_K*m_thetaImpedPara[i].Now) / (m_K*0.05 + m_B);
+		m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*0.05;
 	}
 	return true;
 	

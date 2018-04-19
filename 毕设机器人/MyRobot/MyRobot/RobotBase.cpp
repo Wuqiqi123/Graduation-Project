@@ -294,12 +294,12 @@ void CRobotBase::UpdateJointArray()
 	double vel[4];
 	unsigned short status[4];
 
-	for (int i = 0; i < m_JointNumber; i++)   //把这一次的位置赋值上一次的位置
+	for (int i = 0; i < m_JointNumber; i++)   //把这一次的位置赋值上一次的位置(关节空间)
 	{
 		m_JointArray[i].LastJointPosition = m_JointArray[i].CurrentJointPositon;
 		m_JointArray[i].LastJointVelocity = m_JointArray[i].CurrentJointVelocity;
 	}
-	for (int i = 0; i<3; i++)
+	for (int i = 0; i<3; i++)         //把这一次的位置赋值上一次的位置(直角坐标空间） 
 		for (int j = 0; j<4; j++)
 			m_HandLastTn[i][j] = m_HandCurrTn[i][j];
 
