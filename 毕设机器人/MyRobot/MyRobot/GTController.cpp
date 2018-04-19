@@ -212,6 +212,27 @@ short CGTController::ServoOff(void)             //###################注释完成
 //这个函数会被上层的机器人类中的函数调用,这里传入的指针，所以这里其实改变了输入参数的值
 short CGTController::GetAxisPositionAndVelocityAndState(long pos[4], double vel[4],unsigned short state[4])    //###################注释完成
 {
+	short rtn;
+	//在这里这个时刻直接刷新这个函数的值
+	for (int i = 0; i < m_AxisNumber; i++)
+	{
+		GT_Axis(i);///选择第i根轴
+		rtn=GT_GetAtlPos(&m_AxisArray[i].CurrentPosition);   //获取第i根轴的实际位置
+		if (rtn!=0)
+		{
+			AfxMessageBox(_T("调用函数GT_GetAtlPos获取实际位置失败!"), MB_OK);
+		}
+		rtn=GT_GetAtlVel(&m_AxisArray[i].CurrentVelocity);    //获取第i根轴的实际速度
+		if (rtn != 0)
+		{
+			AfxMessageBox(_T("调用函数GT_GetAtlVel获取实际速度失败!"), MB_OK);
+		}
+		rtn=GT_GetSts(&m_AxisArray[i].CurrentState);        //获取第i根轴的实际状态
+		if (rtn != 0)
+		{
+			AfxMessageBox(_T("调用函数GT_GetSts获取实际状态失败!"), MB_OK);
+		}
+	}
 	for (int i = 0; i < m_AxisNumber; i++)
 	{
 		pos[i] = m_AxisArray[i].CurrentPosition;    //获取当前的位置
