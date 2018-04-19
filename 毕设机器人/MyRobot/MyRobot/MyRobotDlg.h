@@ -5,6 +5,7 @@
 #pragma once
 
 #include "GRB4Robot.h"
+#include "Impedance.h"
 #include "afxwin.h"
 
 // CMyRobotDlg 对话框
@@ -14,8 +15,11 @@ class CMyRobotDlg : public CDialogEx
 public:
 	CMyRobotDlg(CWnd* pParent = NULL);	// 标准构造函数
 	CRobotBase *Robot;
+	CImpedance *ImpedanceController;
 	bool m_deviceflag;
 	bool m_servoflag;
+	void OnJointsDataShow();	
+	void OnToolDataShow();
 
 // 对话框数据
 	enum { IDD = IDD_MYROBOT_DIALOG };
@@ -39,9 +43,13 @@ public:
 	afx_msg void OnBnClickedServoOn();
 //	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnBnClickedButtonHome();
-	// 打开控制器控件按钮的对象
-	CButton m_opendevice;
-	// 伺服驱动器打开
-	CButton m_servo;
+
+	CButton m_opendevice;//控制按钮能否被点击控制器控件按钮的对象
+	CButton m_servo;//控制按钮能否被点击  伺服驱动器打开
+	CButton m_ImpedanceButton;   //控制按钮能否被点击
+
 	afx_msg void OnBnClickedButtonTest();
+	afx_msg void OnBnClickedButtonImpedance();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
+
 };

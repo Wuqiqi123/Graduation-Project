@@ -106,6 +106,7 @@
   <ItemGroup>
     <ClInclude Include="GRB4Robot.h" />
     <ClInclude Include="GTController.h" />
+    <ClInclude Include="Impedance.h" />
     <ClInclude Include="MyRobot.h" />
     <ClInclude Include="MyRobotDlg.h" />
     <ClInclude Include="Planner.h" />
@@ -117,6 +118,7 @@
   <ItemGroup>
     <ClCompile Include="GRB4Robot.cpp" />
     <ClCompile Include="GTController.cpp" />
+    <ClCompile Include="Impedance.cpp" />
     <ClCompile Include="MyRobot.cpp" />
     <ClCompile Include="MyRobotDlg.cpp" />
     <ClCompile Include="Planner.cpp" />

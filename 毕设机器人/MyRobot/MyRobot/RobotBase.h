@@ -12,6 +12,7 @@ struct t_Joint
 	double	 CurrentJointPositon; 	//关节当前位置
 	double   CurrentJointVelocity;
 	double	 LastJointPosition;  	//关节上一次位置
+	double   LastJointVelocity;    //关节上一次的速度
 
 	double	 NormalJointVelocity;	//正常关节速度
 	double	 NormalJointAcc;		//正常关节加速度
@@ -44,6 +45,7 @@ public:
 
 	t_Tools 	 m_toolArray[16];   //可控制16路输出，实际只有一个电磁手爪，方便以后扩充
 
+	double   m_HandLastTn[3][4];    //上一次关节的位置；
 	double	 m_HandCurrTn[3][4];  	//当前末端当前位姿,临时变量  ///运动学正解结果存放在这
 	double	 m_HandGoalTn[3][4];	//末端目标位姿，		 ///反解输入
 	double	 m_JointGoal[4];	    //关节位置，临时变量 	///运动学反解结果存放在这

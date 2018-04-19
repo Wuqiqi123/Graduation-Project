@@ -15,14 +15,12 @@ UpgradeLog.XML
 *.7z  
 *.a  
 *.aps  
-*.clw  
-*.dll  
+*.clw   
 *.dsp  
 *.dsw  
 *.exe  
 *.exp  
-*.lastbuildstate  
-*.lib  
+*.lastbuildstate    
 *.log  
 *.tlog  
 *.idb  
@@ -39,6 +37,8 @@ UpgradeLog.XML
 *.suo  
 *.user  
 *.zip  
+*.dll
+*.lib
   
 #--------------------------  
 # ignored dirs for vc++  

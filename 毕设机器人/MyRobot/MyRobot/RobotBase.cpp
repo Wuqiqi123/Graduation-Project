@@ -141,16 +141,18 @@ short CRobotBase::CartesianJog(short CartesianAxis, double step)
 			goalPos: 目标位置数组 单位是 deg
 			vel    : 运动速度数组 单位是 deg/s
 */
-short CRobotBase::JointsTMove(double goalPos[], double vel[])
+short CRobotBase::JointsTMove(double goalPos[], double goalVel[])
 {
 	double acc[4];
 	long pos[4];
+	double vel[4];
+
 	int i;
 
 	for (i = 0; i<m_JointNumber; i++)
 	{
 		pos[i] = (long)(goalPos[i] * m_JointArray[i].PulsePerMmOrDegree);
-		vel[i] = vel[i] * m_JointArray[i].PulsePerMmOrDegree * 2 * 0.0001; //转化为板卡识别的速度：PLUSE/ST  ******@wqq 我觉得固高写错了 固高写的是0.000001
+		vel[i] = goalVel[i] * m_JointArray[i].PulsePerMmOrDegree * 2 * 0.0001; //转化为板卡识别的速度：PLUSE/ST  ******@wqq 我觉得固高写错了 固高写的是0.000001
 		acc[i] = m_JointArray[i].NormalJointAcc;
 	}
 	m_pController->MoveToWithTProfile(pos, vel, acc);
@@ -291,6 +293,16 @@ void CRobotBase::UpdateJointArray()
 	long pos[4];					//脉冲量
 	double vel[4];
 	unsigned short status[4];
+
+	for (int i = 0; i < m_JointNumber; i++)   //把这一次的位置赋值上一次的位置
+	{
+		m_JointArray[i].LastJointPosition = m_JointArray[i].CurrentJointPositon;
+		m_JointArray[i].LastJointVelocity = m_JointArray[i].CurrentJointVelocity;
+	}
+	for (int i = 0; i<3; i++)
+		for (int j = 0; j<4; j++)
+			m_HandLastTn[i][j] = m_HandCurrTn[i][j];
+
 
 	if (m_pController != NULL&&m_pController->m_ServoIsOn)
 	{

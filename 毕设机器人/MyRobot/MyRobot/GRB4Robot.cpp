@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "GRB4Robot.h"
 
-
 CGRB4Robot::CGRB4Robot()
 {
 	InitJoints();
@@ -34,12 +33,21 @@ void CGRB4Robot::InitJoints(void)
 	for (i = 0; i<m_JointNumber; i++)
 	{
 		m_JointArray[i].JointNo = i + 1;  //  轴号  分别为 1,2,3,4
-		m_JointArray[i].CurrentJointPositon = 0.0;   //设置当前的位置我0
-		m_JointArray[i].CurrentJointPositon = 0.02;      //这个加速度可以直接赋值给板卡 GT_SetAcc  ********@wqq 我自己的应该可以改写，我自己的应该大一点好
 		m_JointArray[i].LastJointPosition = 0.0;
+		m_JointArray[i].CurrentJointPositon = 0.0;   //设置当前的位置我0
+		m_JointArray[i].NormalJointAcc = 0.02;      //这个加速度可以直接赋值给板卡 GT_SetAcc  ********@wqq 我自己的应该可以改写，我自己的应该大一点好
+		m_JointArray[i].LastJointPosition = 0.0;
+		m_JointArray[i].LastJointVelocity = 0.0;
 		m_JointArray[i].MaxJointVelocity = 15;     //单位是 deg/s    
-		m_JointArray[i].MaxJointAcceleration = 0.06;  //定义但是没有用到
+		m_JointArray[i].MaxJointAcceleration = 0.1;  //定义但是没有用到
 	}
+
+	ForwardKinematics();
+	for (int i = 0; i<3; i++)
+		for (int j = 0; j<4; j++)
+			m_HandLastTn[i][j] =m_HandCurrTn[i][j] ;
+
+
 	/*
 	控制周期：ST=200us
 	电机每转脉冲数：p=2500(Pulse/r)
@@ -79,9 +87,9 @@ void CGRB4Robot::InitJoints(void)
 
 	m_JointArray[2].AxisRatio = 1;   //第三个关节是移动副，所以没有减速器。直接连接丝杠螺母
 	m_JointArray[2].JointType = 0;   
-	m_JointArray[2].PulsePerMmOrDegree = 10000 * m_JointArray[2].AxisRatio / 5.;  //每运动1mm 需要多少个脉冲量  2000 PLUSE
+	m_JointArray[2].PulsePerMmOrDegree = 10000 * m_JointArray[2].AxisRatio / 5.;  //每运动1mm 需要多少个脉冲量  2000 PLUSE  3轴丝杆螺距：L=5(mm/r)
 //	m_JointArray[2].NormalJointVelocity = 5. / (m_JointArray[2].PulsePerMmOrDegree * 2 * 0.000001);  //500Pulse/ST=1250mm/s
-	m_JointArray[2].NormalJointVelocity = 12;  //**************@wqq自己设置成10 mm/s
+	m_JointArray[2].NormalJointVelocity = 12;  //**************@wqq自己设置成12 mm/s
 	m_JointArray[2].NegativeJointLimit = -110;
 	m_JointArray[2].PositiveJointLimit = 110.0;
 
