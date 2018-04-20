@@ -592,7 +592,7 @@ void CGTController::wait_motion_finished(int AxisNo)     //###################注
 		GT_GetSts(&str); //获取运动状态寄存器
 		if ((str & 0x1) || (!(str & 0x400))) flag = true;   //轴不在运动或者是运动完成标志位置1有一个满足时
 	}
-	GT_ClrSts(); //***************@wqq 自己添加的
+//	GT_ClrSts(); //***************@wqq 自己添加的
 }
 
 

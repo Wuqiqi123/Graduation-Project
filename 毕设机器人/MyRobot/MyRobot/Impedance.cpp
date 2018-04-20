@@ -3,7 +3,7 @@
 
 ///////////////////////////////////////////////////////////
 HANDLE hSyncEvent;//同步事件句柄
-bool stopflag; //线程结束标志
+bool ImpedenceControllerStopflag; //线程结束标志
 DWORD WINAPI ThreadProc(LPVOID lpParam)
 {
 	CImpedance *pImpedence = (CImpedance *)lpParam;  //获取该指针
@@ -11,7 +11,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 	while (1)
 	{
 		WaitForSingleObject(hSyncEvent, INFINITE);
-		if (stopflag)
+		if (ImpedenceControllerStopflag)
 		{
 			break;
 		}
@@ -129,7 +129,7 @@ bool CImpedance::StartImpedanceController()
 //		exit(1);
 //	}
 	GT_SetIntSyncEvent(hSyncEvent);//为PCI控制卡设置中断同步事件，当该参数为NULL时，该函数复位以前的设置值
-	stopflag = false;
+	ImpedenceControllerStopflag = false;
 	m_hControlThread = CreateThread(NULL, 0, ThreadProc, (LPVOID)(this), 0, NULL);  //构造定时器函数，立即激活该函数,将阻抗控制对象的指针赋作为该线程函数的参数
 	SetThreadPriority(m_hControlThread, THREAD_PRIORITY_HIGHEST);
 	if (m_hControlThread == NULL)
