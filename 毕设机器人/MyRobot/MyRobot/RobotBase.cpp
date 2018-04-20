@@ -317,5 +317,5 @@ void CRobotBase::UpdateJointArray()
 		//末端位置运动学正解存放在m_HandCurrTn[3][4]; 
 		ForwardKinematics();
 	}
-	Sleep(5);
+//	Sleep(5);
 }

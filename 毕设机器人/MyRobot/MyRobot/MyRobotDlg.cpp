@@ -60,6 +60,7 @@ CMyRobotDlg::CMyRobotDlg(CWnd* pParent /*=NULL*/)
 	Robot = new CGRB4Robot();
 	m_deviceflag = false;
 	m_servoflag = false;
+	m_ImpedanceButtonflag = false;
 
 }
 
@@ -82,6 +83,15 @@ ON_BN_CLICKED(IDC_BUTTON_HOME, &CMyRobotDlg::OnBnClickedButtonHome)
 ON_BN_CLICKED(IDC_BUTTON_TEST, &CMyRobotDlg::OnBnClickedButtonTest)
 ON_BN_CLICKED(IDC_BUTTON_IMPEDANCE, &CMyRobotDlg::OnBnClickedButtonImpedance)
 ON_WM_TIMER()
+ON_BN_CLICKED(IDC_BUTTON_JOINT1_NEGATIVE, &CMyRobotDlg::OnBnClickedButtonJoint1Negative)
+ON_BN_CLICKED(IDC_BUTTON_JOINT1_POSITIVE, &CMyRobotDlg::OnBnClickedButtonJoint1Positive)
+ON_BN_CLICKED(IDC_BUTTON_JOINT2_POSITIVE, &CMyRobotDlg::OnBnClickedButtonJoint2Positive)
+ON_BN_CLICKED(IDC_BUTTON_JOINT2_NEGATIVE, &CMyRobotDlg::OnBnClickedButtonJoint2Negative)
+ON_BN_CLICKED(IDC_BUTTON_JOINT3_NEGATIVE, &CMyRobotDlg::OnBnClickedButtonJoint3Negative)
+ON_BN_CLICKED(IDC_BUTTON_JOINT3_POSITIVE, &CMyRobotDlg::OnBnClickedButtonJoint3Positive)
+ON_BN_CLICKED(IDC_BUTTON_JOINT4_POSITIVE, &CMyRobotDlg::OnBnClickedButtonJoint4Positive)
+ON_BN_CLICKED(IDC_BUTTON_JOINT4_NEGATIVE, &CMyRobotDlg::OnBnClickedButtonJoint4Negative)
+ON_BN_CLICKED(IDC_BUTTON_GOHOME, &CMyRobotDlg::OnBnClickedButtonGohome)
 END_MESSAGE_MAP()
 
   
@@ -219,6 +229,7 @@ void CMyRobotDlg::OnBnClickedServoOn()
 		Robot->m_pController->ServoOff();
 		m_opendevice.EnableWindow(true);
 		GetDlgItem(IDC_BUTTON_HOME)->EnableWindow(false);
+		GetDlgItem(IDC_BUTTON_IMPEDANCE)->EnableWindow(false);
 		m_servo.SetWindowText(_T("伺服上电"));
 		m_servoflag = false;
 	}
@@ -226,17 +237,31 @@ void CMyRobotDlg::OnBnClickedServoOn()
 }
 
 
-void CMyRobotDlg::OnBnClickedButtonHome()
+void CMyRobotDlg::OnBnClickedButtonHome()   //寻找零点并回到零点
 {
 	// TODO:  在此添加控件通知处理程序代码
 	//这是我用工控机修改的
-
-
 	CWaitCursor wc;
 	Robot->Home();
 	for (int i = 0; i<Robot->m_JointNumber; i++)
 		Robot->m_JointArray[i].LastJointPosition = 0;
 
+}
+void CMyRobotDlg::OnBnClickedButtonGohome()    //在已经有知道零点在哪的情况下直接货到零点
+{
+	// TODO:  在此添加控件通知处理程序代码
+	CWaitCursor wc;
+	double homepos[4] = { 0, 0, 0, 0 };
+	double homevel[4];
+	for (int i = 0; i < Robot->m_JointNumber; i++)
+	{
+		homevel[i] = Robot->m_JointArray[i].NormalJointVelocity;
+	}
+	Robot->JointsTMove(homepos,homevel);
+	Robot->m_pController->wait_motion_finished(1);  //等待轴运动完成后停止
+	Robot->UpdateJointArray();      //刷新机器人类中的变量
+	OnJointsDataShow();
+	OnToolDataShow();
 }
 
 
@@ -249,11 +274,29 @@ void CMyRobotDlg::OnBnClickedButtonTest()
 
 
 //在这里开启阻抗控制的代码
+extern bool ImpedenceControllerStopflag;  //在阻抗控制内部开启一个线程，此变量用于标记线程是否执行下去
 void CMyRobotDlg::OnBnClickedButtonImpedance()
 {
 	// TODO:  在此添加控件通知处理程序代码
-	ImpedanceController = new CImpedance(Robot);
-	ImpedanceController->StartImpedanceController();
+	if (ImpedanceController == NULL)
+	{
+		ImpedanceController = new CImpedance(Robot);
+	}
+
+	if (m_ImpedanceButtonflag == false)   //如果还没有打开阻抗控制的按钮，那么这个按钮就是打开的意思
+	{
+		ImpedanceController->StartImpedanceController();
+		ImpedenceControllerStopflag == false;
+		m_ImpedanceButton.SetWindowText(_T("阻抗控制关闭"));
+		m_ImpedanceButtonflag = true;
+	}
+	else
+	{                                                                                                                                                                                                                                                                                                                                                                                                                  
+		ImpedenceControllerStopflag = true;
+		m_ImpedanceButton.SetWindowText(_T("阻抗控制开启"));
+		m_ImpedanceButtonflag = false;
+	}
+
 
 }
 /*
@@ -348,3 +391,114 @@ void CMyRobotDlg::OnTimer(UINT_PTR nIDEvent)
 	}
 	CDialogEx::OnTimer(nIDEvent);
 }
+
+
+////***************************************************//下面这八个函数对应着单步调试，值得一说的是这些函数必须等到这些运动完成之后才会停止
+void CMyRobotDlg::OnBnClickedButtonJoint1Negative()
+{
+	// TODO:  在此添加控件通知处理程序代码
+	CWaitCursor wc;
+	if (Robot->JointJog(1,-1,1)==-1)  //第1根轴的，运动正1度，运动速率为1
+		AfxMessageBox(_T("运动超出范围!"), MB_OK);
+	Robot->m_pController->wait_motion_finished(1);  //等待轴运动完成后停止
+	Robot->UpdateJointArray();      //刷新机器人类中的变量
+	OnJointsDataShow();
+	OnToolDataShow();
+}
+
+
+void CMyRobotDlg::OnBnClickedButtonJoint1Positive()
+{
+	// TODO:  在此添加控件通知处理程序代码
+	CWaitCursor wc;
+	if (Robot->JointJog(1, 1, 1) == -1)  //第1根轴的，运动负1度，运动速率为1
+		AfxMessageBox(_T("运动超出范围!"), MB_OK);
+	Robot->m_pController->wait_motion_finished(1);  //等待轴运动完成后停止
+	Robot->UpdateJointArray();      //刷新机器人类中的变量
+	OnJointsDataShow();
+	OnToolDataShow();
+}
+
+
+void CMyRobotDlg::OnBnClickedButtonJoint2Positive()
+{
+	// TODO:  在此添加控件通知处理程序代码
+	CWaitCursor wc;
+	if (Robot->JointJog(2, 1, 1) == -1)  //第2轴的，运动正1度，运动速率为1
+		AfxMessageBox(_T("运动超出范围!"), MB_OK);
+	Robot->m_pController->wait_motion_finished(2);  //等待轴运动完成后停止
+	Robot->UpdateJointArray();      //刷新机器人类中的变量
+	OnJointsDataShow();
+	OnToolDataShow();
+
+}
+
+
+void CMyRobotDlg::OnBnClickedButtonJoint2Negative()
+{
+	// TODO:  在此添加控件通知处理程序代码
+	CWaitCursor wc;
+	if (Robot->JointJog(2, -1, 1) == -1)  //第2轴的，运动负1度，运动速率为1
+		AfxMessageBox(_T("运动超出范围!"), MB_OK);
+	Robot->m_pController->wait_motion_finished(2);  //等待轴运动完成后停止
+	Robot->UpdateJointArray();      //刷新机器人类中的变量
+	OnJointsDataShow();
+	OnToolDataShow();
+
+}
+
+
+void CMyRobotDlg::OnBnClickedButtonJoint3Negative()
+{
+	// TODO:  在此添加控件通知处理程序代码
+	CWaitCursor wc;
+	if (Robot->JointJog(3, -1, 1) == -1)  //第3轴的，运动负1度，运动速率为1
+		AfxMessageBox(_T("运动超出范围!"), MB_OK);
+	Robot->m_pController->wait_motion_finished(3);  //等待轴运动完成后停止
+	Robot->UpdateJointArray();      //刷新机器人类中的变量
+	OnJointsDataShow();
+	OnToolDataShow();
+}
+
+
+void CMyRobotDlg::OnBnClickedButtonJoint3Positive()
+{
+	// TODO:  在此添加控件通知处理程序代码
+	CWaitCursor wc;
+	if (Robot->JointJog(3, 1, 1) == -1)  //第3轴的，运动正1度，运动速率为1
+		AfxMessageBox(_T("运动超出范围!"), MB_OK);
+	Robot->m_pController->wait_motion_finished(3);  //等待轴运动完成后停止
+	Robot->UpdateJointArray();      //刷新机器人类中的变量
+	OnJointsDataShow();
+	OnToolDataShow();
+}
+
+
+void CMyRobotDlg::OnBnClickedButtonJoint4Positive()
+{
+	// TODO:  在此添加控件通知处理程序代码
+	CWaitCursor wc;
+	if (Robot->JointJog(4, 1, 1) == -1)  //第4轴的，运动正1度，运动速率为1
+		AfxMessageBox(_T("运动超出范围!"), MB_OK);
+	Robot->m_pController->wait_motion_finished(4);  //等待轴运动完成后停止
+	Robot->UpdateJointArray();      //刷新机器人类中的变量
+	OnJointsDataShow();
+	OnToolDataShow();
+}
+
+
+void CMyRobotDlg::OnBnClickedButtonJoint4Negative()
+{
+	// TODO:  在此添加控件通知处理程序代码
+	CWaitCursor wc;
+	if (Robot->JointJog(4, -1, 1) == -1)  //第4轴的，运动负1度，运动速率为1
+		AfxMessageBox(_T("运动超出范围!"), MB_OK);
+	Robot->m_pController->wait_motion_finished(4);  //等待轴运动完成后停止
+	Robot->UpdateJointArray();      //刷新机器人类中的变量
+	OnJointsDataShow();
+	OnToolDataShow();
+}
+//*******************************************************//
+
+
+

@@ -18,6 +18,7 @@ public:
 	CImpedance *ImpedanceController;
 	bool m_deviceflag;
 	bool m_servoflag;
+	bool m_ImpedanceButtonflag;
 	void OnJointsDataShow();	
 	void OnToolDataShow();
 
@@ -52,4 +53,13 @@ public:
 	afx_msg void OnBnClickedButtonImpedance();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 
+	afx_msg void OnBnClickedButtonJoint1Negative();
+	afx_msg void OnBnClickedButtonJoint1Positive();
+	afx_msg void OnBnClickedButtonJoint2Positive();
+	afx_msg void OnBnClickedButtonJoint2Negative();
+	afx_msg void OnBnClickedButtonJoint3Negative();
+	afx_msg void OnBnClickedButtonJoint3Positive();
+	afx_msg void OnBnClickedButtonJoint4Positive();
+	afx_msg void OnBnClickedButtonJoint4Negative();
+	afx_msg void OnBnClickedButtonGohome();
 };

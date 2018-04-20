@@ -28,7 +28,5 @@ public:
     bool GetCurrentState(void);
 	bool GetNextStateUsingJointSpaceImpendence(void);
 
-
-
 };
 
