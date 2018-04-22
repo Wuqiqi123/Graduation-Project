@@ -70,7 +70,6 @@ CImpedance::CImpedance(CRobotBase *Robot)
 	}
 
 	m_hControlThread = NULL;	
-	m_Robot = Robot;   //连接机器人对象
 
 }
 
@@ -122,7 +121,7 @@ bool CImpedance::StartImpedanceController()
 
 	GT_SetIntrTm(250);  //设置定时器的定时长度为250*200us = 50ms
 	GT_TmrIntr();   //向主机申请定时中断
-	//GT_GetIntr(&Status);
+	//GT_GetIntr(&Status);   //这个windows环境下面禁用这个函数 
 //	if (&Status != 0)
 	//{
 	//	AfxMessageBox(_T("定时器中断设置出错!"), MB_OK);
@@ -175,7 +174,7 @@ bool CImpedance::GetCurrentState(void)
 
 bool CImpedance::GetNextStateUsingJointSpaceImpendence(void)
 {
-	double Torque[3] = { 10, 10, 0 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
+	double Torque[3] = { 10, 10, 10 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
 	for (int i = 0; i < 3; i++)
 	{
 		m_angularVelImpedPara[i].Next = (Torque[i] - m_K*m_thetaImpedPara[i].Now) / (m_K*0.05 + m_B);

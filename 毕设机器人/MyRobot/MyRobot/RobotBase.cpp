@@ -107,7 +107,7 @@ short CRobotBase::JointJog(short axisNo, double step, double velRatio)       //#
 	//当前位置（“度”或者“毫米”）加步长（“度”或者“毫米”）；
 	//旋转关节单位为“度”，移动关节单位为“毫米”；
 
-	vel = OverallVelocityRate * m_JointArray[axisNo - 1].NormalJointVelocity*velRatio;
+	vel = OverallVelocityRate * m_JointArray[axisNo - 1].NormalJointVelocity * velRatio;
 	//m_JointArray[axisNo-1].NormalJointVelocity:板卡“正常速度”，单位为“度/秒”或“毫米/秒”；
 	//m_JointArray[axisNo-1].AxisRatio：轴减速比；
 	//velRatio：当前轴“正常速度”的比率（子运动速度比率），不是绝对数值。“正常速度”的值在板卡初始化时设定后，没有特殊情况一般不于改变，
