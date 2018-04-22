@@ -214,20 +214,20 @@ short CGTController::GetAxisPositionAndVelocityAndState(long pos[4], double vel[
 {
 	short rtn;
 	//在这里这个时刻直接刷新这个函数的值
-	for (int i = 0; i < m_AxisNumber; i++)
+	for (int i = 1; i <= m_AxisNumber; i++)
 	{
 		GT_Axis(i);///选择第i根轴
-		rtn=GT_GetAtlPos(&m_AxisArray[i].CurrentPosition);   //获取第i根轴的实际位置
+		rtn=GT_GetAtlPos(&m_AxisArray[i-1].CurrentPosition);   //获取第i根轴的实际位置
 		if (rtn!=0)
 		{
 			AfxMessageBox(_T("调用函数GT_GetAtlPos获取实际位置失败!"), MB_OK);
 		}
-		rtn=GT_GetAtlVel(&m_AxisArray[i].CurrentVelocity);    //获取第i根轴的实际速度
+		rtn=GT_GetAtlVel(&m_AxisArray[i-1].CurrentVelocity);    //获取第i根轴的实际速度
 		if (rtn != 0)
 		{
 			AfxMessageBox(_T("调用函数GT_GetAtlVel获取实际速度失败!"), MB_OK);
 		}
-		rtn=GT_GetSts(&m_AxisArray[i].CurrentState);        //获取第i根轴的实际状态
+		rtn=GT_GetSts(&m_AxisArray[i-1].CurrentState);        //获取第i根轴的实际状态
 		if (rtn != 0)
 		{
 			AfxMessageBox(_T("调用函数GT_GetSts获取实际状态失败!"), MB_OK);

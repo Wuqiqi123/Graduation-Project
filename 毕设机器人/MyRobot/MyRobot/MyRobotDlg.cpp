@@ -6,7 +6,7 @@
 #include "MyRobot.h"
 #include "MyRobotDlg.h"
 #include "afxdialogex.h"
-
+#include <conio.h> //使用命令行控制
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -221,6 +221,8 @@ void CMyRobotDlg::OnBnClickedServoOn()
 		m_opendevice.EnableWindow(false);
 		GetDlgItem(IDC_BUTTON_HOME)->EnableWindow(true);
 		GetDlgItem(IDC_BUTTON_IMPEDANCE)->EnableWindow(true);
+		GetDlgItem(IDC_BUTTON_GOHOME)->EnableWindow(true);
+		GetDlgItem(IDC_BUTTON_TEST)->EnableWindow(true);
 		m_servo.SetWindowText(_T("伺服断电"));
 		m_servoflag = true;  //伺服上电标志位开
 	}
@@ -230,6 +232,7 @@ void CMyRobotDlg::OnBnClickedServoOn()
 		m_opendevice.EnableWindow(true);
 		GetDlgItem(IDC_BUTTON_HOME)->EnableWindow(false);
 		GetDlgItem(IDC_BUTTON_IMPEDANCE)->EnableWindow(false);
+		GetDlgItem(IDC_BUTTON_GOHOME)->EnableWindow(false);
 		m_servo.SetWindowText(_T("伺服上电"));
 		m_servoflag = false;
 	}
@@ -269,7 +272,37 @@ void CMyRobotDlg::OnBnClickedButtonTest()
 {
 	// TODO:  在此添加控件通知处理程序代码
 	CWaitCursor wc;
-	Robot->JointsTest();
+	short rtn;
+	long pos[4];
+	double vel[4];
+	unsigned short sta[4];
+
+	for (int i = 1; i <= 4; i++)
+	{
+		GT_Axis(i);///选择第i根轴
+		rtn = GT_GetAtlPos(&pos[i-1]);   //获取第i根轴的实际位置
+		if (rtn != 0)
+		{
+			AfxMessageBox(_T("调用函数GT_GetAtlPos获取实际位置失败!"), MB_OK);
+		}
+		rtn = GT_GetAtlVel(&vel[i-1]);    //获取第i根轴的实际速度
+		if (rtn != 0)
+		{
+			AfxMessageBox(_T("调用函数GT_GetAtlVel获取实际速度失败!"), MB_OK);
+		}
+		rtn = GT_GetSts(&sta[i-1]);        //获取第i根轴的实际状态
+		if (rtn != 0)
+		{
+			AfxMessageBox(_T("调用函数GT_GetSts获取实际状态失败!"), MB_OK);
+		}
+	}
+	AllocConsole();//注意检查返回值
+	_cprintf("pos0=%d\n", pos[0]);
+	_cprintf("pos1=%d\n", pos[1]);
+	_cprintf("pos2=%d\n", pos[2]);
+	_cprintf("pos3=%d\n", pos[3]);
+//	FreeConsole();
+
 }
 
 
@@ -321,33 +354,33 @@ long statusStatusIDArray[8][4] =
 unsigned statusBitsMask[5] = { 0x02, 0x10, 0x20, 0x40, 0x200 };//分别是伺服报警，运动出错，正向限位开关，负向限位开关，伺服上电
 void CMyRobotDlg::OnJointsDataShow()  //关节空间中的状态显示
 {
-/////////////////////////////////当前关节的位置
+//////////////////////////////////////////////当前关节的位置
 	CString str;
 	str.Format(_T("%f"), Robot->m_JointArray[0].CurrentJointPositon);  //double转化成字符串类
 	SetDlgItemText(IDC_STATIC_61, str);
-	str.Format(_T("%f"), Robot->m_JointArray[1].CurrentJointPositon);  //double转化成字符串类
+	str.Format(_T("%f"), Robot->m_JointArray[1].CurrentJointPositon);  
 	SetDlgItemText(IDC_STATIC_62, str);
-	str.Format(_T("%f"), Robot->m_JointArray[2].CurrentJointPositon);  //double转化成字符串类
+	str.Format(_T("%f"), Robot->m_JointArray[2].CurrentJointPositon);  
 	SetDlgItemText(IDC_STATIC_63, str);
-	str.Format(_T("%f"), Robot->m_JointArray[3].CurrentJointPositon);  //double转化成字符串类
+	str.Format(_T("%f"), Robot->m_JointArray[3].CurrentJointPositon); 
 	SetDlgItemText(IDC_STATIC_64, str);
-//////////////////////////////////////////////关节正限位角度
-	str.Format(_T("%f"), Robot->m_JointArray[0].PositiveJointLimit);  //double转化成字符串类
+//////////////////////////////////////////////关节正限位角度,保留小数点后一位小数
+	str.Format(_T("%.1f"), Robot->m_JointArray[0].PositiveJointLimit);  //double转化成字符串类
 	SetDlgItemText(IDC_STATIC_71, str);
-	str.Format(_T("%f"), Robot->m_JointArray[1].PositiveJointLimit);  //double转化成字符串类
+	str.Format(_T("%.1f"), Robot->m_JointArray[1].PositiveJointLimit);  
 	SetDlgItemText(IDC_STATIC_72, str);
-	str.Format(_T("%f"), Robot->m_JointArray[2].PositiveJointLimit);  //double转化成字符串类
+	str.Format(_T("%.1f"), Robot->m_JointArray[2].PositiveJointLimit); 
 	SetDlgItemText(IDC_STATIC_73, str);
-	str.Format(_T("%f"), Robot->m_JointArray[3].PositiveJointLimit);  //double转化成字符串类
+	str.Format(_T("%.1f"), Robot->m_JointArray[3].PositiveJointLimit);  
 	SetDlgItemText(IDC_STATIC_74, str);
-////////////////////////////////////////////关节负限位角度
-	str.Format(_T("%f"), Robot->m_JointArray[0].NegativeJointLimit);  //double转化成字符串类
+////////////////////////////////////////////关节负限位角度,保留小数点后一位小数
+	str.Format(_T("%.1f"), Robot->m_JointArray[0].NegativeJointLimit);  //double转化成字符串类
 	SetDlgItemText(IDC_STATIC_81, str);
-	str.Format(_T("%f"), Robot->m_JointArray[1].NegativeJointLimit);  //double转化成字符串类
+	str.Format(_T("%.1f"), Robot->m_JointArray[1].NegativeJointLimit);  
 	SetDlgItemText(IDC_STATIC_82, str);
-	str.Format(_T("%f"), Robot->m_JointArray[2].NegativeJointLimit);  //double转化成字符串类
+	str.Format(_T("%.1f"), Robot->m_JointArray[2].NegativeJointLimit);  
 	SetDlgItemText(IDC_STATIC_83, str);
-	str.Format(_T("%f"), Robot->m_JointArray[3].NegativeJointLimit);  //double转化成字符串类
+	str.Format(_T("%.1f"), Robot->m_JointArray[3].NegativeJointLimit);  
 	SetDlgItemText(IDC_STATIC_84, str);
 
 ////////////////////////////////////////////////
@@ -370,13 +403,14 @@ void CMyRobotDlg::OnJointsDataShow()  //关节空间中的状态显示
 void CMyRobotDlg::OnToolDataShow()    //直角坐标系中的状态显示
 {
 	CString str;
-	str.Format(_T("%f"), Robot->m_HandCurrTn[0][3]);   //取机器人缓存区里面直角坐标系当前的X的坐标
+	//直角坐标区的信息显示，保留小数点后4位有效数字
+	str.Format(_T("%.4f"), Robot->m_HandCurrTn[0][3]);   //取机器人缓存区里面直角坐标系当前的X的坐标
 	SetDlgItemText(IDC_STATIC_XPOS, str);
-	str.Format(_T("%f"), Robot->m_HandCurrTn[1][3]);   //取机器人缓存区里面直角坐标系当前的Y的坐标
+	str.Format(_T("%.4f"), Robot->m_HandCurrTn[1][3]);   //取机器人缓存区里面直角坐标系当前的Y的坐标
 	SetDlgItemText(IDC_STATIC_YPOS, str);
-	str.Format(_T("%f"), Robot->m_HandCurrTn[2][3]);       //取机器人缓存区里面直角坐标系当前的Z的坐标
+	str.Format(_T("%.4f"), Robot->m_HandCurrTn[2][3]);       //取机器人缓存区里面直角坐标系当前的Z的坐标
 	SetDlgItemText(IDC_STATIC_ZPOS, str);
-	str.Format(_T("%f"), Robot->m_JointArray[3].CurrentJointPositon);
+	str.Format(_T("%.4f"), Robot->m_JointArray[3].CurrentJointPositon);
 	SetDlgItemText(IDC_STATIC_GRIPPER_JOINT, str);
 }
 
@@ -430,7 +464,6 @@ void CMyRobotDlg::OnBnClickedButtonJoint2Positive()
 	Robot->UpdateJointArray();      //刷新机器人类中的变量
 	OnJointsDataShow();
 	OnToolDataShow();
-
 }
 
 
@@ -444,15 +477,14 @@ void CMyRobotDlg::OnBnClickedButtonJoint2Negative()
 	Robot->UpdateJointArray();      //刷新机器人类中的变量
 	OnJointsDataShow();
 	OnToolDataShow();
-
 }
 
 
-void CMyRobotDlg::OnBnClickedButtonJoint3Negative()
+void CMyRobotDlg::OnBnClickedButtonJoint3Negative()  //*****注意第三根轴的方向与定义的方向是相反的
 {
 	// TODO:  在此添加控件通知处理程序代码
 	CWaitCursor wc;
-	if (Robot->JointJog(3, -1, 1) == -1)  //第3轴的，运动负1度，运动速率为1
+	if (Robot->JointJog(3, 1, 1) == -1)  //第3轴的，运动负1度，运动速率为1
 		AfxMessageBox(_T("运动超出范围!"), MB_OK);
 	Robot->m_pController->wait_motion_finished(3);  //等待轴运动完成后停止
 	Robot->UpdateJointArray();      //刷新机器人类中的变量
@@ -461,11 +493,11 @@ void CMyRobotDlg::OnBnClickedButtonJoint3Negative()
 }
 
 
-void CMyRobotDlg::OnBnClickedButtonJoint3Positive()
+void CMyRobotDlg::OnBnClickedButtonJoint3Positive()  //*****注意第三根轴的方向与定义的方向是相反的
 {
 	// TODO:  在此添加控件通知处理程序代码
 	CWaitCursor wc;
-	if (Robot->JointJog(3, 1, 1) == -1)  //第3轴的，运动正1度，运动速率为1
+	if (Robot->JointJog(3, -1, 1) == -1)  //第3轴的，运动正1度，运动速率为1
 		AfxMessageBox(_T("运动超出范围!"), MB_OK);
 	Robot->m_pController->wait_motion_finished(3);  //等待轴运动完成后停止
 	Robot->UpdateJointArray();      //刷新机器人类中的变量

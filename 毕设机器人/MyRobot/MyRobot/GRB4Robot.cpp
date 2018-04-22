@@ -81,7 +81,7 @@ void CGRB4Robot::InitJoints(void)
 	m_JointArray[1].JointType = 1;
 	m_JointArray[1].PulsePerMmOrDegree = 10000.* m_JointArray[1].AxisRatio / 360.; 
 //	m_JointArray[1].NormalJointVelocity = 2. / (m_JointArray[1].PulsePerMmOrDegree * 2 * 0.000001);
-	m_JointArray[0].NormalJointVelocity = 4;  //**************@wqq自己设置成4 deg/s
+	m_JointArray[1].NormalJointVelocity = 6;  //**************@wqq自己设置成6 deg/s
 	m_JointArray[1].NegativeJointLimit = -120.0;
 	m_JointArray[1].PositiveJointLimit = 120.0;
 
@@ -97,7 +97,7 @@ void CGRB4Robot::InitJoints(void)
 	m_JointArray[3].JointType = 1;      //第四根轴是转动副 
 	m_JointArray[3].PulsePerMmOrDegree = 10000.* m_JointArray[3].AxisRatio / 360.;   //每转一度需要多少个脉冲量666.667 PULSE
 //	m_JointArray[3].NormalJointVelocity = 2. / (m_JointArray[3].PulsePerMmOrDegree * 2 * 0.000001); //1500 deg/s 固高的设置也太大了吧
-	m_JointArray[2].NormalJointVelocity = 15;  //**************@wqq自己设置成15 deg/s
+	m_JointArray[3].NormalJointVelocity = 15;  //**************@wqq自己设置成15 deg/s
 	m_JointArray[3].NegativeJointLimit = -360.0;
 	m_JointArray[3].PositiveJointLimit = 360.0;
 }
