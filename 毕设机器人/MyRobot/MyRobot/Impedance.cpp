@@ -48,7 +48,17 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 		}
 		///////////在这里我需要处理的代码
 		pImpedence->GetCurrentState();//获取当前的时刻的关节空间的速度，位置和直角坐标空间的位置，速度
+		for (int i = 0; i < 4; i++)
+		{
+			TRACE("the %d’axis theta is: %.3f\n",i,pImpedence->m_thetaImpedPara[i].Now);
+			TRACE("the %d' axis angelVel is: %.3f\n",i,pImpedence->m_angularVelImpedPara[i].Now);
+		}
 		pImpedence->GetNextStateUsingJointSpaceImpendence();  //计算下一个时刻的关节的角度和角速度
+		for (int i = 0; i < 4; i++)
+		{
+			TRACE("the %d’axis next theta is: %.3f\n", i, pImpedence->m_thetaImpedPara[i].Next);
+			TRACE("the %d’axis next angelVel is: %.3f\n", i, pImpedence->m_thetaImpedPara[i].Next);
+		}
 		double GoalPos[4],GoalVel[4];
 		for (int i = 0; i < pImpedence->m_Robot->m_JointNumber; i++)
 		{
@@ -186,13 +196,13 @@ bool CImpedance::GetCurrentState(void)
 	m_Robot->UpdateJointArray(); //刷新各个关节的值
 	for (int i = 0; i < m_Robot->m_JointNumber; i++)   //得到三个关节的角度,这里依旧用的是人直接理解的位置，角度或者mm
 	{
-		m_thetaImpedPara[i].Last = m_Robot->m_JointArray[i].LastJointPosition;
+		m_thetaImpedPara[i].Last = m_thetaImpedPara[i].Now;
 		m_thetaImpedPara[i].Now = m_Robot->m_JointArray[i].CurrentJointPositon;
 	}
 
 	for (int i = 0; i < m_Robot->m_JointNumber; i++)  //得到三个关节的角速度  人可以理解的速度
 	{
-		m_angularVelImpedPara[i].Last = m_Robot->m_JointArray[i].LastJointVelocity;
+		m_angularVelImpedPara[i].Last = m_angularVelImpedPara[i].Now;
 		m_angularVelImpedPara[i].Now = m_Robot->m_JointArray[i].CurrentJointVelocity;
 	}
 
