@@ -301,6 +301,7 @@ void CMyRobotDlg::OnBnClickedButtonTest()
 	_cprintf("pos1=%d\n", pos[1]);
 	_cprintf("pos2=%d\n", pos[2]);
 	_cprintf("pos3=%d\n", pos[3]);
+//	TRACE("x   =   %d   and   y   =   %d/n", pos[0], pos[1]);
 //	FreeConsole();
 
 }
@@ -484,7 +485,7 @@ void CMyRobotDlg::OnBnClickedButtonJoint3Negative()  //*****注意第三根轴的方向与
 {
 	// TODO:  在此添加控件通知处理程序代码
 	CWaitCursor wc;
-	if (Robot->JointJog(3, 1, 1) == -1)  //第3轴的，运动负1度，运动速率为1
+	if (Robot->JointJog(3, -1, 1) == -1)  //第3轴的，运动负1度，运动速率为1
 		AfxMessageBox(_T("运动超出范围!"), MB_OK);
 	Robot->m_pController->wait_motion_finished(3);  //等待轴运动完成后停止
 	Robot->UpdateJointArray();      //刷新机器人类中的变量
@@ -497,7 +498,7 @@ void CMyRobotDlg::OnBnClickedButtonJoint3Positive()  //*****注意第三根轴的方向与
 {
 	// TODO:  在此添加控件通知处理程序代码
 	CWaitCursor wc;
-	if (Robot->JointJog(3, -1, 1) == -1)  //第3轴的，运动正1度，运动速率为1
+	if (Robot->JointJog(3, 1, 1) == -1)  //第3轴的，运动正1度，运动速率为1
 		AfxMessageBox(_T("运动超出范围!"), MB_OK);
 	Robot->m_pController->wait_motion_finished(3);  //等待轴运动完成后停止
 	Robot->UpdateJointArray();      //刷新机器人类中的变量
