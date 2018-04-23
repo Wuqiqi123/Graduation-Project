@@ -1,16 +1,47 @@
 #include "stdafx.h"
 #include "Impedance.h"
-
+#include <conio.h> //使用命令行控制
 ///////////////////////////////////////////////////////////
+int testNUM = 0;
 HANDLE hSyncEvent;//同步事件句柄
 bool ImpedenceControllerStopflag; //线程结束标志
 DWORD WINAPI ThreadProc(LPVOID lpParam)
 {
 	CImpedance *pImpedence = (CImpedance *)lpParam;  //获取该指针
 	ResetEvent(hSyncEvent);  //确保事件处于无信号状态
+//	AllocConsole();//注意检查返回值   谨慎使用命令台，因为这个在函数中使用这个非常的消耗时间，两条显示语句大概11ms
+	LARGE_INTEGER litmp;
+	LONGLONG qt1=0, qt2=0,qt1last;
+	double dft, dfm1, dfm2, dff;
+	//获得时钟频率  
+	QueryPerformanceFrequency(&litmp);//获得时钟频率  
+	dff = (double)litmp.QuadPart;
 	while (1)
 	{
+////////////////////////////////////////////////调试时间代码开始
+		////获得初始值  
+		//QueryPerformanceCounter(&litmp);
+		//qt1 = litmp.QuadPart;//获得当前时间t1的值	
+		//dfm1 = (double)(qt1 - qt2);
+		//dft = dfm1 / dff;
+		//_cprintf("t1-t2=%.3f\n", dft * 1000);
+///////////////////////////////////////////////调试时间代码结束
 		WaitForSingleObject(hSyncEvent, INFINITE);
+////////////////////////////////////////////////调试时间代码开始
+		QueryPerformanceCounter(&litmp);
+		qt1last = qt1;
+		qt1 = litmp.QuadPart;//获得当前时间t2的值 
+		//获得对应的时间值，转到毫秒单位上  
+		dfm1 = (double)(qt1 - qt2);
+		dft = dfm1 / dff;
+//		_cprintf("waited time:t1-t2=%.3f\n", dft * 1000);
+		TRACE("waited time:t1-t2=%.3f\n", dft * 1000);
+//		TRACE("testNUM=%d\n", testNUM);	
+		dfm1 = (double)(qt1 - qt1last);
+		dft = dfm1 / dff;
+//		_cprintf("One cycle time:t1-t1last=%.3f\n", dft*1000);
+		TRACE("One cycle time:t1-t1last=%.3f\n", dft * 1000);
+///////////////////////////////////////////////调试时间代码结束
 		if (ImpedenceControllerStopflag)
 		{
 			break;
@@ -27,6 +58,14 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 		pImpedence->m_Robot->JointsTMove(GoalPos, GoalVel);
 
 		////////////处理代码完结
+////////////////////////////////////////////调试时间代码开始
+		QueryPerformanceCounter(&litmp);
+		qt2 = litmp.QuadPart;//获得当前时间t3的值 
+		dfm2 = (double)(qt2 - qt1);
+		dft = dfm2 / dff;
+//		_cprintf("The program running time:t2-t1=%.3f\n", dft * 1000);
+		TRACE("The program running time:t2-t1=%.3f\n", dft * 1000);
+////////////////////////////////////////////调试时间代码结束
 		ResetEvent(hSyncEvent);//复位同步事件
 	}
 	GT_SetIntSyncEvent(NULL);//通知设备ISR 释放事件
@@ -119,7 +158,7 @@ bool CImpedance::StartImpedanceController()
 		AfxMessageBox(_T("创建定时器句柄失败!"), MB_OK);
 	}
 
-	GT_SetIntrTm(250);  //设置定时器的定时长度为250*200us = 50ms
+	GT_SetIntrTm(50);  //设置定时器的定时长度为50*200us = 10ms
 	GT_TmrIntr();   //向主机申请定时中断
 	//GT_GetIntr(&Status);   //这个windows环境下面禁用这个函数 
 //	if (&Status != 0)
@@ -129,8 +168,9 @@ bool CImpedance::StartImpedanceController()
 //	}
 	GT_SetIntSyncEvent(hSyncEvent);//为PCI控制卡设置中断同步事件，当该参数为NULL时，该函数复位以前的设置值
 	ImpedenceControllerStopflag = false;
-	m_hControlThread = CreateThread(NULL, 0, ThreadProc, (LPVOID)(this), 0, NULL);  //构造定时器函数，立即激活该函数,将阻抗控制对象的指针赋作为该线程函数的参数
+	m_hControlThread = CreateThread(NULL, 0, ThreadProc, (LPVOID)(this), CREATE_SUSPENDED, NULL);  //构造定时器函数，立即激活该函数,将阻抗控制对象的指针赋作为该线程函数的参数
 	SetThreadPriority(m_hControlThread, THREAD_PRIORITY_HIGHEST);
+	ResumeThread(m_hControlThread);
 	if (m_hControlThread == NULL)
 	{
 		AfxMessageBox(_T("创建线程失败!"), MB_OK);
@@ -177,8 +217,8 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendence(void)
 	double Torque[3] = { 10, 10, 10 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
 	for (int i = 0; i < 3; i++)
 	{
-		m_angularVelImpedPara[i].Next = (Torque[i] - m_K*m_thetaImpedPara[i].Now) / (m_K*0.05 + m_B);
-		m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*0.05;
+		m_angularVelImpedPara[i].Next = (Torque[i] - m_K*m_thetaImpedPara[i].Now) / (m_K*0.01 + m_B);
+		m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*0.01;
 	}
 	return true;
 	
