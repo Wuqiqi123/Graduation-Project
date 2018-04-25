@@ -35,7 +35,7 @@ void CGRB4Robot::InitJoints(void)
 		m_JointArray[i].JointNo = i + 1;  //  轴号  分别为 1,2,3,4
 		m_JointArray[i].LastJointPosition = 0.0;
 		m_JointArray[i].CurrentJointPositon = 0.0;   //设置当前的位置我0
-		m_JointArray[i].NormalJointAcc = 0.02;      //这个加速度可以直接赋值给板卡 GT_SetAcc  ********@wqq 我自己的应该可以改写，我自己的应该大一点好
+		m_JointArray[i].NormalJointAcc = 0.05;      //这个加速度可以直接赋值给板卡 GT_SetAcc  ********@wqq 我自己的应该可以改写，我自己的应该大一点好
 		m_JointArray[i].LastJointPosition = 0.0;
 		m_JointArray[i].LastJointVelocity = 0.0;
 		m_JointArray[i].MaxJointVelocity = 15;     //单位是 deg/s    

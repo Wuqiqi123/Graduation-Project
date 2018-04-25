@@ -179,7 +179,7 @@ short CRobotBase::JointSynTMove(double goalPos[], double moveTime)
 		vel[i] = fabs((goalPos[i] - m_JointArray[i].CurrentJointPositon)) / moveTime;
 		///???
 	}
-	return JointsTMove(goalPos, vel+1);    //在这里加1为了提前到达，因为T型曲线还有加速过程
+	return JointsTMove(goalPos, vel);    //在这里加1为了提前到达，因为T型曲线还有加速过程
 }
 
 /*

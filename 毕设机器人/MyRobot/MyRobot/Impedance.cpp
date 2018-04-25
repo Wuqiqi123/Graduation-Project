@@ -3,7 +3,8 @@
 #include <conio.h> //使用命令行控制
 ///////////////////////////////////////////////////////////
 //////定义定时周期
-#define T (10)
+#define Tms (10)   
+#define T (Tms*0.001)
 ////////////////////////
 int testNUM = 0;
 HANDLE hSyncEvent;//同步事件句柄
@@ -56,7 +57,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 			TRACE("the %d’axis theta is: %.3f\n",i,pImpedence->m_thetaImpedPara[i].Now);
 			TRACE("the %d' axis angelVel is: %.3f\n",i,pImpedence->m_angularVelImpedPara[i].Now);
 		}
-		pImpedence->GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile();  //计算下一个时刻的关节的角度和角速度
+		pImpedence->GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile();  //计算下一个时刻的关节的角度和角速度
 
 		////////////处理代码完结
 ////////////////////////////////////////////调试时间代码开始
@@ -158,7 +159,7 @@ bool CImpedance::StartImpedanceController()
 	{
 		AfxMessageBox(_T("创建定时器句柄失败!"), MB_OK);
 	}
-	GT_SetIntrTm(5*T);  //设置定时器的定时长度为50*200us = 10ms
+	GT_SetIntrTm(5*Tms);  //设置定时器的定时长度为50*200us = 10ms
 	GT_TmrIntr();   //向主机申请定时中断
 	//GT_GetIntr(&Status);   //这个windows环境下面禁用这个函数 
 //	if (&Status != 0)
@@ -214,12 +215,12 @@ bool CImpedance::GetCurrentState(void)
 
 bool CImpedance::GetNextStateUsingJointSpaceImpendence(void)
 {
-	double Torque[3] = { 10, 10, 10 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
-	for (int i = 0; i < 3; i++)
-	{
-		m_angularVelImpedPara[i].Next = (Torque[i] - m_K*m_thetaImpedPara[i].Now) / (m_K*0.01 + m_B);
-		m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*0.01;
-	}
+	//double Torque[3] = { 10, 10, 10 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
+	//for (int i = 0; i < 3; i++)
+	//{
+	//	m_angularVelImpedPara[i].Next = (Torque[i] - m_K*m_thetaImpedPara[i].Now) / (m_K*0.01 + m_B);
+	//	m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*0.01;
+	//}
 	return true;
 	
 }
@@ -229,8 +230,8 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 	double Torque[3] = { 10, 10, 10 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
 	for (int i = 0; i < 3; i++)
 	{
-		m_angularVelImpedPara[i].Next = (Torque[i] - m_K*m_thetaImpedPara[i].Now) / (m_K*T*0.001 + m_B);
-		m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*T*0.001;
+		m_angularVelImpedPara[i].Next = (Torque[i] - m_K*m_thetaImpedPara[i].Now) / (m_K*T + m_B);
+		m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*T;
 	}
 	for (int i = 0; i < 4; i++)
 	{
@@ -264,7 +265,8 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile(v
 	{
 		GoalPos[i] = (this->m_thetaImpedPara[i].Next);  
 	}
-	this->m_Robot->JointSynTMove(GoalPos,T*0.001);
+	this->m_Robot->JointSynTMove(GoalPos,T);
+	return true;
 }
 
 bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithSProfile(void)
