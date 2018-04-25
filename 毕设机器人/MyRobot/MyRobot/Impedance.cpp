@@ -2,6 +2,9 @@
 #include "Impedance.h"
 #include <conio.h> //使用命令行控制
 ///////////////////////////////////////////////////////////
+//////定义定时周期
+#define T (10)
+////////////////////////
 int testNUM = 0;
 HANDLE hSyncEvent;//同步事件句柄
 bool ImpedenceControllerStopflag; //线程结束标志
@@ -53,19 +56,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 			TRACE("the %d’axis theta is: %.3f\n",i,pImpedence->m_thetaImpedPara[i].Now);
 			TRACE("the %d' axis angelVel is: %.3f\n",i,pImpedence->m_angularVelImpedPara[i].Now);
 		}
-		pImpedence->GetNextStateUsingJointSpaceImpendence();  //计算下一个时刻的关节的角度和角速度
-		for (int i = 0; i < 4; i++)
-		{
-			TRACE("the %d’axis next theta is: %.3f\n", i, pImpedence->m_thetaImpedPara[i].Next);
-			TRACE("the %d’axis next angelVel is: %.3f\n", i, pImpedence->m_thetaImpedPara[i].Next);
-		}
-		double GoalPos[4],GoalVel[4];
-		for (int i = 0; i < pImpedence->m_Robot->m_JointNumber; i++)
-		{
-			GoalPos[i] = (pImpedence->m_thetaImpedPara[i].Next)+2;   //在这里直接加上一点多余的东西，防止减速
-			GoalVel[i] = pImpedence->m_angularVelImpedPara[i].Next;
-		}
-		pImpedence->m_Robot->JointsTMove(GoalPos, GoalVel);
+		pImpedence->GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile();  //计算下一个时刻的关节的角度和角速度
 
 		////////////处理代码完结
 ////////////////////////////////////////////调试时间代码开始
@@ -167,8 +158,7 @@ bool CImpedance::StartImpedanceController()
 	{
 		AfxMessageBox(_T("创建定时器句柄失败!"), MB_OK);
 	}
-
-	GT_SetIntrTm(50);  //设置定时器的定时长度为50*200us = 10ms
+	GT_SetIntrTm(5*T);  //设置定时器的定时长度为50*200us = 10ms
 	GT_TmrIntr();   //向主机申请定时中断
 	//GT_GetIntr(&Status);   //这个windows环境下面禁用这个函数 
 //	if (&Status != 0)
@@ -232,4 +222,52 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendence(void)
 	}
 	return true;
 	
+}
+
+bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void)
+{
+	double Torque[3] = { 10, 10, 10 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
+	for (int i = 0; i < 3; i++)
+	{
+		m_angularVelImpedPara[i].Next = (Torque[i] - m_K*m_thetaImpedPara[i].Now) / (m_K*T*0.001 + m_B);
+		m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*T*0.001;
+	}
+	for (int i = 0; i < 4; i++)
+	{
+		TRACE("the %d’axis next theta is: %.3f\n", i, this->m_thetaImpedPara[i].Next);
+		TRACE("the %d’axis next angelVel is: %.3f\n", i, this->m_angularVelImpedPara[i].Next);
+	}
+	double GoalPos[4], GoalVel[4];
+	for (int i = 0; i < this->m_Robot->m_JointNumber; i++)
+	{
+		GoalPos[i] = (this->m_thetaImpedPara[i].Next) + 2;   //在这里直接加上一点多余的东西，防止减速
+		GoalVel[i] = this->m_angularVelImpedPara[i].Next;
+	}
+	this->m_Robot->JointsTMove(GoalPos, GoalVel);
+	return true;
+}
+
+//////////////////现在使用向后差分的方法来求下一个时刻的位置
+bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile(void)
+{
+	double Torque[3] = { 10, 10, 10 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
+	for (int i = 0; i < 3; i++)
+	{
+		m_thetaImpedPara[i].Next = 1.0 / (m_B / T + m_K)*Torque[i] + 1.0 / (m_B / T + m_K)*(m_B / T)*m_thetaImpedPara[i].Now;
+	}
+	for (int i = 0; i < 4; i++)
+	{
+		TRACE("the %d’axis next theta is: %.3f\n", i, this->m_thetaImpedPara[i].Next);
+	}
+	double GoalPos[4];
+	for (int i = 0; i < this->m_Robot->m_JointNumber; i++)
+	{
+		GoalPos[i] = (this->m_thetaImpedPara[i].Next);  
+	}
+	this->m_Robot->JointSynTMove(GoalPos,T*0.001);
+}
+
+bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithSProfile(void)
+{
+	return true;
 }

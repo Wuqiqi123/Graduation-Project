@@ -171,7 +171,7 @@ short CRobotBase::JointSynTMove(double goalPos[], double moveTime)
 	//检查目标关节值是否在机器人工作空间内
 	//......
 	if (moveTime<0.001) return -1;
-	double vel[6];
+	double vel[4];
 	int i;
 	for (i = 0; i<m_JointNumber; i++)
 	{
@@ -179,7 +179,7 @@ short CRobotBase::JointSynTMove(double goalPos[], double moveTime)
 		vel[i] = fabs((goalPos[i] - m_JointArray[i].CurrentJointPositon)) / moveTime;
 		///???
 	}
-	return JointsTMove(goalPos, vel);
+	return JointsTMove(goalPos, vel+1);    //在这里加1为了提前到达，因为T型曲线还有加速过程
 }
 
 /*

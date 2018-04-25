@@ -595,4 +595,42 @@ void CGTController::wait_motion_finished(int AxisNo)     //###################注
 //	GT_ClrSts(); //***************@wqq 自己添加的
 }
 
+/////////////////////////////////////////////////2018.4.24 添加
+//开始使用S曲线做规划
+bool CGTController::StartUsingSProfile()
+{
+	short rtn;
+	for (int i = 0; i < 4; i++)
+	{
+		rtn = GT_PrflS();
+		rtn = GT_SetJerk(0.000002);
+		rtn = GT_SetMAcc(0.004);
+		rtn = GT_SetVel(4);
+	}
+	GT_MltiUpdt(0xF); //同时刷新多轴状态
+	return true;
+}
 
+//多轴的S型曲线运动
+short CGTController::MoveToWithSProfile(long pos[4])
+{
+	for (int i = 1; i <= 4; i++) //依次设置四轴状态
+	{
+		GT_Axis(i);
+		GT_ClrSts();
+		GT_SetPos(pos[i - 1]);
+	}
+	GT_MltiUpdt(0xF); //同时刷新多轴状态
+	return 0;
+}
+
+//单轴的S型曲线运动	
+short CGTController::AxisMoveToWithSProfile(int axisno, long pos)
+{
+	GT_Axis(axisno); //设置当前轴
+	GT_ClrSts();	//清除状态位
+	GT_SetPos(pos); //设置目标位置
+	GT_Update();	//刷新该轴
+	return 0;
+}
+///////////////////////////////////////////////////2018.4.24 添加结束
