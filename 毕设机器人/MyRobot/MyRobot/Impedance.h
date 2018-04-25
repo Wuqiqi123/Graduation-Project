@@ -27,6 +27,9 @@ public:
 	bool StartImpedanceController();  //开始阻抗控制器，将机器人控制类传递给阻抗控制器
     bool GetCurrentState(void);
 	bool GetNextStateUsingJointSpaceImpendence(void);
+	bool GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void);
+	bool GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile(void);
+	bool GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithSProfile(void);
 
 };
 

@@ -39,10 +39,10 @@ public:
 	short AxisCaptHomeWithHome(int axisno, long maxNegativeOffset, long maxPositiveOffset, double vel);
 	short AxisCaptHomeWithLimit(int axisno, long offset, double vel);
 	short AxisCaptLimit(int axisno, long offset, double vel);
-	short CGTController::AxisCaptHomeWithoutLimit(int axisno, double vel);
-	short CGTController::AxisMoveToWithTProfile(int axisno, long pos, double vel, double acc);
-	short CGTController::MoveToWithTProfile(long pos[4], double vel[4], double acc[4]);
-	short CGTController::DigitalOut(unsigned int dout);
-	void CGTController::wait_motion_finished(int AxisNo);
+	short AxisCaptHomeWithoutLimit(int axisno, double vel);
+	short AxisMoveToWithTProfile(int axisno, long pos, double vel, double acc);
+	short MoveToWithTProfile(long pos[4], double vel[4], double acc[4]);
+	short DigitalOut(unsigned int dout);
+	void  wait_motion_finished(int AxisNo);
 };
 
