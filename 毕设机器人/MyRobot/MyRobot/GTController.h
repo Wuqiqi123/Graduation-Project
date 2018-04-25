@@ -43,7 +43,7 @@ public:
 	short AxisMoveToWithTProfile(int axisno, long pos, double vel, double acc);
 	bool  StartUsingSProfile();
 	short MoveToWithSProfile(long pos[4]);
-	short CGTController::AxisMoveToWithSProfile(int axisno, long pos);
+	short AxisMoveToWithSProfile(int axisno, long pos);
 	short MoveToWithTProfile(long pos[4], double vel[4], double acc[4]);
 	short DigitalOut(unsigned int dout);
 	void  wait_motion_finished(int AxisNo);

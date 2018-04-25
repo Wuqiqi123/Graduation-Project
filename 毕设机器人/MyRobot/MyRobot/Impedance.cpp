@@ -81,7 +81,7 @@ CImpedance::CImpedance(CRobotBase *Robot)
 	m_Robot = Robot;
 	m_M = 0;
 	m_K = 0.5;   //µ¥Î»ÊÇ N/mm
-	m_B = 0.01;
+	m_B = 0.51;
 	m_FImpedPara.Last = 0;
 	m_FImpedPara.Now = 0;
 	m_FImpedPara.Next = 0;
