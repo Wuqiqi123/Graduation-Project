@@ -41,6 +41,12 @@ void CGRB4Robot::InitJoints(void)
 		m_JointArray[i].MaxJointVelocity = 15;     //单位是 deg/s    
 		m_JointArray[i].MaxJointAcceleration = 0.1;  //定义但是没有用到
 	}
+	for (int i = 0; i < m_JointNumber; i++)
+	{
+		m_JointGap[i].GapLength = 0;
+		m_JointGap[i].GapToPositive = 0;
+		m_JointGap[i].GapToNegative = m_JointGap[i].GapLength - m_JointGap[i].GapToPositive;
+	}
 
 	ForwardKinematics();
 	for (int i = 0; i<3; i++)

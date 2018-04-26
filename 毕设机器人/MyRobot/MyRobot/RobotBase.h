@@ -27,6 +27,12 @@ struct t_Joint
 
 	unsigned  short  JointStatus;	//关节状态，0：静止，1：运动
 };
+struct t_JointGap
+{
+	double GapLength;
+	double GapToPositive;
+	double GapToNegative;
+};
 //工具结构体
 struct t_Tools{
 	unsigned int toolIndex;			//索引
@@ -54,6 +60,8 @@ public:
 
 	t_Joint *m_JointArray;	  		//关节数组，存放关节参数  对于SCARA机器人来说一共有四个关节
 	int 	 m_JointNumber; 		//关节个数
+	t_JointGap *m_JointGap;
+	
 public:
 	CRobotBase();
 	virtual ~CRobotBase();
