@@ -110,7 +110,8 @@ short CGTController::InitCard(void)            //###################注释完成
 	short	m_nILimit = 1000 ;
 	long	m_nPos = 0;		//正常位置x100  /  PAxisReduce
 	double	m_nVel = 500 / PAxisReduce;		//正常速度x100  /  PAxisReduce
-	int		i; 
+	int		i;
+
 
 	for (i = 1; i <= 4; i++)  
 	{
@@ -121,9 +122,31 @@ short CGTController::InitCard(void)            //###################注释完成
 		//*********设置为闭环的控制方式：这种可以实现准确的位置控制，SV控制器默认的控制方式为闭环控制，还允许用GT_OpenLp()设置开环
 
         //PID参数参数设置，固高官方手册的数值
-		GT_SetKp(3);
-		GT_SetKi(0);
-		GT_SetKd(10);
+		if (i == 1)
+		{
+			GT_SetKp(5);
+			GT_SetKi(2);
+			GT_SetKd(10);
+		}
+		if (i == 2)
+		{
+			GT_SetKp(15);
+			GT_SetKi(5);
+			GT_SetKd(10);
+		}
+		if (i == 3)
+		{
+			GT_SetKp(9);
+			GT_SetKi(3);
+			GT_SetKd(9);
+		}
+		if (i == 4)
+		{
+			GT_SetKp(3);
+			GT_SetKi(0);
+			GT_SetKd(15);
+		}
+
 		//*********还可以设置速度前馈GT_SetKvff(0~32767),加速度前馈GT_SetKaff(0~32767)，静差补偿GT_SetMtrBias(-32768~32768)，
 		//*********输出的最大取值范围+/2^15，对应的模拟量输出为+/-10v ,实际控制可以由GT_SetILmt(0~32767)决定有效输出范围，默认为32767
 

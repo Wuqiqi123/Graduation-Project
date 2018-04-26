@@ -28,20 +28,20 @@ void CGRB4Robot::InitJoints(void)
 {
 	m_JointNumber = 4;  //在这里赋值了基类的关节个数
 	m_JointArray = new t_Joint[m_JointNumber];  //在这里创建了基类的各个关节的具体变量
-
+	m_JointGap = new t_JointGap[m_JointNumber];
 	int i = 0;
 	for (i = 0; i<m_JointNumber; i++)
 	{
 		m_JointArray[i].JointNo = i + 1;  //  轴号  分别为 1,2,3,4
 		m_JointArray[i].LastJointPosition = 0.0;
 		m_JointArray[i].CurrentJointPositon = 0.0;   //设置当前的位置我0
-		m_JointArray[i].NormalJointAcc = 0.2;      //这个加速度可以直接赋值给板卡 GT_SetAcc  ********@wqq 我自己的应该可以改写，我自己的应该大一点好
+		m_JointArray[i].NormalJointAcc = 1	;      //这个加速度可以直接赋值给板卡 GT_SetAcc  ********@wqq 我自己的应该可以改写，我自己的应该大一点好
 		m_JointArray[i].LastJointPosition = 0.0;
 		m_JointArray[i].LastJointVelocity = 0.0;
 		m_JointArray[i].MaxJointVelocity = 15;     //单位是 deg/s    
 		m_JointArray[i].MaxJointAcceleration = 0.1;  //定义但是没有用到
 	}
-	for (int i = 0; i < m_JointNumber; i++)
+	for (i = 0; i < m_JointNumber; i++)
 	{
 		m_JointGap[i].GapLength = 0;
 		m_JointGap[i].GapToPositive = 0;
