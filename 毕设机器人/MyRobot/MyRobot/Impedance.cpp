@@ -248,11 +248,15 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 	return true;
 }
 
-//////////////////现在使用向后差分的方法来求下一个时刻的位置
+//////////////////现在求下一个时刻的位置
 bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile(void)
 {
 	double Torque[3] = { 10, 10, 10 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 3; i++)  //使用向后差分的形式
+	{
+		m_thetaImpedPara[i].Next = 1.0 / (m_B / T + m_K)*Torque[i] + 1.0 / (m_B / T + m_K)*(m_B / T)*m_thetaImpedPara[i].Now;
+	}
+	for (int i = 0; i < 3; i++)   //直接是用微分方程
 	{
 		m_thetaImpedPara[i].Next = 1.0 / (m_B / T + m_K)*Torque[i] + 1.0 / (m_B / T + m_K)*(m_B / T)*m_thetaImpedPara[i].Now;
 	}
@@ -271,5 +275,19 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile(v
 
 bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithSProfile(void)
 {
+	double Torque[3] = { 10, 10, 10 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
+	for (int i = 0; i < 3; i++)
+	{
+		m_thetaImpedPara[i].Next = 1.0 / (m_B / T + m_K)*Torque[i] + 1.0 / (m_B / T + m_K)*(m_B / T)*m_thetaImpedPara[i].Now;
+	}
+	for (int i = 0; i < 4; i++)
+	{
+		TRACE("the %d’axis next theta is: %.3f\n", i, this->m_thetaImpedPara[i].Next);
+	}
+	double GoalPos[4];
+	for (int i = 0; i < this->m_Robot->m_JointNumber; i++)
+	{
+		GoalPos[i] = (this->m_thetaImpedPara[i].Next);
+	}
 	return true;
 }
