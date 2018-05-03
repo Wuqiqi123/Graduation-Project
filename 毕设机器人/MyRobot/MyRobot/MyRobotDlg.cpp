@@ -433,7 +433,7 @@ void CMyRobotDlg::OnBnClickedButtonJoint1Negative()
 {
 	// TODO:  在此添加控件通知处理程序代码
 	CWaitCursor wc;
-	if (Robot->JointJog(1,-1,1)==-1)  //第1根轴的，运动正1度，运动速率为1
+	if (Robot->JointJog(1,-1,1)==-1)  //第1根轴的，运动负1度，运动速率为1
 		AfxMessageBox(_T("运动超出范围!"), MB_OK);
 	Robot->m_pController->wait_motion_finished(1);  //等待轴运动完成后停止
 	Robot->UpdateJointArray();      //刷新机器人类中的变量
@@ -446,7 +446,7 @@ void CMyRobotDlg::OnBnClickedButtonJoint1Positive()
 {
 	// TODO:  在此添加控件通知处理程序代码
 	CWaitCursor wc;
-	if (Robot->JointJog(1, 1, 1) == -1)  //第1根轴的，运动负1度，运动速率为1
+	if (Robot->JointJog(1, 1, 1) == -1)  //第1根轴的，运动正1度，运动速率为1
 		AfxMessageBox(_T("运动超出范围!"), MB_OK);
 	Robot->m_pController->wait_motion_finished(1);  //等待轴运动完成后停止
 	Robot->UpdateJointArray();      //刷新机器人类中的变量
