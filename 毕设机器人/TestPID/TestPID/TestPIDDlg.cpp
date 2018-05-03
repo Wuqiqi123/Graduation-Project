@@ -50,6 +50,7 @@ END_MESSAGE_MAP()
 
 CTestPIDDlg::CTestPIDDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CTestPIDDlg::IDD, pParent)
+	, m_c_arrayLength(1000)
 	
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -75,6 +76,10 @@ BEGIN_MESSAGE_MAP(CTestPIDDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_SERVO_ON, &CTestPIDDlg::OnBnClickedButtonServoOn)
 	ON_BN_CLICKED(IDC_BUTTON_TEST, &CTestPIDDlg::OnBnClickedButtonTest)
 	ON_BN_CLICKED(IDC_BUTTON_STARTSHOW, &CTestPIDDlg::OnBnClickedButtonStartshow)
+	ON_WM_TIMER()
+	ON_BN_CLICKED(IDC_BUTTON_STOP, &CTestPIDDlg::OnBnClickedButtonStop)
+	ON_BN_CLICKED(IDC_BUTTON_RESTART, &CTestPIDDlg::OnBnClickedButtonRestart)
+	ON_BN_CLICKED(IDC_BUTTON_STEP_RESPONSE, &CTestPIDDlg::OnBnClickedButtonStepResponse)
 END_MESSAGE_MAP()
 
 
@@ -113,9 +118,10 @@ BOOL CTestPIDDlg::OnInitDialog()
 	////////设置坐标轴为数值
 	CChartAxis *pAxis = NULL;
 	pAxis = m_ChartCtrl1.CreateStandardAxis(CChartCtrl::BottomAxis);
-	pAxis->SetAutomatic(true);
+	pAxis->SetAutomatic(true);	
 	pAxis = m_ChartCtrl1.CreateStandardAxis(CChartCtrl::LeftAxis);
 	pAxis->SetAutomatic(true);
+	//pAxis->SetMinMax(0, 10);
 	///////创建标题
 	TChartString str1;
 	str1 = _T("位置数据显示");
@@ -127,7 +133,9 @@ BOOL CTestPIDDlg::OnInitDialog()
 	pLabel = m_ChartCtrl1.GetLeftAxis()->GetLabel();
 	pLabel->SetText(str1);
 
-
+	m_pLineSerie1 = m_ChartCtrl1.CreateLineSerie();
+	m_pLineSerie2 = m_ChartCtrl1.CreateLineSerie();
+	m_pLineSerie3 = m_ChartCtrl1.CreateLineSerie();
 
 	/////////
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
@@ -291,19 +299,134 @@ void CTestPIDDlg::OnBnClickedButtonTest()
 void CTestPIDDlg::OnBnClickedButtonStartshow()
 {
 	// TODO:  在此添加控件通知处理程序代码
-	m_ChartCtrl1.EnableRefresh(false);
-	double x[1000], y[1000];
-	for (int i = 0; i<1000; i++)
+	//m_ChartCtrl1.RemoveAllSeries();//先清空
+	//KillTimer(2);
+	ZeroMemory(&m_HightSpeedChartArray1, sizeof(double)*m_c_arrayLength);
+	m_pLineSerie1->SetSeriesOrdering(poNoOrdering);//设置为无序
+	for (size_t i = 0; i<m_c_arrayLength; ++i)
 	{
-		x[i] = i;
-		y[i] = sin(float(i));
+		m_X[i] = i;   //X轴的参数初始化
 	}
-	CChartLineSerie *pLineSerie1;
-	m_ChartCtrl1.RemoveAllSeries();//先清空
-	pLineSerie1 = m_ChartCtrl1.CreateLineSerie();
-	pLineSerie1->SetSeriesOrdering(poNoOrdering);//设置为无序
-	pLineSerie1->AddPoints(x, y, 1000);
-	pLineSerie1->SetName(_T("这是IDC_ChartCtrl1的第一条线"));//SetName的作用将在后面讲到
+	m_count = m_c_arrayLength;
+	m_pLineSerie1->ClearSerie();  //清空点
+	TChartStringStream strs1;
+	strs1 << _T("这是IDC_ChartCtrl1的第")
+		<< m_ChartCtrl1.GetSeriesCount()
+		<< _T("条曲线");
+	m_pLineSerie1->SetName(strs1.str());//SetName的作用将在后面讲到
+
+	SetTimer(2, 50, NULL);
 }
 
 
+
+///   
+/// \brief 左移数组  
+/// \param ptr 数组指针  
+/// \param data 新数值  
+///  
+void LeftMoveArray(double* ptr, size_t length, double data)
+{
+	for (size_t i = 1; i<length; ++i)
+	{
+		ptr[i - 1] = ptr[i];
+	}
+	ptr[length - 1] = data;
+}
+
+//void CTestPIDDlg::drawMoving()
+//{
+//	m_pLineSerie->ClearSerie();
+//	RandArray(m_HightSpeedChartArray, m_c_arrayLength);
+//	LeftMoveArray(m_X, m_c_arrayLength, m_count);
+//	m_pLineSerie->AddPoints(m_X, m_HightSpeedChartArray, m_c_arrayLength);
+//}
+//
+void CTestPIDDlg::OnTimer(UINT_PTR nIDEvent)
+{
+	// TODO:  在此添加消息处理程序代码和/或调用默认值
+	Robot->UpdateJointArray();
+	if (nIDEvent == 2)
+	{
+		++m_count;
+		m_pLineSerie1->ClearSerie();
+		LeftMoveArray(m_HightSpeedChartArray1, m_c_arrayLength, randf(0, 10));  //Y轴的数组
+		LeftMoveArray(m_X, m_c_arrayLength, m_count);                          //X轴的数组
+		m_pLineSerie1->AddPoints(m_X, m_HightSpeedChartArray1, m_c_arrayLength);
+		CDialogEx::OnTimer(nIDEvent);
+	}
+	if (nIDEvent == 0)
+	{
+		++m_count;
+		m_pLineSerie1->ClearSerie();
+		m_pLineSerie2->ClearSerie();
+		m_pLineSerie3->ClearSerie();
+		LeftMoveArray(m_HightSpeedChartArray1, m_c_arrayLength, 10);  //Y轴的数组
+		LeftMoveArray(m_HightSpeedChartArray2, m_c_arrayLength, Robot->m_JointArray[0].CurrentJointPositon);  //Y轴的数组
+		LeftMoveArray(m_HightSpeedChartArray3, m_c_arrayLength, 10 - Robot->m_JointArray[0].CurrentJointPositon);  //Y轴的数组
+		LeftMoveArray(m_X, m_c_arrayLength, m_count);
+		m_pLineSerie1->AddPoints(m_X, m_HightSpeedChartArray1, m_c_arrayLength);
+		m_pLineSerie2->AddPoints(m_X, m_HightSpeedChartArray2, m_c_arrayLength);
+		m_pLineSerie3->AddPoints(m_X, m_HightSpeedChartArray3, m_c_arrayLength);
+
+	}
+
+}
+
+double CTestPIDDlg::randf(double min, double max)
+{
+	int minInteger = (int)(min * 10000);
+	int maxInteger = (int)(max * 10000);
+	int randInteger = rand()*rand();
+	int diffInteger = maxInteger - minInteger;
+	int resultInteger = randInteger % diffInteger + minInteger;
+	return resultInteger / 10000.0;
+}
+
+void CTestPIDDlg::OnBnClickedButtonStop()
+{
+	// TODO:  在此添加控件通知处理程序代码
+	KillTimer(2);
+	KillTimer(0);
+}
+
+
+void CTestPIDDlg::OnBnClickedButtonRestart()
+{
+	// TODO:  在此添加控件通知处理程序代码
+	//SetTimer(2, 50, NULL); 
+	SetTimer(0, 50, NULL);
+}
+
+
+void CTestPIDDlg::OnBnClickedButtonStepResponse()
+{
+	// TODO:  在此添加控件通知处理程序代码
+	CWaitCursor wc;	
+	ZeroMemory(&m_HightSpeedChartArray1, sizeof(double)*m_c_arrayLength);
+	ZeroMemory(&m_HightSpeedChartArray2, sizeof(double)*m_c_arrayLength);
+	ZeroMemory(&m_HightSpeedChartArray3, sizeof(double)*m_c_arrayLength);
+	m_pLineSerie1->SetSeriesOrdering(poNoOrdering);//设置为无序
+	m_pLineSerie2->SetSeriesOrdering(poNoOrdering);//设置为无序
+	m_pLineSerie3->SetSeriesOrdering(poNoOrdering);//设置为无序
+	for (size_t i = 0; i<m_c_arrayLength; ++i)
+	{
+		m_X[i] = i;   //X轴的参数初始化
+	}
+	m_count = m_c_arrayLength;
+	m_pLineSerie1->ClearSerie();  //清空点  
+	m_pLineSerie2->ClearSerie();  //清空点 
+	m_pLineSerie3->ClearSerie();  //清空点 
+	TChartStringStream strs1,strs2,strs3;
+	strs1 << _T("设定值");
+	m_pLineSerie1->SetName(strs1.str());//SetName的作用将在后面讲到
+	strs2 << _T("采集值");
+	m_pLineSerie2->SetName(strs2.str());
+	strs3 << _T("误差值");
+	m_pLineSerie3->SetName(strs3.str());
+	m_ChartCtrl1.GetLegend()->SetVisible(true);
+	SetTimer(0, 50, NULL);    //开启定时器0，定时周期是50ms
+	if (Robot->JointJog(2, 10, 1) == -1)  //第1根轴的，运动正1度，运动速率为1
+		AfxMessageBox(_T("运动超出范围!"), MB_OK);
+
+}
