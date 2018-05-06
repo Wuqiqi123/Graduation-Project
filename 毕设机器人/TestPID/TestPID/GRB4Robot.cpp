@@ -38,7 +38,7 @@ void CGRB4Robot::InitJoints(void)
 		m_JointArray[i].NormalJointAcc = 1	;      //这个加速度可以直接赋值给板卡 GT_SetAcc  ********@wqq 我自己的应该可以改写，我自己的应该大一点好
 		m_JointArray[i].LastJointPosition = 0.0;
 		m_JointArray[i].LastJointVelocity = 0.0;
-		m_JointArray[i].MaxJointVelocity = 15;     //单位是 deg/s    
+		m_JointArray[i].MaxJointVelocity = 10;     //单位是 deg/s    
 		m_JointArray[i].MaxJointAcceleration = 0.1;  //定义但是没有用到
 	}
 	for (i = 0; i < m_JointNumber; i++)
@@ -167,9 +167,9 @@ short CGRB4Robot::Home()
 	//这些硬编码的数字是试出来的吧
 	//以10Pulse/ST 的速度正转33度，就是说明10~20Pulse/ST 是比较正常的速度
 	m_pController->AxisCaptHomeWithLimit(1, long(/*120*/(33.)*m_JointArray[0].PulsePerMmOrDegree), 10);
-	m_pController->AxisCaptHomeWithLimit(2, long(/*185.*/(103.)*m_JointArray[1].PulsePerMmOrDegree), 15);
-	m_pController->AxisCaptHomeWithLimit(3, long(100.*m_JointArray[2].PulsePerMmOrDegree), 20);
-	m_pController->AxisCaptHomeWithoutLimit(4, 20);	//手爪需要修改来调零
+	m_pController->AxisCaptHomeWithLimit(2, long(/*185.*/(103.)*m_JointArray[1].PulsePerMmOrDegree), 10);
+	m_pController->AxisCaptHomeWithLimit(3, long(60.*m_JointArray[2].PulsePerMmOrDegree), 12);
+	m_pController->AxisCaptHomeWithoutLimit(4, 10);	//手爪需要修改来调零
 
 	return 1;
 }

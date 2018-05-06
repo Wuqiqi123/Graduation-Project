@@ -120,16 +120,16 @@ BOOL CTestPIDDlg::OnInitDialog()
 	pAxis = m_ChartCtrl1.CreateStandardAxis(CChartCtrl::BottomAxis);
 	pAxis->SetAutomatic(true);	
 	pAxis = m_ChartCtrl1.CreateStandardAxis(CChartCtrl::LeftAxis);
-	pAxis->SetAutomatic(true);
-	//pAxis->SetMinMax(0, 10);
+	//pAxis->SetAutomatic(true);
+	pAxis->SetMinMax(-55,55);
 	///////创建标题
 	TChartString str1;
-	str1 = _T("位置数据显示");
+	str1 = _T("数据显示");
 	m_ChartCtrl1.GetTitle()->AddString(str1);
-	str1 = _T("三种位置大小");
+	str1 = _T("计数点数");
 	CChartAxisLabel *pLabel=m_ChartCtrl1.GetBottomAxis()->GetLabel();
 	pLabel->SetText(str1);
-	str1 = _T("时间计数");
+	str1 = _T("位置deg、速度deg/s");
 	pLabel = m_ChartCtrl1.GetLeftAxis()->GetLabel();
 	pLabel->SetText(str1);
 
@@ -262,37 +262,38 @@ void CTestPIDDlg::OnBnClickedButtonTest()
 {
 	// TODO:  在此添加控件通知处理程序代码
 	CWaitCursor wc;
-	short rtn;
-	long pos[4];
-	double vel[4];
-	unsigned short sta[4];
+	//short rtn;
+	//long pos[4];
+	//double vel[4];
+	//unsigned short sta[4];
 
-	for (int i = 1; i <= 4; i++)
-	{
-		GT_Axis(i);///选择第i根轴
-		rtn = GT_GetAtlPos(&pos[i - 1]);   //获取第i根轴的实际位置
-		if (rtn != 0)
-		{
-			AfxMessageBox(_T("调用函数GT_GetAtlPos获取实际位置失败!"), MB_OK);
-		}
-		rtn = GT_GetAtlVel(&vel[i - 1]);    //获取第i根轴的实际速度
-		if (rtn != 0)
-		{
-			AfxMessageBox(_T("调用函数GT_GetAtlVel获取实际速度失败!"), MB_OK);
-		}
-		rtn = GT_GetSts(&sta[i - 1]);        //获取第i根轴的实际状态
-		if (rtn != 0)
-		{
-			AfxMessageBox(_T("调用函数GT_GetSts获取实际状态失败!"), MB_OK);
-		}
-	}
-	AllocConsole();//注意检查返回值
-	_cprintf("pos0=%d\n", pos[0]);
-	_cprintf("pos1=%d\n", pos[1]);
-	_cprintf("pos2=%d\n", pos[2]);
-	_cprintf("pos3=%d\n", pos[3]);
+	//for (int i = 1; i <= 4; i++)
+	//{
+	//	GT_Axis(i);///选择第i根轴
+	//	rtn = GT_GetAtlPos(&pos[i - 1]);   //获取第i根轴的实际位置
+	//	if (rtn != 0)
+	//	{
+	//		AfxMessageBox(_T("调用函数GT_GetAtlPos获取实际位置失败!"), MB_OK);
+	//	}
+	//	rtn = GT_GetAtlVel(&vel[i - 1]);    //获取第i根轴的实际速度
+	//	if (rtn != 0)
+	//	{
+	//		AfxMessageBox(_T("调用函数GT_GetAtlVel获取实际速度失败!"), MB_OK);
+	//	}
+	//	rtn = GT_GetSts(&sta[i - 1]);        //获取第i根轴的实际状态
+	//	if (rtn != 0)
+	//	{
+	//		AfxMessageBox(_T("调用函数GT_GetSts获取实际状态失败!"), MB_OK);
+	//	}
+	//}
+	//AllocConsole();//注意检查返回值
+	//_cprintf("pos0=%d\n", pos[0]);
+	//_cprintf("pos1=%d\n", pos[1]);
+	//_cprintf("pos2=%d\n", pos[2]);
+	//_cprintf("pos3=%d\n", pos[3]);
 	//	TRACE("x   =   %d   and   y   =   %d/n", pos[0], pos[1]);
 	//	FreeConsole();
+	Robot->m_pController->AxisCaptHomeWithoutLimit(4, 10);	//手爪需要修改来调零
 }
 
 
@@ -361,9 +362,9 @@ void CTestPIDDlg::OnTimer(UINT_PTR nIDEvent)
 		m_pLineSerie1->ClearSerie();
 		m_pLineSerie2->ClearSerie();
 		m_pLineSerie3->ClearSerie();
-		LeftMoveArray(m_HightSpeedChartArray1, m_c_arrayLength, 10);  //Y轴的数组
-		LeftMoveArray(m_HightSpeedChartArray2, m_c_arrayLength, Robot->m_JointArray[0].CurrentJointPositon);  //Y轴的数组
-		LeftMoveArray(m_HightSpeedChartArray3, m_c_arrayLength, 10 - Robot->m_JointArray[0].CurrentJointPositon);  //Y轴的数组
+		LeftMoveArray(m_HightSpeedChartArray1, m_c_arrayLength, 100);  //Y轴的数组
+		LeftMoveArray(m_HightSpeedChartArray2, m_c_arrayLength, Robot->m_JointArray[3].CurrentJointPositon);  //Y轴的数组
+		LeftMoveArray(m_HightSpeedChartArray3, m_c_arrayLength, Robot->m_JointArray[3].CurrentJointVelocity);  //Y轴的数组
 		LeftMoveArray(m_X, m_c_arrayLength, m_count);
 		m_pLineSerie1->AddPoints(m_X, m_HightSpeedChartArray1, m_c_arrayLength);
 		m_pLineSerie2->AddPoints(m_X, m_HightSpeedChartArray2, m_c_arrayLength);
@@ -422,11 +423,11 @@ void CTestPIDDlg::OnBnClickedButtonStepResponse()
 	m_pLineSerie1->SetName(strs1.str());//SetName的作用将在后面讲到
 	strs2 << _T("采集值");
 	m_pLineSerie2->SetName(strs2.str());
-	strs3 << _T("误差值");
+	strs3 << _T("速度值");
 	m_pLineSerie3->SetName(strs3.str());
 	m_ChartCtrl1.GetLegend()->SetVisible(true);
 	SetTimer(0, 50, NULL);    //开启定时器0，定时周期是50ms
-	if (Robot->JointJog(2, 10, 1) == -1)  //第1根轴的，运动正1度，运动速率为1
+	if (Robot->JointJog(4, 100, 1) == -1)  //第1根轴的，运动正1度，运动速率为1
 		AfxMessageBox(_T("运动超出范围!"), MB_OK);
 
 }
