@@ -124,27 +124,27 @@ short CGTController::InitCard(void)            //###################注释完成
         //PID参数参数设置，固高官方手册的数值
 		if (i == 1)
 		{
-			GT_SetKp(5);
-			GT_SetKi(2);
-			GT_SetKd(10);
+			GT_SetKp(11);   //5
+			GT_SetKi(2);   //2
+			GT_SetKd(8);  //10
 		}
 		if (i == 2)
 		{
-			GT_SetKp(15);
-			GT_SetKi(5);
-			GT_SetKd(10);
+			GT_SetKp(13);  //15
+			GT_SetKi(5);   //5
+			GT_SetKd(5);  //10
 		}
 		if (i == 3)
 		{
-			GT_SetKp(9);
-			GT_SetKi(3);
-			GT_SetKd(9);
+			GT_SetKp(11);   //9
+			GT_SetKi(2);   //3
+			GT_SetKd(5);   //9
 		}
 		if (i == 4)
 		{
-			GT_SetKp(3);
-			GT_SetKi(0);
-			GT_SetKd(15);
+			GT_SetKp(9);   //3
+			GT_SetKi(0);   //0
+			GT_SetKd(0);  //15
 		}
 
 		//*********还可以设置速度前馈GT_SetKvff(0~32767),加速度前馈GT_SetKaff(0~32767)，静差补偿GT_SetMtrBias(-32768~32768)，
@@ -521,7 +521,7 @@ short CGTController::AxisCaptHomeWithoutLimit(int axisno, double vel)     //####
 	//***********************************这里我觉得需要修改，为什么不直接读原点开关的位置了，或许是原点位置开关安装位置比较偏。
 	GT_SetVel(vel);
 	GT_SetAcc(0.01);
-	GT_SetPos(long((-105. + 1.7415)*10000.*24. / 360.));		//lty  
+	GT_SetPos(long((96)*10000.*24. / 360.));		//lty  
 	//GT_SetPos(long(/*-17.*/(-51.+1.7415)*10000.*24./360.));
 	GT_Update();
 	GT_GetSts(&str);
