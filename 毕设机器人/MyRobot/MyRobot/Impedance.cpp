@@ -7,6 +7,7 @@
 #define T (Tms*0.001)
 ////////////////////////
 int testNUM = 0;
+int timeflag = 0;
 HANDLE hSyncEvent;//同步事件句柄
 bool ImpedenceControllerStopflag; //线程结束标志
 DWORD WINAPI ThreadProc(LPVOID lpParam)
@@ -57,6 +58,8 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 			TRACE("the %d’axis theta is: %.3f\n",i,pImpedence->m_thetaImpedPara[i].Now);
 			TRACE("the %d' axis angelVel is: %.3f\n",i,pImpedence->m_angularVelImpedPara[i].Now);
 		}
+		timeflag++;
+		TRACE("timeflag=%d\n", timeflag);
 		pImpedence->GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile();  //计算下一个时刻的关节的角度和角速度
 
 		////////////处理代码完结
@@ -251,7 +254,15 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 //////////////////现在求下一个时刻的位置
 bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile(void)
 {
+	
 	double Torque[3] = { 10, 10, 10 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
+	if (timeflag == 1500) timeflag = 1000;
+	if (timeflag >= 1000)
+	{
+		Torque[0] = 4;
+		Torque[1] = 0;
+		Torque[2] = 0;
+	}
 	for (int i = 0; i < 3; i++)  //使用向后差分的形式
 	{
 		m_thetaImpedPara[i].Next = 1.0 / (m_B / T + m_K)*Torque[i] + 1.0 / (m_B / T + m_K)*(m_B / T)*m_thetaImpedPara[i].Now;

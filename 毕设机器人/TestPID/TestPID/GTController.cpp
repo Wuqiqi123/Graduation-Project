@@ -136,15 +136,15 @@ short CGTController::InitCard(void)            //###################注释完成
 		}
 		if (i == 3)
 		{
-			GT_SetKp(11);   //9
-			GT_SetKi(2);   //3
-			GT_SetKd(5);   //9
+			GT_SetKp(9);   //9
+			GT_SetKi(3);   //3
+			GT_SetKd(9);   //9
 		}
 		if (i == 4)
 		{
-			GT_SetKp(9);   //3
-			GT_SetKi(0);   //0
-			GT_SetKd(0);  //15
+			GT_SetKp(16);   //3
+			GT_SetKi(4);   //0
+			GT_SetKd(5);  //15
 		}
 
 		//*********还可以设置速度前馈GT_SetKvff(0~32767),加速度前馈GT_SetKaff(0~32767)，静差补偿GT_SetMtrBias(-32768~32768)，
