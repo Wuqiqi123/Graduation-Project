@@ -7,11 +7,15 @@
 #include "TestPIDDlg.h"
 #include "afxdialogex.h"
 #include <conio.h> //使用命令行控制
+#include <mmsystem.h>
+#pragma comment(lib, "winmm.lib")
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
+
+void CALLBACK TimerCallback(UINT TimerID, UINT msg, DWORD dwUser, DWORD dwa, DWORD dwb);  //申明多媒体定时器的回调函数
 
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 
@@ -121,7 +125,7 @@ BOOL CTestPIDDlg::OnInitDialog()
 	pAxis->SetAutomatic(true);	
 	pAxis = m_ChartCtrl1.CreateStandardAxis(CChartCtrl::LeftAxis);
 	//pAxis->SetAutomatic(true);
-	pAxis->SetMinMax(-55,55);
+	pAxis->SetMinMax(-1,55);
 	///////创建标题
 	TChartString str1;
 	str1 = _T("数据显示");
@@ -362,7 +366,7 @@ void CTestPIDDlg::OnTimer(UINT_PTR nIDEvent)
 		m_pLineSerie1->ClearSerie();
 		m_pLineSerie2->ClearSerie();
 		m_pLineSerie3->ClearSerie();
-		LeftMoveArray(m_HightSpeedChartArray1, m_c_arrayLength, 100);  //Y轴的数组
+		LeftMoveArray(m_HightSpeedChartArray1, m_c_arrayLength, 50);  //Y轴的数组
 		LeftMoveArray(m_HightSpeedChartArray2, m_c_arrayLength, Robot->m_JointArray[3].CurrentJointPositon);  //Y轴的数组
 		LeftMoveArray(m_HightSpeedChartArray3, m_c_arrayLength, Robot->m_JointArray[3].CurrentJointVelocity);  //Y轴的数组
 		LeftMoveArray(m_X, m_c_arrayLength, m_count);
@@ -389,6 +393,7 @@ void CTestPIDDlg::OnBnClickedButtonStop()
 	// TODO:  在此添加控件通知处理程序代码
 	KillTimer(2);
 	KillTimer(0);
+	timeKillEvent(TimerID);
 }
 
 
@@ -427,7 +432,14 @@ void CTestPIDDlg::OnBnClickedButtonStepResponse()
 	m_pLineSerie3->SetName(strs3.str());
 	m_ChartCtrl1.GetLegend()->SetVisible(true);
 	SetTimer(0, 50, NULL);    //开启定时器0，定时周期是50ms
-	if (Robot->JointJog(4, 100, 1) == -1)  //第1根轴的，运动正1度，运动速率为1
+//   TimerID=timeSetEvent(50, 1, (LPTIMECALLBACK)TimerCallback, (DWORD)this, TIME_PERIODIC);
+	if (Robot->JointJog(4, 50, 1) == -1)  //第1根轴的，运动正1度，运动速率为1
 		AfxMessageBox(_T("运动超出范围!"), MB_OK);
 
+}
+
+void CALLBACK TimerCallback(UINT TimerID, UINT msg, DWORD dwUser, DWORD dwa, DWORD dwb)
+{
+	CTestPIDDlg* pDlg = (CTestPIDDlg*)dwUser;
+	pDlg->OnTimer(0);
 }
