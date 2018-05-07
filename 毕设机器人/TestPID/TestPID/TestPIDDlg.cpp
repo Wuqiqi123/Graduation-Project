@@ -367,8 +367,8 @@ void CTestPIDDlg::OnTimer(UINT_PTR nIDEvent)
 		m_pLineSerie2->ClearSerie();
 		m_pLineSerie3->ClearSerie();
 		LeftMoveArray(m_HightSpeedChartArray1, m_c_arrayLength, 50);  //Y轴的数组
-		LeftMoveArray(m_HightSpeedChartArray2, m_c_arrayLength, Robot->m_JointArray[3].CurrentJointPositon);  //Y轴的数组
-		LeftMoveArray(m_HightSpeedChartArray3, m_c_arrayLength, Robot->m_JointArray[3].CurrentJointVelocity);  //Y轴的数组
+		LeftMoveArray(m_HightSpeedChartArray2, m_c_arrayLength, Robot->m_JointArray[2].CurrentJointPositon);  //Y轴的数组
+		LeftMoveArray(m_HightSpeedChartArray3, m_c_arrayLength, Robot->m_JointArray[2].CurrentJointVelocity);  //Y轴的数组
 		LeftMoveArray(m_X, m_c_arrayLength, m_count);
 		m_pLineSerie1->AddPoints(m_X, m_HightSpeedChartArray1, m_c_arrayLength);
 		m_pLineSerie2->AddPoints(m_X, m_HightSpeedChartArray2, m_c_arrayLength);
@@ -431,9 +431,9 @@ void CTestPIDDlg::OnBnClickedButtonStepResponse()
 	strs3 << _T("速度值");
 	m_pLineSerie3->SetName(strs3.str());
 	m_ChartCtrl1.GetLegend()->SetVisible(true);
-	SetTimer(0, 50, NULL);    //开启定时器0，定时周期是50ms
-//   TimerID=timeSetEvent(50, 1, (LPTIMECALLBACK)TimerCallback, (DWORD)this, TIME_PERIODIC);
-	if (Robot->JointJog(4, 50, 1) == -1)  //第1根轴的，运动正1度，运动速率为1
+	SetTimer(0, 20, NULL);    //开启定时器0，定时周期是50ms
+    //TimerID=timeSetEvent(50, 1, (LPTIMECALLBACK)TimerCallback, (DWORD)this, TIME_PERIODIC);
+	if (Robot->JointJog(3, 50, 1) == -1)  //第1根轴的，运动正1度，运动速率为1
 		AfxMessageBox(_T("运动超出范围!"), MB_OK);
 
 }

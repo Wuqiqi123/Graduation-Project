@@ -124,17 +124,17 @@ short CGTController::InitCard(void)            //###################注释完成
         //PID参数参数设置，固高官方手册的数值
 		if (i == 1)
 		{
-			GT_SetKp(5);
+			GT_SetKp(11);  
 			GT_SetKi(2);
-			GT_SetKd(10);
+			GT_SetKd(8);
 		}
 		if (i == 2)
 		{
-			GT_SetKp(15);
+			GT_SetKp(13);
 			GT_SetKi(5);
-			GT_SetKd(10);
+			GT_SetKd(5);
 		}
-		if (i == 3)
+		if (i == 3)   //特地修改这几个值，以使得阻抗控制时轴同步
 		{
 			GT_SetKp(9);
 			GT_SetKi(3);
@@ -142,9 +142,9 @@ short CGTController::InitCard(void)            //###################注释完成
 		}
 		if (i == 4)
 		{
-			GT_SetKp(3);
-			GT_SetKi(0);
-			GT_SetKd(15);
+			GT_SetKp(16);
+			GT_SetKi(4);
+			GT_SetKd(5);
 		}
 
 		//*********还可以设置速度前馈GT_SetKvff(0~32767),加速度前馈GT_SetKaff(0~32767)，静差补偿GT_SetMtrBias(-32768~32768)，
@@ -521,7 +521,7 @@ short CGTController::AxisCaptHomeWithoutLimit(int axisno, double vel)     //####
 	//***********************************这里我觉得需要修改，为什么不直接读原点开关的位置了，或许是原点位置开关安装位置比较偏。
 	GT_SetVel(vel);
 	GT_SetAcc(0.01);
-	GT_SetPos(long((-105. + 1.7415)*10000.*24. / 360.));		//lty  
+	GT_SetPos(long((96)*10000.*24. / 360.));		//lty  
 	//GT_SetPos(long(/*-17.*/(-51.+1.7415)*10000.*24./360.));
 	GT_Update();
 	GT_GetSts(&str);
@@ -570,6 +570,10 @@ short CGTController::AxisMoveToWithTProfile(int axisno, long pos, double vel, do
 //实现一系列运动的基础；///实现四根轴以四种速度和加速度运动到目标位置
 short CGTController::MoveToWithTProfile(long pos[4], double vel[4], double acc[4])       //###################注释完成
 {
+	for (int i = 0; i < 4; i++)
+	{
+		if (vel[i]>10) vel[i] = 10;
+	}
 	for (int i = 1; i <= 4; i++) //依次设置四轴状态
 	{
 		GT_Axis(i);
