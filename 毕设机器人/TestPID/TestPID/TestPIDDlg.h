@@ -34,6 +34,7 @@ public:
 //	void LeftMoveArray(double* ptr, size_t length, double data);
 //	void RandArray(double* ptr, size_t length);
 	double randf(double min, double max);
+	UINT TimerID;
 // 对话框数据
 	enum { IDD = IDD_TESTPID_DIALOG };
 
