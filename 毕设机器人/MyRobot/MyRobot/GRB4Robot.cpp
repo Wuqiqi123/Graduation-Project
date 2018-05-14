@@ -45,7 +45,7 @@ void CGRB4Robot::InitJoints(void)
 	{
 		switch(i)    //初始化四根轴的间隙，这里需要修改值
 		{
-			case 0: m_JointGap[i].GapLength = 0;   break;  
+			case 0: m_JointGap[i].GapLength = 4.197;   break;  
 			case 1: m_JointGap[i].GapLength = 0;   break;
 			case 2: m_JointGap[i].GapLength = 0;   break;
 			case 3: m_JointGap[i].GapLength = 0;   break;

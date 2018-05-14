@@ -70,9 +70,9 @@ void CRobotBase::DetachController(void)
 	输出： -1，失败
 		    0，成功
 */
-short CRobotBase::JointDrive(short jointNo, double goalPos, double vel)    //###################注释完成
+short CRobotBase::JointDrive(short jointNo, double goalPos, double vel,double step)    //###################注释完成
 {
-	JointJogGapDeal(jointNo, goalPos);   //先判断间隙的符合条件
+	JointJogGapDeal(jointNo, goalPos, step);   //先判断间隙的符合条件
 	unsigned short flag = 0;
 
 	// 当前位置小于最小限位位置或大于最大限位位置时，报警，超出运动范围；
@@ -95,7 +95,7 @@ short CRobotBase::JointDrive(short jointNo, double goalPos, double vel)    //###
 	return 0;
 }
 
-short CRobotBase::JointJogGapDeal(short axisNo, double goalPos)       //单步运动的轴间隙处理函数
+short CRobotBase::JointJogGapDeal(short axisNo, double& goalPos,const double& step)       //单步运动的轴间隙处理函数
 {
 	if (goalPos < m_JointArray[axisNo - 1].LastJointPosition)    //负向运动
 	{
@@ -120,6 +120,7 @@ short CRobotBase::JointJogGapDeal(short axisNo, double goalPos)       //单步运动
 				m_JointGap[axisNo - 1].GapToPositive = m_JointGap[axisNo - 1].GapLength - m_JointGap[axisNo - 1].GapToNegative;
 				//	m_pController->wait_motion_finished(1);  //等待轴运动完成后停止
 				UpdateJointArray();			//@wqq师弟在这里加的
+				goalPos = m_JointArray[axisNo - 1].CurrentJointPositon + step;
 			}
 		}
 	}
@@ -174,7 +175,7 @@ short CRobotBase::JointJog(short axisNo, double step, double velRatio)       //#
 	//velRatio：当前轴“正常速度”的比率（子运动速度比率），不是绝对数值。“正常速度”的值在板卡初始化时设定后，没有特殊情况一般不于改变，
 	//          用户只需改变速度比率调整速度的大小。速度比率默认值为“1”。
 	//OverallVelocityRate：整个任务的整体运动速度比值；
-	return JointDrive(axisNo, pos1, vel);
+	return JointDrive(axisNo, pos1, vel,step);
 }
 
 /*

@@ -85,7 +85,7 @@ public:
 	/// 
 
 	short JointsTMove(double goalPos[], double vel[]);
-	short JointDrive(short jointNo, double goalPos, double vel);
+	short JointDrive(short jointNo, double goalPos, double vel,double step);
 	short JointJog(short axisNo, double step, double velRatio);
 	short CartesianJog(short CartesianAxis, double step);
 	short JointSynTMove(double goalPos[], double moveTime = 1.);
@@ -97,7 +97,7 @@ public:
 	void  UpdateJointArray();
 	 
 	//
-	short JointJogGapDeal(short axisNo, double goalPos);
+	short JointJogGapDeal(short axisNo, double& goalPos, const double& step);
 
 
 };
