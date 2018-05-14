@@ -22,7 +22,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 	QueryPerformanceFrequency(&litmp);//获得时钟频率  
 	dff = (double)litmp.QuadPart;
 	while (1)
-	{
+	{	
 ////////////////////////////////////////////////调试时间代码开始
 		////获得初始值  
 		//QueryPerformanceCounter(&litmp);
@@ -82,6 +82,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 CImpedance::CImpedance(CRobotBase *Robot)
 {
 	m_Robot = Robot;
+	m_RunningFlag = false;
 	m_M = 0;
 	m_K = 0.5;   //单位是 N/mm
 	m_B = 0.51;
