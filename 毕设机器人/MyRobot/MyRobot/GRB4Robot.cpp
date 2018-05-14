@@ -41,6 +41,9 @@ void CGRB4Robot::InitJoints(void)
 		m_JointArray[i].MaxJointVelocity = 15;     //单位是 deg/s    
 		m_JointArray[i].MaxJointAcceleration = 0.1;  //定义但是没有用到
 	}
+
+	////////////
+	m_isGapCorrespond = true;
 	for (i = 0; i < m_JointNumber; i++)   //由于机器人在回零的时候四根轴的都是正向移动的，所以正向的间隙都是0，而负向的间隙就是GapLength-0=GapLength
 	{
 		switch(i)    //初始化四根轴的间隙，这里需要修改值

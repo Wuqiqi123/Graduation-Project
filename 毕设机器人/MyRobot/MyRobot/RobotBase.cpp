@@ -75,6 +75,10 @@ short CRobotBase::JointDrive(short jointNo, double goalPos, double vel,double st
 	JointJogGapDeal(jointNo, goalPos, step);   //先判断间隙的符合条件
 	unsigned short flag = 0;
 
+	if (!m_isGapCorrespond)
+	{
+		goalPos = goalPos - m_JointGap[jointNo - 1].GapLength;
+	}
 	// 当前位置小于最小限位位置或大于最大限位位置时，报警，超出运动范围；
 	if (goalPos<m_JointArray[jointNo - 1].NegativeJointLimit || goalPos>m_JointArray[jointNo - 1].PositiveJointLimit)
 		return -1;
@@ -107,7 +111,7 @@ short CRobotBase::JointJogGapDeal(short axisNo, double& goalPos,const double& st
 				double vel1, acc;
 
 				//将关节值转化为脉冲值
-				pos = (long)(m_JointArray[axisNo - 1].CurrentJointPositon-m_JointGap[axisNo - 1].GapLength * m_JointArray[axisNo - 1].PulsePerMmOrDegree);  //走过正-->负间隙的距离
+				pos = (long)((m_JointArray[axisNo - 1].CurrentJointPositon-m_JointGap[axisNo - 1].GapLength)* m_JointArray[axisNo - 1].PulsePerMmOrDegree);  //走过正-->负间隙的距离
 				//将速度转为板卡接受的速度,vel是角度每秒，得脉冲每周期   默认程序控制周期是200us,deg/s = 
 				vel1 = m_JointArray[axisNo - 1].NormalJointVelocity;
 				//加速度直接传过去，单位一直是Pulse/ST^2
@@ -118,9 +122,7 @@ short CRobotBase::JointJogGapDeal(short axisNo, double& goalPos,const double& st
 				m_isGapCorrespond = false;
 				m_JointGap[axisNo - 1].GapToNegative = 0;
 				m_JointGap[axisNo - 1].GapToPositive = m_JointGap[axisNo - 1].GapLength - m_JointGap[axisNo - 1].GapToNegative;
-				//	m_pController->wait_motion_finished(1);  //等待轴运动完成后停止
 				UpdateJointArray();			//@wqq师弟在这里加的
-				goalPos = m_JointArray[axisNo - 1].CurrentJointPositon + step;
 			}
 		}
 	}
@@ -134,7 +136,7 @@ short CRobotBase::JointJogGapDeal(short axisNo, double& goalPos,const double& st
 				double vel1, acc;
 
 				//将关节值转化为脉冲值
-				pos = (long)(m_JointArray[axisNo - 1].CurrentJointPositon + m_JointGap[axisNo - 1].GapLength * m_JointArray[axisNo - 1].PulsePerMmOrDegree);  //走过负-->正转折点处
+				pos = (long)((m_JointArray[axisNo - 1].CurrentJointPositon + m_JointGap[axisNo - 1].GapLength)* m_JointArray[axisNo - 1].PulsePerMmOrDegree);  //走过负-->正转折点处
 				//将速度转为板卡接受的速度,vel是角度每秒，得脉冲每周期   默认程序控制周期是200us,deg/s = 
 				vel1 = m_JointArray[axisNo - 1].NormalJointVelocity;
 				//加速度直接传过去，单位一直是Pulse/ST^2
@@ -145,7 +147,6 @@ short CRobotBase::JointJogGapDeal(short axisNo, double& goalPos,const double& st
 				m_isGapCorrespond = true;
 				m_JointGap[axisNo - 1].GapToPositive = 0;
 				m_JointGap[axisNo - 1].GapToNegative = m_JointGap[axisNo - 1].GapLength - m_JointGap[axisNo - 1].GapToPositive;
-				//	m_pController->wait_motion_finished(1);  //等待轴运动完成后停止
 				UpdateJointArray();			//@wqq师弟在这里加的
 			}
 		}
@@ -399,7 +400,7 @@ void CRobotBase::UpdateJointArray()
 			m_pController->GetAxisPositionAndVelocityAndState(pos, vel, status);
 			for (int i = 0; i<m_JointNumber; i++)
 			{
-				m_JointArray[i].CurrentJointPositon = (double)pos[i] / m_JointArray[i].PulsePerMmOrDegree-m_JointGap[i].GapLength;  //减去间隙的长度
+				m_JointArray[i].CurrentJointPositon = (double)pos[i] / m_JointArray[i].PulsePerMmOrDegree+m_JointGap[i].GapLength;  //减去间隙的长度
 				m_JointArray[i].JointStatus = status[i];
 				m_JointArray[i].CurrentJointVelocity = (double)vel[i] / (m_JointArray[i].PulsePerMmOrDegree * 0.0002);
 			}
