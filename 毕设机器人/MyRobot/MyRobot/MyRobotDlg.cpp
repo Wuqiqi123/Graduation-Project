@@ -320,7 +320,7 @@ void CMyRobotDlg::OnBnClickedButtonImpedance()
 	if (m_ImpedanceButtonflag == false)   //如果还没有打开阻抗控制的按钮，那么这个按钮就是打开的意思
 	{
 		ImpedanceController->StartImpedanceController();
-		ImpedenceControllerStopflag == false;
+		ImpedenceControllerStopflag = false;
 		m_ImpedanceButton.SetWindowText(_T("阻抗控制关闭"));
 		m_ImpedanceButtonflag = true;
 	}
@@ -419,7 +419,13 @@ void CMyRobotDlg::OnToolDataShow()    //直角坐标系中的状态显示
 void CMyRobotDlg::OnTimer(UINT_PTR nIDEvent)
 {
 	// TODO:  在此添加消息处理程序代码和/或调用默认值
-	if (m_servoflag)
+	if (m_servoflag&&ImpedenceControllerStopflag==true)   //如果阻抗控制器不在工作，那么执行刷新函数
+	{
+		Robot->UpdateJointArray();
+		OnJointsDataShow();
+		OnToolDataShow();
+	}
+	if (m_servoflag&&ImpedenceControllerStopflag==false)   //如果阻抗正在工作，那么不用执行刷新函数
 	{
 		OnJointsDataShow();
 		OnToolDataShow();
@@ -449,7 +455,7 @@ void CMyRobotDlg::OnBnClickedButtonJoint1Positive()
 	if (Robot->JointJog(1, 1, 1) == -1)  //第1根轴的，运动正1度，运动速率为1
 		AfxMessageBox(_T("运动超出范围!"), MB_OK);
 	Robot->m_pController->wait_motion_finished(1);  //等待轴运动完成后停止
-	Robot->UpdateJointArray();      //刷新机器人类中的变量
+	Robot->UpdateJointArray();      //刷新机器人类中的变量，由于加入间隙处理函数，所以所有的运动函数必须在结束完成之后刷新
 	OnJointsDataShow();
 	OnToolDataShow();
 }

@@ -4,10 +4,10 @@
 CGRB4Robot::CGRB4Robot()
 {
 	InitJoints();
-//	UpdateJointArray();			//刷新当前正解位置//@wqq 师弟加的
+	//	UpdateJointArray();			//刷新当前正解位置//@wqq 师弟加的
 	m_OutportState = 0xffff;    //输出端口全部置1
 	//初始化工具数组,标准4自由度机械手GRB2014有一个电磁手抓，使用bit1
-	for (int i = 0; i<16; i++)
+	for (int i = 0; i < 16; i++)
 	{
 		m_toolArray[i].toolIndex = i;
 		m_toolArray[i].IsOpen = false;
@@ -23,31 +23,37 @@ CGRB4Robot::~CGRB4Robot()
 
 /*
 	初始化各个关节的参数,主要是初始化各个轴的减速比，
-*/
+	*/
 void CGRB4Robot::InitJoints(void)
 {
 	m_JointNumber = 4;  //在这里赋值了基类的关节个数
 	m_JointArray = new t_Joint[m_JointNumber];  //在这里创建了基类的各个关节的具体变量
-	m_JointGap = new t_JointGap[m_JointNumber];
+	m_JointGap = new t_JointGap[m_JointNumber];  //在这里创建了机器人四根轴的运动间隙
 	int i = 0;
-	for (i = 0; i<m_JointNumber; i++)
+	for (i = 0; i < m_JointNumber; i++)
 	{
 		m_JointArray[i].JointNo = i + 1;  //  轴号  分别为 1,2,3,4
 		m_JointArray[i].LastJointPosition = 0.0;
-		m_JointArray[i].CurrentJointPositon = 0.0;   //设置当前的位置我0
-		m_JointArray[i].NormalJointAcc = 1	;      //这个加速度可以直接赋值给板卡 GT_SetAcc  ********@wqq 我自己的应该可以改写，我自己的应该大一点好
+		m_JointArray[i].CurrentJointPositon = 0.0;   //设置当前的位置为0
+		m_JointArray[i].NormalJointAcc = 1;      //这个加速度可以直接赋值给板卡 GT_SetAcc  ********@wqq 我自己的应该可以改写，我自己的应该大一点好
 		m_JointArray[i].LastJointPosition = 0.0;
 		m_JointArray[i].LastJointVelocity = 0.0;
 		m_JointArray[i].MaxJointVelocity = 15;     //单位是 deg/s    
 		m_JointArray[i].MaxJointAcceleration = 0.1;  //定义但是没有用到
 	}
-	for (i = 0; i < m_JointNumber; i++)
+	for (i = 0; i < m_JointNumber; i++)   //由于机器人在回零的时候四根轴的都是正向移动的，所以正向的间隙都是0，而负向的间隙就是GapLength-0=GapLength
 	{
-		m_JointGap[i].GapLength = 0;
-		m_JointGap[i].GapToPositive = 0;
-		m_JointGap[i].GapToNegative = m_JointGap[i].GapLength - m_JointGap[i].GapToPositive;
+		switch(i)    //初始化四根轴的间隙，这里需要修改值
+		{
+			case 0: m_JointGap[i].GapLength = 0;   break;  
+			case 1: m_JointGap[i].GapLength = 0;   break;
+			case 2: m_JointGap[i].GapLength = 0;   break;
+			case 3: m_JointGap[i].GapLength = 0;   break;
+		}
+	//不在这里幅值了，在下面的Home函数里面给GapToPositive，和GapToNegative赋值
+	//	m_JointGap[i].GapToPositive = 0;
+	//	m_JointGap[i].GapToNegative = m_JointGap[i].GapLength - m_JointGap[i].GapToPositive;
 	}
-
 	ForwardKinematics();
 	for (int i = 0; i<3; i++)
 		for (int j = 0; j<4; j++)
@@ -171,6 +177,13 @@ short CGRB4Robot::Home()
 	m_pController->AxisCaptHomeWithLimit(3, long(100.*m_JointArray[2].PulsePerMmOrDegree), 12);
 	m_pController->AxisCaptHomeWithoutLimit(4, 10);	//手爪需要修改来调零
 
+	//由于是原点归零是正向移动，所以正向移动的时候正向间隙时0，负向间隙时是GapLength-GapToPositive=GapLength
+	for (int i = 0; i < m_JointNumber; i++)   //由于机器人在回零的时候四根轴的都是正向移动的，所以正向的间隙都是0，而负向的间隙就是GapLength-0=GapLength
+	{
+			m_JointGap[i].GapToPositive = 0;
+			m_JointGap[i].GapToNegative = m_JointGap[i].GapLength - m_JointGap[i].GapToPositive;
+	}
+	m_isGapCorrespond = true;  //板卡的脉冲与机器人的关节是对应的
 	return 1;
 }
 
@@ -335,3 +348,4 @@ bool CGRB4Robot::FullInverseKinematics(void)
 {
 	return true;
 }
+

@@ -72,6 +72,7 @@ void CRobotBase::DetachController(void)
 */
 short CRobotBase::JointDrive(short jointNo, double goalPos, double vel)    //###################注释完成
 {
+	JointJogGapDeal(jointNo, goalPos);   //先判断间隙的符合条件
 	unsigned short flag = 0;
 
 	// 当前位置小于最小限位位置或大于最大限位位置时，报警，超出运动范围；
@@ -89,18 +90,78 @@ short CRobotBase::JointDrive(short jointNo, double goalPos, double vel)    //###
 	acc = m_JointArray[jointNo - 1].NormalJointAcc;
 	if (m_pController->AxisMoveToWithTProfile(jointNo, pos, vel1, acc) != 0)  //单轴梯形运动模式
 		return -1;
-	//	UpdateJointArray();			//@wqq师弟在这里加的
+//	m_pController->wait_motion_finished(1);  //等待轴运动完成后停止
+		UpdateJointArray();			//@wqq师弟在这里加的
 	return 0;
 }
 
+short CRobotBase::JointJogGapDeal(short axisNo, double goalPos)       //单步运动的轴间隙处理函数
+{
+	if (goalPos < m_JointArray[axisNo - 1].LastJointPosition)    //负向运动
+	{
+		if (m_JointGap[axisNo - 1].GapToNegative != 0)
+		{
+			if (m_isGapCorrespond == true)   //在正-->负转折点处
+			{
+				long pos;
+				double vel1, acc;
+
+				//将关节值转化为脉冲值
+				pos = (long)(m_JointArray[axisNo - 1].CurrentJointPositon-m_JointGap[axisNo - 1].GapLength * m_JointArray[axisNo - 1].PulsePerMmOrDegree);  //走过正-->负间隙的距离
+				//将速度转为板卡接受的速度,vel是角度每秒，得脉冲每周期   默认程序控制周期是200us,deg/s = 
+				vel1 = m_JointArray[axisNo - 1].NormalJointVelocity;
+				//加速度直接传过去，单位一直是Pulse/ST^2
+				acc = m_JointArray[axisNo - 1].NormalJointAcc;
+				if (m_pController->AxisMoveToWithTProfile(axisNo, pos, vel1, acc) != 0)  //单轴梯形运动模式
+					return -1;
+				m_pController->wait_motion_finished(axisNo);  //等待轴运动完成后停止
+				m_isGapCorrespond = false;
+				m_JointGap[axisNo - 1].GapToNegative = 0;
+				m_JointGap[axisNo - 1].GapToPositive = m_JointGap[axisNo - 1].GapLength - m_JointGap[axisNo - 1].GapToNegative;
+				//	m_pController->wait_motion_finished(1);  //等待轴运动完成后停止
+				UpdateJointArray();			//@wqq师弟在这里加的
+			}
+		}
+	}
+	if (goalPos > m_JointArray[axisNo - 1].LastJointPosition)   //正向运动
+	{
+		if (m_JointGap[axisNo - 1].GapToPositive != 0)
+		{ 
+			if (m_isGapCorrespond == false)     //在负-->正转折点处
+			{
+				long pos;
+				double vel1, acc;
+
+				//将关节值转化为脉冲值
+				pos = (long)(m_JointArray[axisNo - 1].CurrentJointPositon + m_JointGap[axisNo - 1].GapLength * m_JointArray[axisNo - 1].PulsePerMmOrDegree);  //走过负-->正转折点处
+				//将速度转为板卡接受的速度,vel是角度每秒，得脉冲每周期   默认程序控制周期是200us,deg/s = 
+				vel1 = m_JointArray[axisNo - 1].NormalJointVelocity;
+				//加速度直接传过去，单位一直是Pulse/ST^2
+				acc = m_JointArray[axisNo - 1].NormalJointAcc;
+				if (m_pController->AxisMoveToWithTProfile(axisNo, pos, vel1, acc) != 0)  //单轴梯形运动模式
+					return -1;
+				m_pController->wait_motion_finished(axisNo);  //等待轴运动完成后停止
+				m_isGapCorrespond = true;
+				m_JointGap[axisNo - 1].GapToPositive = 0;
+				m_JointGap[axisNo - 1].GapToNegative = m_JointGap[axisNo - 1].GapLength - m_JointGap[axisNo - 1].GapToPositive;
+				//	m_pController->wait_motion_finished(1);  //等待轴运动完成后停止
+				UpdateJointArray();			//@wqq师弟在这里加的
+			}
+		}
+	}
+	return 0;
+
+}
+
 /*
-	关节的单步运动，梯形模式
+	关节的单步运动，梯形模式，在上层函数中被每个关节的单步运动调用
 	输入：	axisNo：  关节号
 			step :  步长  （步长是deg或者是mm)
 			velRatio：  速度倍率   
 */
 short CRobotBase::JointJog(short axisNo, double step, double velRatio)       //###################注释完成
 {
+
 	double pos1, vel;
 
 	pos1 = m_JointArray[axisNo - 1].CurrentJointPositon + step;
@@ -293,29 +354,58 @@ void CRobotBase::UpdateJointArray()
 	long pos[4];					//脉冲量
 	double vel[4];
 	unsigned short status[4];
-
-	for (int i = 0; i < m_JointNumber; i++)   //把这一次的位置赋值上一次的位置(关节空间)
+	if (m_isGapCorrespond)
 	{
-		m_JointArray[i].LastJointPosition = m_JointArray[i].CurrentJointPositon;
-		m_JointArray[i].LastJointVelocity = m_JointArray[i].CurrentJointVelocity;
-	}
-	for (int i = 0; i<3; i++)         //把这一次的位置赋值上一次的位置(直角坐标空间） 
-		for (int j = 0; j<4; j++)
-			m_HandLastTn[i][j] = m_HandCurrTn[i][j];
-
-
-	if (m_pController != NULL&&m_pController->m_ServoIsOn)
-	{
-		//m_pController->UpdateAxisArray();
-		m_pController->GetAxisPositionAndVelocityAndState(pos,vel,status);
-		for (int i = 0; i<m_JointNumber; i++)
+		for (int i = 0; i < m_JointNumber; i++)   //把这一次的位置赋值上一次的位置(关节空间)
 		{
-			m_JointArray[i].CurrentJointPositon = (double)pos[i] / m_JointArray[i].PulsePerMmOrDegree;
-			m_JointArray[i].JointStatus = status[i];
-			m_JointArray[i].CurrentJointVelocity = (double)vel[i] / (m_JointArray[i].PulsePerMmOrDegree * 0.0002);
+			m_JointArray[i].LastJointPosition = m_JointArray[i].CurrentJointPositon;
+			m_JointArray[i].LastJointVelocity = m_JointArray[i].CurrentJointVelocity;
 		}
-		//末端位置运动学正解存放在m_HandCurrTn[3][4]; 
-		ForwardKinematics();
+		for (int i = 0; i<3; i++)         //把这一次的位置赋值上一次的位置(直角坐标空间） 
+			for (int j = 0; j<4; j++)
+				m_HandLastTn[i][j] = m_HandCurrTn[i][j];
+
+
+		if (m_pController != NULL&&m_pController->m_ServoIsOn)
+		{
+			//m_pController->UpdateAxisArray();
+			m_pController->GetAxisPositionAndVelocityAndState(pos,vel,status);
+			for (int i = 0; i<m_JointNumber; i++)
+			{
+				m_JointArray[i].CurrentJointPositon = (double)pos[i] / m_JointArray[i].PulsePerMmOrDegree;
+				m_JointArray[i].JointStatus = status[i];
+				m_JointArray[i].CurrentJointVelocity = (double)vel[i] / (m_JointArray[i].PulsePerMmOrDegree * 0.0002);
+			}
+			//末端位置运动学正解存放在m_HandCurrTn[3][4]; 
+			ForwardKinematics();
+		}
 	}
+	else
+	{
+		for (int i = 0; i < m_JointNumber; i++)   //把这一次的位置赋值上一次的位置(关节空间)
+		{
+			m_JointArray[i].LastJointPosition = m_JointArray[i].CurrentJointPositon;
+			m_JointArray[i].LastJointVelocity = m_JointArray[i].CurrentJointVelocity;
+		}
+		for (int i = 0; i<3; i++)         //把这一次的位置赋值上一次的位置(直角坐标空间） 
+			for (int j = 0; j<4; j++)
+				m_HandLastTn[i][j] = m_HandCurrTn[i][j];
+
+
+		if (m_pController != NULL&&m_pController->m_ServoIsOn)
+		{
+			//m_pController->UpdateAxisArray();
+			m_pController->GetAxisPositionAndVelocityAndState(pos, vel, status);
+			for (int i = 0; i<m_JointNumber; i++)
+			{
+				m_JointArray[i].CurrentJointPositon = (double)pos[i] / m_JointArray[i].PulsePerMmOrDegree-m_JointGap[i].GapLength;  //减去间隙的长度
+				m_JointArray[i].JointStatus = status[i];
+				m_JointArray[i].CurrentJointVelocity = (double)vel[i] / (m_JointArray[i].PulsePerMmOrDegree * 0.0002);
+			}
+			//末端位置运动学正解存放在m_HandCurrTn[3][4]; 
+			ForwardKinematics();
+		}
+	}
+
 //	Sleep(5);
 }

@@ -60,7 +60,8 @@ public:
 
 	t_Joint *m_JointArray;	  		//关节数组，存放关节参数  对于SCARA机器人来说一共有四个关节
 	int 	 m_JointNumber; 		//关节个数
-	t_JointGap *m_JointGap;
+	t_JointGap *m_JointGap;        //定义关节的间隙
+	bool m_isGapCorrespond;     //true则对应，否则不对应
 	
 public:
 	CRobotBase();
@@ -94,7 +95,9 @@ public:
 	bool  ExecuteToolOperation(int toolIndex, int toolOperation);
 	void  ExecuteDelayOperation(int ms);
 	void  UpdateJointArray();
-
+	 
+	//
+	short JointJogGapDeal(short axisNo, double goalPos);
 
 
 };
