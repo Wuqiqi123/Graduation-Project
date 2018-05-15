@@ -13,7 +13,7 @@ class CImpedance : public CObject
 {
 public:
 	HANDLE m_hControlThread;
-	bool m_RunningFlag;
+	bool m_RunningFlag;   //正在运行阻抗控制标志位
 	CRobotBase *m_Robot;    //机器人对象
 	double m_M, m_K, m_B;
 	ImpedancePara m_FImpedPara, m_xImpedPara[3], m_vImpedPara[3];   //该结构体里面储存了做阻抗控制时，需要用到的参数，力参数，笛卡尔坐标空间的位置和力；
@@ -26,6 +26,7 @@ public:
 	virtual ~CImpedance();
 public:
 	bool StartImpedanceController();  //开始阻抗控制器，将机器人控制类传递给阻抗控制器
+	bool StopImpedanceController();   //关闭阻抗控制器，主要是解决间隙的问题，保证在停止的时候，保证间隙GaptoPositive=0;
     bool GetCurrentState(void);
 	bool GetNextStateUsingJointSpaceImpendence(void);
 	bool GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void);

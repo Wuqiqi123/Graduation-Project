@@ -7,9 +7,11 @@
 #define T (Tms*0.001)
 ////////////////////////
 int testNUM = 0;
-int timeflag = 0;
+int timenum = 0;
+bool UpOrDown = 0;  //0为up,1为down
 HANDLE hSyncEvent;//同步事件句柄
 bool ImpedenceControllerStopflag; //线程结束标志
+//阻抗控制从Home点开始运动，在Home点的时候，GaptoPositive=0;
 DWORD WINAPI ThreadProc(LPVOID lpParam)
 {
 	CImpedance *pImpedence = (CImpedance *)lpParam;  //获取该指针
@@ -47,20 +49,43 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 //		_cprintf("One cycle time:t1-t1last=%.3f\n", dft*1000);
 		TRACE("One cycle time:t1-t1last=%.3f\n", dft * 1000);
 ///////////////////////////////////////////////调试时间代码结束
+
 		if (ImpedenceControllerStopflag)
 		{
 			break;
 		}
-		///////////在这里我需要处理的代码
-		pImpedence->GetCurrentState();//获取当前的时刻的关节空间的速度，位置和直角坐标空间的位置，速度
-		for (int i = 0; i < 4; i++)
+//////////////////**********力的三角生成器开始
+		if (UpOrDown == 0)    //在上升沿
 		{
-			TRACE("the %d’axis theta is: %.3f\n",i,pImpedence->m_thetaImpedPara[i].Now);
-			TRACE("the %d' axis angelVel is: %.3f\n",i,pImpedence->m_angularVelImpedPara[i].Now);
+			timenum++;
+			if (timenum == 1000)
+			{
+				UpOrDown = 1;   //最高点，变成下降沿
+			}
 		}
-		timeflag++;
-		TRACE("timeflag=%d\n", timeflag);
-		pImpedence->GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile();  //计算下一个时刻的关节的角度和角速度并执行
+		else     //否则在下降沿
+		{
+			timenum--;
+			if (timenum == 0)
+			{
+				UpOrDown = 0;   //最低点，变成上升沿
+			}
+		}
+////////////////***********力的三角形生成器结束
+		///////////在这里我需要处理的代码		
+		if (!(pImpedence->m_Robot->m_isOnGap))
+		{
+			pImpedence->GetCurrentState();//获取当前的时刻的关节空间的速度，位置和直角坐标空间的位置，速度
+			for (int i = 0; i < 4; i++)
+			{
+				TRACE("the %d’axis theta is: %.3f\n",i,pImpedence->m_thetaImpedPara[i].Now);
+				TRACE("the %d' axis angelVel is: %.3f\n",i,pImpedence->m_angularVelImpedPara[i].Now);
+			}
+
+			TRACE("timeflag=%d\n", timenum);
+			pImpedence->GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile();  //计算下一个时刻的关节的角度和角速度并执行
+		}
+
 
 		////////////处理代码完结
 ////////////////////////////////////////////调试时间代码开始
@@ -144,9 +169,9 @@ bool CImpedance::StartImpedanceController()
 	}
 
 	//仅仅是做测试用，真正在用的时候需要直接采集力的信息
-	m_FImpedPara.Last = 10;   //力是1N  ，单位是N
-	m_FImpedPara.Now = 10;   
-	m_FImpedPara.Next = 10;
+	m_FImpedPara.Last = 0;   //力是1N  ，单位是N
+	m_FImpedPara.Now = 0;   
+	m_FImpedPara.Next = 0;
 
 /////////////////直角坐标系的信息
 	m_xImpedPara[0].Last = m_Robot->m_HandCurrTn[0][3];   //沿X轴线的位移
@@ -186,6 +211,38 @@ bool CImpedance::StartImpedanceController()
 	return true;
 }
 
+//关闭阻抗控制器，主要是解决间隙的问题，保证在停止的时候，保证间隙GaptoPositive=0;
+bool CImpedance::StopImpedanceController()
+{
+	ImpedenceControllerStopflag = true;
+	this->m_Robot->m_pController->wait_motion_finished(0);
+	if (this->m_Robot->m_JointGap[0].GapToPositive != 0)
+	{
+		if (this->m_Robot->m_isGapCorrespond == false)     //在负-->正转折点处
+		{
+			this->m_Robot->m_isOnGap = true;   //开始进过间隙了，所以在上层阻抗控制中暂时什么都不做
+			long pos;
+			double vel1, acc;
+
+			//将关节值转化为脉冲值
+			pos = (long)((this->m_Robot->m_JointArray[0].CurrentJointWithoutGapPosition + this->m_Robot->m_JointGap[0].GapLength)* this->m_Robot->m_JointArray[0].PulsePerMmOrDegree);  //走过负-->正转折点处
+			//将速度转为板卡接受的速度,vel是角度每秒，得脉冲每周期   默认程序控制周期是200us,deg/s = 
+			vel1 = this->m_Robot->m_JointArray[0].NormalJointVelocity;
+			//加速度直接传过去，单位一直是Pulse/ST^2
+			acc = this->m_Robot->m_JointArray[0].NormalJointAcc;
+			if (this->m_Robot->m_pController->AxisMoveToWithTProfile(1, pos, vel1, acc) != 0)  //单轴梯形运动模式
+				return -1;
+			this->m_Robot->m_pController->wait_motion_finished(1);  //等待轴运动完成后停止
+			this->m_Robot->m_isGapCorrespond = true;     //现在匹配上了
+			this->m_Robot->m_JointGap[0].GapToPositive = 0;
+			this->m_Robot->m_JointGap[0].GapToNegative = this->m_Robot->m_JointGap[0].GapLength - this->m_Robot->m_JointGap[0].GapToPositive;
+			this->m_Robot->UpdateJointArray();			//@wqq师弟在这里加的
+			this->m_Robot->m_isOnGap = false;   //完成间隙，这时候可以在阻抗控制中继续任务
+			TRACE("pass the negetive to positive!\n");
+		}
+	}
+}
+
 bool CImpedance::GetCurrentState(void)
 {
 	m_Robot->UpdateJointArray(); //刷新各个关节的值
@@ -202,9 +259,9 @@ bool CImpedance::GetCurrentState(void)
 	}
 
 	//仅仅是做测试用，真正在用的时候需要直接采集力的信息
-	m_FImpedPara.Last = 10;   //力是1N  ，单位是N
-	m_FImpedPara.Now = 10;
-	m_FImpedPara.Next = 10;
+	//m_FImpedPara.Last = 10;   //力是1N  ，单位是N
+	//m_FImpedPara.Now = 10;
+	//m_FImpedPara.Next = 10;
 
 	/////////////////直角坐标系的信息
 	m_xImpedPara[0].Last = m_Robot->m_HandCurrTn[0][3];   //沿X轴线的位移
@@ -256,19 +313,18 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile(void)
 {
 	
-	double Torque[3] = { 10, 10, 10 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
-	if (timeflag == 1500) timeflag = 1000;
-	if (timeflag >= 1000)
-	{
-		Torque[0] = 4;
-		Torque[1] = 0;
-		Torque[2] = 0;
-	}
+	double Torque[3] = { 0, 0, 0 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
+
+
+		Torque[0] = timenum / 100.0;
+		Torque[1] = timenum / 100.0;
+		Torque[2] = timenum / 100.0;
+
 	for (int i = 0; i < 3; i++)  //使用向后差分的形式
 	{
 		m_thetaImpedPara[i].Next = 1.0 / (m_B / T + m_K)*Torque[i] + 1.0 / (m_B / T + m_K)*(m_B / T)*m_thetaImpedPara[i].Now;
 	}
-	//for (int i = 0; i < 3; i++)   //直接是用微分方程
+	//for (int i = 0; i < 3; i++)   //直接使用微分方程
 	//{
 	//	m_thetaImpedPara[i].Next = 1.0 / (m_B / T + m_K)*Torque[i] + 1.0 / (m_B / T + m_K)*(m_B / T)*m_thetaImpedPara[i].Now;
 	//}

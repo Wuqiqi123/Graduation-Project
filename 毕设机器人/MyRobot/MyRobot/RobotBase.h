@@ -63,6 +63,7 @@ public:
 	int 	 m_JointNumber; 		//关节个数
 	t_JointGap *m_JointGap;        //定义关节的间隙
 	bool m_isGapCorrespond;     //true则对应，否则不对应
+	bool m_isOnGap;     //判断是不是在阻抗控制的时候  
 	
 public:
 	CRobotBase();
