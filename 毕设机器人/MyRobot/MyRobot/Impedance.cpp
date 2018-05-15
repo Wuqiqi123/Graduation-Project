@@ -60,7 +60,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 		}
 		timeflag++;
 		TRACE("timeflag=%d\n", timeflag);
-		pImpedence->GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile();  //计算下一个时刻的关节的角度和角速度
+		pImpedence->GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile();  //计算下一个时刻的关节的角度和角速度并执行
 
 		////////////处理代码完结
 ////////////////////////////////////////////调试时间代码开始
@@ -252,7 +252,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 	return true;
 }
 
-//////////////////现在求下一个时刻的位置
+//////////////////现在求下一个时刻的位置并到达那个位置：不用速度的规划
 bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile(void)
 {
 	
