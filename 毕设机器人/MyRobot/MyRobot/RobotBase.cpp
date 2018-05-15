@@ -94,14 +94,15 @@ short CRobotBase::JointDrive(short jointNo, double goalPos, double vel,double st
 	acc = m_JointArray[jointNo - 1].NormalJointAcc;
 	if (m_pController->AxisMoveToWithTProfile(jointNo, pos, vel1, acc) != 0)  //单轴梯形运动模式
 		return -1;
-//	m_pController->wait_motion_finished(1);  //等待轴运动完成后停止
+	m_pController->wait_motion_finished(jointNo);  //等待轴运动完成后停止
 		UpdateJointArray();			//@wqq师弟在这里加的
+	TRACE("1.CurrentJointPositon=%.3f\n", m_JointArray[0].CurrentJointPositon);
 	return 0;
 }
 
 short CRobotBase::JointJogGapDeal(short axisNo, double& goalPos,const double& step)       //单步运动的轴间隙处理函数
 {
-	if (goalPos < m_JointArray[axisNo - 1].LastJointPosition)    //负向运动
+	if (goalPos < m_JointArray[axisNo - 1].CurrentJointPositon)    //负向运动
 	{
 		if (m_JointGap[axisNo - 1].GapToNegative != 0)
 		{
@@ -123,10 +124,11 @@ short CRobotBase::JointJogGapDeal(short axisNo, double& goalPos,const double& st
 				m_JointGap[axisNo - 1].GapToNegative = 0;
 				m_JointGap[axisNo - 1].GapToPositive = m_JointGap[axisNo - 1].GapLength - m_JointGap[axisNo - 1].GapToNegative;
 				UpdateJointArray();			//@wqq师弟在这里加的
+				TRACE("pass the positive to negetive!\n");
 			}
 		}
 	}
-	if (goalPos > m_JointArray[axisNo - 1].LastJointPosition)   //正向运动
+	if (goalPos > m_JointArray[axisNo - 1].CurrentJointPositon)   //正向运动
 	{
 		if (m_JointGap[axisNo - 1].GapToPositive != 0)
 		{ 
@@ -136,7 +138,7 @@ short CRobotBase::JointJogGapDeal(short axisNo, double& goalPos,const double& st
 				double vel1, acc;
 
 				//将关节值转化为脉冲值
-				pos = (long)((m_JointArray[axisNo - 1].CurrentJointPositon + m_JointGap[axisNo - 1].GapLength)* m_JointArray[axisNo - 1].PulsePerMmOrDegree);  //走过负-->正转折点处
+				pos = (long)((m_JointArray[axisNo - 1].CurrentJointWithoutGapPosition + m_JointGap[axisNo - 1].GapLength)* m_JointArray[axisNo - 1].PulsePerMmOrDegree);  //走过负-->正转折点处
 				//将速度转为板卡接受的速度,vel是角度每秒，得脉冲每周期   默认程序控制周期是200us,deg/s = 
 				vel1 = m_JointArray[axisNo - 1].NormalJointVelocity;
 				//加速度直接传过去，单位一直是Pulse/ST^2
@@ -148,9 +150,12 @@ short CRobotBase::JointJogGapDeal(short axisNo, double& goalPos,const double& st
 				m_JointGap[axisNo - 1].GapToPositive = 0;
 				m_JointGap[axisNo - 1].GapToNegative = m_JointGap[axisNo - 1].GapLength - m_JointGap[axisNo - 1].GapToPositive;
 				UpdateJointArray();			//@wqq师弟在这里加的
+				TRACE("pass the negetive to positive!\n");
 			}
 		}
 	}
+	TRACE("m_isGapCorrespond=%d\n", (int)m_isGapCorrespond);
+	TRACE("1.CurrentJointPositon=%.3f\n", m_JointArray[axisNo - 1].CurrentJointPositon);
 	return 0;
 
 }
@@ -374,6 +379,7 @@ void CRobotBase::UpdateJointArray()
 			m_pController->GetAxisPositionAndVelocityAndState(pos,vel,status);
 			for (int i = 0; i<m_JointNumber; i++)
 			{
+				m_JointArray[i].CurrentJointWithoutGapPosition = (double)pos[i] / m_JointArray[i].PulsePerMmOrDegree;
 				m_JointArray[i].CurrentJointPositon = (double)pos[i] / m_JointArray[i].PulsePerMmOrDegree;
 				m_JointArray[i].JointStatus = status[i];
 				m_JointArray[i].CurrentJointVelocity = (double)vel[i] / (m_JointArray[i].PulsePerMmOrDegree * 0.0002);
@@ -400,7 +406,8 @@ void CRobotBase::UpdateJointArray()
 			m_pController->GetAxisPositionAndVelocityAndState(pos, vel, status);
 			for (int i = 0; i<m_JointNumber; i++)
 			{
-				m_JointArray[i].CurrentJointPositon = (double)pos[i] / m_JointArray[i].PulsePerMmOrDegree+m_JointGap[i].GapLength;  //减去间隙的长度
+				m_JointArray[i].CurrentJointWithoutGapPosition = (double)pos[i] / m_JointArray[i].PulsePerMmOrDegree;
+				m_JointArray[i].CurrentJointPositon = (double)pos[i] / m_JointArray[i].PulsePerMmOrDegree+m_JointGap[i].GapLength;  //间隙的长度
 				m_JointArray[i].JointStatus = status[i];
 				m_JointArray[i].CurrentJointVelocity = (double)vel[i] / (m_JointArray[i].PulsePerMmOrDegree * 0.0002);
 			}

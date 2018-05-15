@@ -10,6 +10,7 @@ struct t_Joint
 	int 	 JointNo;				//关节编号
 	int 	 JointType; 		    //0：移动关节；1：旋转关节
 	double	 CurrentJointPositon; 	//关节当前位置
+	double   CurrentJointWithoutGapPosition;
 	double   CurrentJointVelocity;
 	double	 LastJointPosition;  	//关节上一次位置
 	double   LastJointVelocity;    //关节上一次的速度
