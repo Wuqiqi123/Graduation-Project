@@ -246,6 +246,9 @@ void CMyRobotDlg::OnBnClickedButtonHome()   //寻找零点并回到零点
 	//这是我用工控机修改的
 	CWaitCursor wc;
 	Robot->Home();
+	Robot->UpdateJointArray();      //刷新机器人类中的变量
+	OnJointsDataShow();
+	OnToolDataShow();
 	for (int i = 0; i<Robot->m_JointNumber; i++)
 		Robot->m_JointArray[i].LastJointPosition = 0;
 
@@ -327,6 +330,7 @@ void CMyRobotDlg::OnBnClickedButtonImpedance()
 	else
 	{                                                                                                                                                                                                                                                                                                                                                                                                                  
 		ImpedenceControllerStopflag = true;
+		ImpedanceController->StopImpedanceController();
 		m_ImpedanceButton.SetWindowText(_T("阻抗控制开启"));
 		m_ImpedanceButtonflag = false;
 	}

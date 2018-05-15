@@ -11,7 +11,7 @@ CRobotBase::CRobotBase()
 	m_NormalCartesianVelocity = 100;   //固高估计这里用的是20000,感觉不对 *********@wqq 改写为100mm/s  ？？？？？
 	m_MacroSamplePeriod = 0.01;  //采样周期是0.01s,规划器传来的任意相邻两点移动时间是0.01s
 	//	UpdateJointArray();		// 这个是师弟编写的刷新函数
-
+	m_isOnGap = false;  //给上层的阻抗控制器调用
 }
 
 
@@ -214,9 +214,72 @@ short CRobotBase::JointsTMove(double goalPos[], double goalVel[])
 	double acc[4];
 	long pos[4];
 	double vel[4];
+///////////***********************间隙补偿算法开始	
+	if (goalPos[0] < m_JointArray[0].CurrentJointPositon)   //目前只考虑第一根轴的间隙，如果后面再加其他轴的间隙需要修改 
+	{
+		if (m_JointGap[0].GapToNegative != 0)
+		{
+			if (m_isGapCorrespond == true)   //在正-->负转折点处
+			{
+				m_isOnGap = true;   //开始进过间隙了，所以在上层阻抗控制中暂时什么都不做
+				long pos;
+				double vel1, acc;
+
+				//将关节值转化为脉冲值
+				pos = (long)((m_JointArray[0].CurrentJointPositon - m_JointGap[0].GapLength)* m_JointArray[0].PulsePerMmOrDegree);  //走过正-->负间隙的距离
+				//将速度转为板卡接受的速度,vel是角度每秒，得脉冲每周期   默认程序控制周期是200us,deg/s = 
+				vel1 = m_JointArray[0].NormalJointVelocity;
+				//加速度直接传过去，单位一直是Pulse/ST^2
+				acc = m_JointArray[0].NormalJointAcc;
+				if (m_pController->AxisMoveToWithTProfile(1, pos, vel1, acc) != 0)  //单轴梯形运动模式
+					return -1;
+				m_pController->wait_motion_finished(1);  //等待轴运动完成后停止
+				m_isGapCorrespond = false;
+				m_JointGap[0].GapToNegative = 0;
+				m_JointGap[0].GapToPositive = m_JointGap[0].GapLength - m_JointGap[0].GapToNegative;
+				UpdateJointArray();			//@wqq师弟在这里加的
+				m_isOnGap = false;   //完成间隙，这时候可以在阻抗控制中继续任务
+				TRACE("pass the positive to negetive!\n");
+			}
+		}
+	}
+	if (goalPos[0] > m_JointArray[0].CurrentJointPositon)   //正向运动
+	{
+		if (m_JointGap[0].GapToPositive != 0)
+		{
+			if (m_isGapCorrespond == false)     //在负-->正转折点处
+			{
+				m_isOnGap = true;   //开始进过间隙了，所以在上层阻抗控制中暂时什么都不做
+				long pos;
+				double vel1, acc;
+
+				//将关节值转化为脉冲值
+				pos = (long)((m_JointArray[0].CurrentJointWithoutGapPosition + m_JointGap[0].GapLength)* m_JointArray[0].PulsePerMmOrDegree);  //走过负-->正转折点处
+				//将速度转为板卡接受的速度,vel是角度每秒，得脉冲每周期   默认程序控制周期是200us,deg/s = 
+				vel1 = m_JointArray[0].NormalJointVelocity;
+				//加速度直接传过去，单位一直是Pulse/ST^2
+				acc = m_JointArray[0].NormalJointAcc;
+				if (m_pController->AxisMoveToWithTProfile(1, pos, vel1, acc) != 0)  //单轴梯形运动模式
+					return -1;
+				m_pController->wait_motion_finished(1);  //等待轴运动完成后停止
+				m_isGapCorrespond = true;
+				m_JointGap[0].GapToPositive = 0;
+				m_JointGap[0].GapToNegative = m_JointGap[0].GapLength - m_JointGap[0].GapToPositive;
+				UpdateJointArray();			//@wqq师弟在这里加的
+				m_isOnGap = false;   //完成间隙，这时候可以在阻抗控制中继续任务
+				TRACE("pass the negetive to positive!\n");
+			}
+		}
+	}
+	if (!m_isGapCorrespond)
+	{
+		goalPos[0] = goalPos[0] - m_JointGap[0].GapLength;
+	}
+
+
+///////***********************间隙补偿算法结束
 
 	int i;
-
 	for (i = 0; i<m_JointNumber; i++)
 	{
 		pos[i] = (long)(goalPos[i] * m_JointArray[i].PulsePerMmOrDegree);
@@ -238,7 +301,7 @@ short CRobotBase::JointSynTMove(double goalPos[], double moveTime)
 {
 	//检查目标关节值是否在机器人工作空间内
 	//......
-	if (moveTime<0.001) return -1;
+//	if (moveTime<0.001) return -1;
 	double vel[4];
 	int i;
 	for (i = 0; i<m_JointNumber; i++)
