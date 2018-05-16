@@ -7,6 +7,7 @@
 #include "GRB4Robot.h"
 #include "Impedance.h"
 #include "afxwin.h"
+#include "afxcmn.h"
 
 // CMyRobotDlg ¶Ô»°¿ò
 class CMyRobotDlg : public CDialogEx
@@ -62,4 +63,13 @@ public:
 	afx_msg void OnBnClickedButtonJoint4Positive();
 	afx_msg void OnBnClickedButtonJoint4Negative();
 	afx_msg void OnBnClickedButtonGohome();
+	CIPAddressCtrl m_ServerIPAddr;
+	CEdit m_ServerPort;
+	afx_msg void OnBnClickedButtonConnectserver();
+
+	void CMyRobotDlg::update(CString s)
+	{
+		m_TCPMessage.AddString(s);
+	}
+	CListBox m_TCPMessage;
 };
