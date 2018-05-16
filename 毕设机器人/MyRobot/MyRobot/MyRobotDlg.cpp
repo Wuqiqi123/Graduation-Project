@@ -70,6 +70,9 @@ void CMyRobotDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_OPENCONTROLLER, m_opendevice);
 	DDX_Control(pDX, IDC_SERVO_ON, m_servo);
 	DDX_Control(pDX, IDC_BUTTON_IMPEDANCE, m_ImpedanceButton);
+	DDX_Control(pDX, IDC_SERVER_IPADDRESS1, m_ServerIPAddr);
+	DDX_Control(pDX, IDC_EDIT1_PORT, m_ServerPort);
+	DDX_Control(pDX, IDC_LIST1, m_TCPMessage);
 }
 
 BEGIN_MESSAGE_MAP(CMyRobotDlg, CDialogEx)
@@ -92,6 +95,7 @@ ON_BN_CLICKED(IDC_BUTTON_JOINT3_POSITIVE, &CMyRobotDlg::OnBnClickedButtonJoint3P
 ON_BN_CLICKED(IDC_BUTTON_JOINT4_POSITIVE, &CMyRobotDlg::OnBnClickedButtonJoint4Positive)
 ON_BN_CLICKED(IDC_BUTTON_JOINT4_NEGATIVE, &CMyRobotDlg::OnBnClickedButtonJoint4Negative)
 ON_BN_CLICKED(IDC_BUTTON_GOHOME, &CMyRobotDlg::OnBnClickedButtonGohome)
+ON_BN_CLICKED(IDC_BUTTON_CONNECTSERVER, &CMyRobotDlg::OnBnClickedButtonConnectserver)
 END_MESSAGE_MAP()
 
   
@@ -545,3 +549,23 @@ void CMyRobotDlg::OnBnClickedButtonJoint4Negative()
 
 
 
+
+
+void CMyRobotDlg::OnBnClickedButtonConnectserver()
+{
+	// TODO:  在此添加控件通知处理程序代码
+	DWORD dwAddress;
+	UpdateData(TRUE);   //从编辑框获取数据到关联变量
+	m_ServerIPAddr.GetAddress(dwAddress);
+	TCHAR port[10] = { 0 };
+	m_ServerPort.GetWindowTextW(port, 10);
+	WSADATA wsaData;
+	int err = WSAStartup(MAKEWORD(2, 2), &wsaData);   //加载套接字库2.0版本
+	if (err != 0)
+	{
+		update(_T("加载套接字库2.0失败"));
+	}
+
+
+
+}
