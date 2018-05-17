@@ -13,7 +13,7 @@
 #endif
 
 
-
+void CString2Char(CString str, char ch[]);//此函数就是字符转换函数的实现代码，函数原型说明
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 
 class CAboutDlg : public CDialogEx
@@ -132,6 +132,19 @@ BOOL CMyRobotDlg::OnInitDialog()
 
 	// TODO:  在此添加额外的初始化代码
 	SetTimer(1, 100, NULL);  //设置定时器，定时周期为100ms
+
+	//*************TCP/IP的地址，设置初始化的TCP/IP地址
+	CString  strIP = _T("192.168.56.1");  //设置默认地址
+	DWORD dwAddress;
+	char ch_ip[20];
+	CString2Char(strIP, ch_ip);//注意！这里调用了字符格式转换函数，此函数功能：CString类型转换为Char类型，实现代码在后面添加
+	dwAddress = inet_addr(ch_ip);
+	unsigned  char  *pIP = (unsigned  char*)&dwAddress;
+	m_ServerIPAddr.SetAddress(*pIP, *(pIP + 1), *(pIP + 2), *(pIP + 3));
+	this->SetDlgItemText(IDC_EDIT1_PORT, _T("8888"));
+
+
+
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -550,22 +563,69 @@ void CMyRobotDlg::OnBnClickedButtonJoint4Negative()
 
 
 
+void CString2Char(CString str, char ch[])//此函数就是字符转换函数的实现代码
+{
+	int i;
+	char *tmpch;
+	int wLen = WideCharToMultiByte(CP_ACP, 0, str, -1, NULL, 0, NULL, NULL);//得到Char的长度
+	tmpch = new char[wLen + 1];                                             //分配变量的地址大小
+	WideCharToMultiByte(CP_ACP, 0, str, -1, tmpch, wLen, NULL, NULL);       //将CString转换成char*
 
+
+	for (i = 0; tmpch[i] != '\0'; i++) ch[i] = tmpch[i];
+	ch[i] = '\0';
+}
+
+
+SOCKET sockClient; //全局变量，客户端的套接字
 void CMyRobotDlg::OnBnClickedButtonConnectserver()
 {
 	// TODO:  在此添加控件通知处理程序代码
-	DWORD dwAddress;
-	UpdateData(TRUE);   //从编辑框获取数据到关联变量
-	m_ServerIPAddr.GetAddress(dwAddress);
-	TCHAR port[10] = { 0 };
-	m_ServerPort.GetWindowTextW(port, 10);
+	//加载套接字库2.0
 	WSADATA wsaData;
 	int err = WSAStartup(MAKEWORD(2, 2), &wsaData);   //加载套接字库2.0版本
 	if (err != 0)
 	{
 		update(_T("加载套接字库2.0失败"));
 	}
-
-
+	///IP号的获取
+	unsigned char *pIP;
+	CString strIP;
+	DWORD dwIP;
+	m_ServerIPAddr.GetAddress(dwIP);
+	pIP = (unsigned char*)&dwIP;
+	strIP.Format(_T("%u.%u.%u.%u"), *(pIP + 3), *(pIP + 2), *(pIP + 1), *pIP);
+	update(_T("服务器IP地址为：") + strIP);
+	//////端口号的获取
+	UpdateData(TRUE);   //从编辑框获取数据到关联变量
+	int ServerPort;
+	ServerPort = GetDlgItemInt(IDC_EDIT1_PORT);
+	CString a;
+	a.Format(_T("%d"), ServerPort);
+	update(_T("服务器端口号为：") + a);
+	///////////////////////
+	//--------创建套接字---------------
+	sockClient = socket(AF_INET, SOCK_STREAM, 0);
+	//--------向服务器发出连接请求------
+	//设置要连接的服务器的信息
+	SOCKADDR_IN addrSrv;
+	char ch_ip[20];
+	CString2Char(strIP, ch_ip);//注意！这里调用了字符格式转换函数，此函数功能：CString类型转换为Char类型，实现代码在后面添加
+	addrSrv.sin_addr.S_un.S_addr = inet_addr(ch_ip);//案例服务器和客户端都在本地，固可以使用本地回路地址127.0.0.1
+	addrSrv.sin_family = AF_INET;
+	addrSrv.sin_port = htons(ServerPort);
+	if (connect(sockClient, (SOCKADDR*)&addrSrv, sizeof(SOCKADDR)) == INVALID_SOCKET)   //这个connect函数是非阻塞模式
+	{
+		update(_T("连接服务器失败"));
+	}
+	else
+	{
+		update(_T("连接服务器成功"));
+	}
+	//测试用
+	//char buff[5] = { '1', '2', '3', '4', '5' };
+	//send(sockClient, buff, sizeof(buff), 0);
+	char buff[1024] = "123456789";
+	send(sockClient, buff, sizeof(buff), 0);
 
 }

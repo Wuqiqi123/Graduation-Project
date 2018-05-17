@@ -313,7 +313,8 @@ UINT server_thd(LPVOID p)//线程要调用的函数
 	{
 		dlg->update(_T("绑定错误"));
 	}
-	listen(listen_sock, 1);     //开始监听,这里使用的是阻塞模式
+
+    listen(listen_sock, 1);     //开始监听,这里使用的是阻塞模式
 	if ((sock = accept(listen_sock, (struct sockaddr *)&client_addr, &iaddrSize)) == INVALID_SOCKET)//接收套接字
 	{
 		dlg->update(_T("accept 失败"));
@@ -326,7 +327,7 @@ UINT server_thd(LPVOID p)//线程要调用的函数
 	}
 	////////////接收数据
 	while (1)
-	{
+	{		
 		if ((res = recv(sock, msg, 1024, 0)) == -1)    //这个rev函数也是阻塞模式
 		{
 			dlg->update(_T("失去客户端的连接"));
@@ -334,10 +335,12 @@ UINT server_thd(LPVOID p)//线程要调用的函数
 		}
 		else
 		{
-			msg[res] = '\0';
+		//	msg[res] = '\0';
 			dlg->update(_T("client:") + CString(msg));
 		}
+
 	}
+	WSACleanup();
 	return 0;
 }
 
