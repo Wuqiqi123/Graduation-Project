@@ -12,7 +12,7 @@
 #define new DEBUG_NEW
 #endif
 
-
+SOCKET sockClient; //全局变量，客户端的套接字
 void CString2Char(CString str, char ch[]);//此函数就是字符转换函数的实现代码，函数原型说明
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 
@@ -132,6 +132,7 @@ BOOL CMyRobotDlg::OnInitDialog()
 
 	// TODO:  在此添加额外的初始化代码
 	SetTimer(1, 100, NULL);  //设置定时器，定时周期为100ms
+	SetTimer(2, 100, NULL);  //设置定时器，定时周期为100ms
 
 	//*************TCP/IP的地址，设置初始化的TCP/IP地址
 	CString  strIP = _T("192.168.56.1");  //设置默认地址
@@ -440,17 +441,33 @@ void CMyRobotDlg::OnToolDataShow()    //直角坐标系中的状态显示
 void CMyRobotDlg::OnTimer(UINT_PTR nIDEvent)
 {
 	// TODO:  在此添加消息处理程序代码和/或调用默认值
-	if (m_servoflag&&ImpedenceControllerStopflag==true)   //如果阻抗控制器不在工作，那么执行刷新函数
+	if (nIDEvent == 1)
 	{
-		Robot->UpdateJointArray();
-		OnJointsDataShow();
-		OnToolDataShow();
+		if (m_servoflag&&ImpedenceControllerStopflag==true)   //如果阻抗控制器不在工作，那么执行刷新函数
+		{
+			Robot->UpdateJointArray();
+			OnJointsDataShow();
+			OnToolDataShow();
+		}
+		if (m_servoflag&&ImpedenceControllerStopflag==false)   //如果阻抗正在工作，那么不用执行刷新函数
+		{
+			OnJointsDataShow();
+			OnToolDataShow();
+		}
 	}
-	if (m_servoflag&&ImpedenceControllerStopflag==false)   //如果阻抗正在工作，那么不用执行刷新函数
+	if (nIDEvent == 2)   //测试用的发送函数
 	{
-		OnJointsDataShow();
-		OnToolDataShow();
+		//测试用
+		RobotData MyRobotData;
+		memset(&MyRobotData, 0, sizeof(MyRobotData));
+		MyRobotData.JointsNow[0] = 5;
+		MyRobotData.JointsNow[1] = 10;
+		char buff[sizeof(MyRobotData)];
+		memset(buff, 0, sizeof(MyRobotData));
+		memcpy(buff, &MyRobotData, sizeof(MyRobotData));
+		send(sockClient, buff, sizeof(buff), 0);
 	}
+
 	CDialogEx::OnTimer(nIDEvent);
 }
 
@@ -577,7 +594,7 @@ void CString2Char(CString str, char ch[])//此函数就是字符转换函数的实现代码
 }
 
 
-SOCKET sockClient; //全局变量，客户端的套接字
+
 void CMyRobotDlg::OnBnClickedButtonConnectserver()
 {
 	// TODO:  在此添加控件通知处理程序代码
@@ -623,9 +640,12 @@ void CMyRobotDlg::OnBnClickedButtonConnectserver()
 		update(_T("连接服务器成功"));
 	}
 	//测试用
-	//char buff[5] = { '1', '2', '3', '4', '5' };
+	//RobotData MyRobotData;
+	//memset(&MyRobotData, 0, sizeof(MyRobotData));
+	//char buff[sizeof(MyRobotData)];
+	//memset(buff, 0, sizeof(MyRobotData));
+	//memcpy(buff, &MyRobotData, sizeof(MyRobotData));
 	//send(sockClient, buff, sizeof(buff), 0);
-	char buff[1024] = "123456789";
-	send(sockClient, buff, sizeof(buff), 0);
+
 
 }
