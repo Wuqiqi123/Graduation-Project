@@ -132,7 +132,7 @@ BOOL CMyRobotDlg::OnInitDialog()
 
 	// TODO:  在此添加额外的初始化代码
 	SetTimer(1, 100, NULL);  //设置定时器，定时周期为100ms
-	SetTimer(2, 100, NULL);  //设置定时器，定时周期为100ms
+	//SetTimer(2, 100, NULL);  //设置定时器，定时周期为100ms,测试TCP/IP数据用
 
 	//*************TCP/IP的地址，设置初始化的TCP/IP地址
 	CString  strIP = _T("192.168.56.1");  //设置默认地址
@@ -458,14 +458,14 @@ void CMyRobotDlg::OnTimer(UINT_PTR nIDEvent)
 	if (nIDEvent == 2)   //测试用的发送函数
 	{
 		//测试用
-		RobotData MyRobotData;
-		memset(&MyRobotData, 0, sizeof(MyRobotData));
-		MyRobotData.JointsNow[0] = 5;
-		MyRobotData.JointsNow[1] = 10;
-		char buff[sizeof(MyRobotData)];
-		memset(buff, 0, sizeof(MyRobotData));
-		memcpy(buff, &MyRobotData, sizeof(MyRobotData));
-		send(sockClient, buff, sizeof(buff), 0);
+		//RobotData MyRobotData;
+		//memset(&MyRobotData, 0, sizeof(MyRobotData));
+		//MyRobotData.JointsNow[0] = 5;
+		//MyRobotData.JointsNow[1] = 10;
+		//char buff[sizeof(MyRobotData)];
+		//memset(buff, 0, sizeof(MyRobotData));
+		//memcpy(buff, &MyRobotData, sizeof(MyRobotData));
+		//send(sockClient, buff, sizeof(buff), 0);
 	}
 
 	CDialogEx::OnTimer(nIDEvent);

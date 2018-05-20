@@ -2,6 +2,21 @@
 #include "Impedance.h"
 #include <conio.h> //使用命令行控制
 ///////////////////////////////////////////////////////////
+struct RobotData
+{
+	double JointsNow[4];
+	double JointsNext[4];
+	double JointsVelNow[4];
+	double JointsVelNext[4];
+	double Origin6axisForce[6];
+	double JointsTorque[4];
+	double CartesianPositionNow[4];
+	double CartesianPositionNext[4];
+	double CartesianVelNow[4];
+	double CartesianVelNext[4];
+};
+
+extern SOCKET sockClient; //全局变量，客户端的套接字
 //////定义定时周期
 #define Tms (10)   
 #define T (Tms*0.001)
@@ -15,6 +30,7 @@ bool ImpedenceControllerStopflag; //线程结束标志
 DWORD WINAPI ThreadProc(LPVOID lpParam)
 {
 	CImpedance *pImpedence = (CImpedance *)lpParam;  //获取该指针
+	RobotData MyRobotData;
 	ResetEvent(hSyncEvent);  //确保事件处于无信号状态
 //	AllocConsole();//注意检查返回值   谨慎使用命令台，因为这个在函数中使用这个非常的消耗时间，两条显示语句大概11ms
 	LARGE_INTEGER litmp;
@@ -84,6 +100,16 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 
 			TRACE("timeflag=%d\n", timenum);
 			pImpedence->GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile();  //计算下一个时刻的关节的角度和角速度并执行
+			
+			////下面是TCP/IP传输
+			memset(&MyRobotData, 0, sizeof(MyRobotData));
+			MyRobotData.JointsNow[0] = pImpedence->m_thetaImpedPara[0].Now;
+			MyRobotData.JointsVelNow[0] = pImpedence->m_angularVelImpedPara[0].Now;
+			MyRobotData.JointsTorque[0] = timenum / 20.0;
+			char buff[sizeof(MyRobotData)];
+			memset(buff, 0, sizeof(MyRobotData));
+			memcpy(buff, &MyRobotData, sizeof(MyRobotData));
+			send(sockClient, buff, sizeof(buff), 0);
 		}
 
 
