@@ -9,19 +9,7 @@
 #include "afxwin.h"
 #include "afxcmn.h"
 
-struct RobotData
-{
-	double JointsNow[4];
-	double JointsNext[4];
-	double JointsVelNow[4];
-	double JointsVelNext[4];
-	double Origin6axisForce[6];
-	double JointsTorque[4];
-	double CartesianPositionNow[4];
-	double CartesianPositionNext[4];
-	double CartesianVelNow[4];
-	double CartesianVelNext[4];
-};
+
 // CMyRobotDlg ¶Ô»°¿ò
 class CMyRobotDlg : public CDialogEx
 {
