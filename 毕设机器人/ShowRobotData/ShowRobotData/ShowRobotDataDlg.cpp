@@ -186,7 +186,7 @@ BOOL CShowRobotDataDlg::OnInitDialog()
 		m_pLineSerie4[i] = m_ChartCtrl4.CreateLineSerie();
 	}
 	/////////////////////////////////////////////////
-	SetTimer(1, 100, NULL);  //设置定时器，定时周期为100ms
+	SetTimer(1, 150, NULL);  //设置定时器，定时周期为100ms
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -662,15 +662,39 @@ void CShowRobotDataDlg::OnTimer(UINT_PTR nIDEvent)
 	m_pLineSerie1[0]->ClearSerie();
 	m_pLineSerie1[1]->ClearSerie();
 	m_pLineSerie1[2]->ClearSerie();
+	m_pLineSerie2[0]->ClearSerie();
+	m_pLineSerie2[1]->ClearSerie();
+	m_pLineSerie2[2]->ClearSerie();
+	m_pLineSerie3[0]->ClearSerie();
+	m_pLineSerie3[1]->ClearSerie();
+	m_pLineSerie3[2]->ClearSerie();
 
 	LeftMoveArrayWithQueue(m_HightSpeedChartArray1[0], m_c_arrayLength, DealQueueData, DataSize,11);  //角度值
 	LeftMoveArrayWithQueue(m_HightSpeedChartArray1[1], m_c_arrayLength, DealQueueData, DataSize,12);  //速度值
 	LeftMoveArrayWithQueue(m_HightSpeedChartArray1[2], m_c_arrayLength, DealQueueData, DataSize,13);  //力矩
+
+	LeftMoveArrayWithQueue(m_HightSpeedChartArray2[0], m_c_arrayLength, DealQueueData, DataSize, 21);  //角度值
+	LeftMoveArrayWithQueue(m_HightSpeedChartArray2[1], m_c_arrayLength, DealQueueData, DataSize, 22);  //速度值
+	LeftMoveArrayWithQueue(m_HightSpeedChartArray2[2], m_c_arrayLength, DealQueueData, DataSize, 23);  //力矩
+
+	LeftMoveArrayWithQueue(m_HightSpeedChartArray3[0], m_c_arrayLength, DealQueueData, DataSize, 31);  //角度值
+	LeftMoveArrayWithQueue(m_HightSpeedChartArray3[1], m_c_arrayLength, DealQueueData, DataSize, 32);  //速度值
+	LeftMoveArrayWithQueue(m_HightSpeedChartArray3[2], m_c_arrayLength, DealQueueData, DataSize, 33);  //力矩
 
 	LeftMoveArrayXWithQueue(m_X, m_c_arrayLength, m_count, DataSize);
 
 	m_pLineSerie1[0]->AddPoints(m_X, m_HightSpeedChartArray1[0], m_c_arrayLength);
 	m_pLineSerie1[1]->AddPoints(m_X, m_HightSpeedChartArray1[1], m_c_arrayLength);
 	m_pLineSerie1[2]->AddPoints(m_X, m_HightSpeedChartArray1[2], m_c_arrayLength);
+
+	m_pLineSerie2[0]->AddPoints(m_X, m_HightSpeedChartArray2[0], m_c_arrayLength);
+	m_pLineSerie2[1]->AddPoints(m_X, m_HightSpeedChartArray2[1], m_c_arrayLength);
+	m_pLineSerie2[2]->AddPoints(m_X, m_HightSpeedChartArray2[2], m_c_arrayLength);
+
+	m_pLineSerie3[0]->AddPoints(m_X, m_HightSpeedChartArray3[0], m_c_arrayLength);
+	m_pLineSerie3[1]->AddPoints(m_X, m_HightSpeedChartArray3[1], m_c_arrayLength);
+	m_pLineSerie3[2]->AddPoints(m_X, m_HightSpeedChartArray3[2], m_c_arrayLength);
+
+
 	CDialogEx::OnTimer(nIDEvent);
 }
