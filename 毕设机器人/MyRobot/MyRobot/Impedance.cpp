@@ -106,6 +106,14 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 			MyRobotData.JointsNow[0] = pImpedence->m_thetaImpedPara[0].Now;
 			MyRobotData.JointsVelNow[0] = pImpedence->m_angularVelImpedPara[0].Now;
 			MyRobotData.JointsTorque[0] = timenum / 20.0;
+
+			MyRobotData.JointsNow[1] = pImpedence->m_thetaImpedPara[1].Now;
+			MyRobotData.JointsVelNow[1] = pImpedence->m_angularVelImpedPara[1].Now;
+			MyRobotData.JointsTorque[1] = timenum / 20.0;
+
+			MyRobotData.JointsNow[2] = pImpedence->m_thetaImpedPara[2].Now;
+			MyRobotData.JointsVelNow[2] = pImpedence->m_angularVelImpedPara[2].Now;
+			MyRobotData.JointsTorque[2] = timenum / 20.0;
 			char buff[sizeof(MyRobotData)];
 			memset(buff, 0, sizeof(MyRobotData));
 			memcpy(buff, &MyRobotData, sizeof(MyRobotData));
