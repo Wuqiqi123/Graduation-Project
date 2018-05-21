@@ -61,11 +61,11 @@ public:
 	CChartLineSerie* m_pLineSerie3[3];
 	CChartLineSerie* m_pLineSerie4[3];
 
-	double m_HightSpeedChartArray1[3][2096];  //Y轴参数
-	double m_HightSpeedChartArray2[3][2096];
-	double m_HightSpeedChartArray3[3][2096];
-	double m_HightSpeedChartArray4[3][2096];
-	double m_X[2096];   //X轴参数
+	double m_HightSpeedChartArray1[3][1024];  //Y轴参数
+	double m_HightSpeedChartArray2[3][1024];
+	double m_HightSpeedChartArray3[3][1024];
+	double m_HightSpeedChartArray4[3][1024];
+	double m_X[1024];   //X轴参数
 	unsigned int m_count;
 	const size_t m_c_arrayLength=500;
 	afx_msg void OnBnClickedStartserver();
@@ -85,6 +85,7 @@ public:
 	CEdit m_TCPPort;
 	CIPAddressCtrl m_TCPIPaddr;
 	void DrawData(RobotData myrobotdata);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };
 
 

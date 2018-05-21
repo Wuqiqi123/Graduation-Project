@@ -6,7 +6,7 @@
 #include "ShowRobotData.h"
 #include "ShowRobotDataDlg.h"
 #include "afxdialogex.h"
-
+#include <queue>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -32,6 +32,8 @@ public:
 // 实现
 protected:
 	DECLARE_MESSAGE_MAP()
+public:
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };
 
 CAboutDlg::CAboutDlg() : CDialogEx(CAboutDlg::IDD)
@@ -77,6 +79,7 @@ BEGIN_MESSAGE_MAP(CShowRobotDataDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_STARTSERVER, &CShowRobotDataDlg::OnBnClickedStartserver)
 	ON_LBN_SELCHANGE(IDC_LIST1_SHOWMESSAGE, &CShowRobotDataDlg::OnLbnSelchangeList1Showmessage)
 	ON_MESSAGE(UM_DRAWROBOTDATA, &CShowRobotDataDlg::OnDrawRobotData)
+	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 
@@ -183,7 +186,7 @@ BOOL CShowRobotDataDlg::OnInitDialog()
 		m_pLineSerie4[i] = m_ChartCtrl4.CreateLineSerie();
 	}
 	/////////////////////////////////////////////////
-
+	SetTimer(1, 100, NULL);  //设置定时器，定时周期为100ms
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -325,7 +328,7 @@ void CShowRobotDataDlg::OnBnClickedStartserver()
 	m_ChartCtrl3.GetLegend()->SetVisible(true);
 	m_ChartCtrl4.GetLegend()->SetVisible(true);
 	///////////////////画图程序的初始化结束
-	AfxBeginThread(server_thd, (LPVOID)GetSafeHwnd());//创建线程
+	AfxBeginThread(server_thd, (LPVOID)GetSafeHwnd(), THREAD_PRIORITY_HIGHEST);//创建线程
 }
 
 
@@ -352,7 +355,108 @@ void LeftMoveArray(double* ptr, size_t length, double data)
 	}
 	ptr[length - 1] = data;
 }
+/////左移数组，左移size位
+void LeftMoveArrayWithQueue(double* ptr, size_t length, RobotData DealQueueData[],int size,int WhichData)
+{
+	for (size_t i = 0; i<(length-size); ++i)
+	{
+		ptr[i] = ptr[size+i];
+	}
+	switch (WhichData)
+	{
+	case 11:   //第一根轴的角度信息
+		for (int i = 0; i < size; i++)
+		{
+			ptr[length - size + i] = DealQueueData[i].JointsNow[0];
+		}
+		break;
+	case 12:   //第一根轴的速度信息
+		for (int i = 0; i < size; i++)
+		{
+			ptr[length - size + i] = DealQueueData[i].JointsVelNow[0];
+		}
+		break;
+	case 13:   //第一根轴的力矩信息
+		for (int i = 0; i < size; i++)
+		{
+			ptr[length - size + i] = DealQueueData[i].JointsTorque[0];
+		}
+		break;
+	case 21:   //第二根轴的角度信息
+		for (int i = 0; i < size; i++)
+		{
+			ptr[length - size + i] = DealQueueData[i].JointsNow[1];
+		}
+		break;
+	case 22:   //第二根轴的速度信息
+		for (int i = 0; i < size; i++)
+		{
+			ptr[length - size + i] = DealQueueData[i].JointsVelNow[1];
+		}
+		break;
+	case 23:   //第二根轴的力矩信息
+		for (int i = 0; i < size; i++)
+		{
+			ptr[length - size + i] = DealQueueData[i].JointsTorque[1];
+		}
+		break;
+	case 31:   //第三根轴的角度信息
+		for (int i = 0; i < size; i++)
+		{
+			ptr[length - size + i] = DealQueueData[i].JointsNow[2];
+		}
+		break;
+	case 32:   //第三根轴的角度信息
+		for (int i = 0; i < size; i++)
+		{
+			ptr[length - size + i] = DealQueueData[i].JointsVelNow[2];
+		}
+		break;
+	case 33:   //第三根轴的力矩信息
+		for (int i = 0; i < size; i++)
+		{
+			ptr[length - size + i] = DealQueueData[i].JointsTorque[2];
+		}
+		break;
+	case 41:   //第四根轴的角度信息
+		for (int i = 0; i < size; i++)
+		{
+			ptr[length - size + i] = DealQueueData[i].JointsNow[3];
+		}
+		break;
+	case 42:   //第四根轴的角度信息
+		for (int i = 0; i < size; i++)
+		{
+			ptr[length - size + i] = DealQueueData[i].JointsVelNow[3];
+		}
+		break;
+	case 43:   //第四根轴的力矩信息
+		for (int i = 0; i < size; i++)
+		{
+			ptr[length - size + i] = DealQueueData[i].JointsTorque[3];
+		}
+		break;
+	}
 
+
+}
+
+/////X轴数组的偏移
+void LeftMoveArrayXWithQueue(double* ptr, size_t length, unsigned int& data, int size)
+{
+	for (size_t i = 0; i<(length-size); ++i)
+	{
+		ptr[i] = ptr[size+i];
+	}
+	for (int i = 0; i < size; i++)
+	{
+		ptr[length - size + i] = ++data;
+	}
+}
+
+
+std::queue<RobotData> g_QueueData;  //全局队列
+HANDLE g_hMutex;  //互斥量句柄
 UINT server_thd(LPVOID p)//线程要调用的函数
 {
 	HWND hWnd = (HWND)p;
@@ -392,7 +496,7 @@ UINT server_thd(LPVOID p)//线程要调用的函数
 
 
 	////////////接收数据
-
+	g_hMutex = CreateMutex(NULL, FALSE, NULL);   //创建无名的互斥量，这个互斥量不被任何线程占有
 	RobotData MyRobotData;
 	char recbuf[sizeof(MyRobotData)];
 	memset(recbuf, 0, sizeof(MyRobotData));
@@ -407,8 +511,16 @@ UINT server_thd(LPVOID p)//线程要调用的函数
 		{
 			memset(&MyRobotData, 0, sizeof(MyRobotData));
 			memcpy(&MyRobotData, recbuf, sizeof(MyRobotData));
-			::PostMessageA(hWnd,UM_DRAWROBOTDATA,(WPARAM)&MyRobotData,1);
-			//dlg->DrawData(MyRobotData);
+
+			////****使用队列的方式来完成任务			
+			WaitForSingleObject(g_hMutex, INFINITE);    //使用互斥量来保护g_QueueData队列读取和插入分开
+			g_QueueData.push(MyRobotData);
+			ReleaseMutex(g_hMutex);
+			////****使用队列的方式来完成任务结束
+
+			////******使用发送消息的方式来完成任务
+			//::PostMessageA(hWnd,UM_DRAWROBOTDATA,(WPARAM)&MyRobotData,1);
+			////******使用发送消息的方式来完成任务结束
 		}
 
 
@@ -528,4 +640,37 @@ void CShowRobotDataDlg::DrawData(RobotData myrobotdata)
 	//m_pLineSerie4[0]->AddPoints(m_X, m_HightSpeedChartArray4[0], m_c_arrayLength);
 	//m_pLineSerie4[1]->AddPoints(m_X, m_HightSpeedChartArray4[1], m_c_arrayLength);
 	//m_pLineSerie4[2]->AddPoints(m_X, m_HightSpeedChartArray4[2], m_c_arrayLength);
+}
+
+
+RobotData DealQueueData[100];    //定义全局变量比较省时间
+void CShowRobotDataDlg::OnTimer(UINT_PTR nIDEvent)
+{
+	// TODO:  在此添加消息处理程序代码和/或调用默认值
+
+	////****使用队列的方式来完成任务			
+	WaitForSingleObject(g_hMutex, INFINITE);
+	int DataSize = g_QueueData.size();   //返回队列中元素个数
+	for (int i = 0; i < DataSize; i++)
+	{
+		DealQueueData[i] = g_QueueData.front();   //取出
+		g_QueueData.pop();
+	}
+	ReleaseMutex(g_hMutex);
+	////****使用队列的方式来完成任务结束
+	//++m_count;
+	m_pLineSerie1[0]->ClearSerie();
+	m_pLineSerie1[1]->ClearSerie();
+	m_pLineSerie1[2]->ClearSerie();
+
+	LeftMoveArrayWithQueue(m_HightSpeedChartArray1[0], m_c_arrayLength, DealQueueData, DataSize,11);  //角度值
+	LeftMoveArrayWithQueue(m_HightSpeedChartArray1[1], m_c_arrayLength, DealQueueData, DataSize,12);  //速度值
+	LeftMoveArrayWithQueue(m_HightSpeedChartArray1[2], m_c_arrayLength, DealQueueData, DataSize,13);  //力矩
+
+	LeftMoveArrayXWithQueue(m_X, m_c_arrayLength, m_count, DataSize);
+
+	m_pLineSerie1[0]->AddPoints(m_X, m_HightSpeedChartArray1[0], m_c_arrayLength);
+	m_pLineSerie1[1]->AddPoints(m_X, m_HightSpeedChartArray1[1], m_c_arrayLength);
+	m_pLineSerie1[2]->AddPoints(m_X, m_HightSpeedChartArray1[2], m_c_arrayLength);
+	CDialogEx::OnTimer(nIDEvent);
 }
