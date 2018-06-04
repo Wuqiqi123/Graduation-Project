@@ -143,7 +143,7 @@ CImpedance::CImpedance(CRobotBase *Robot)
 	m_Robot = Robot;
 	m_RunningFlag = false;
 	m_M = 0;
-	m_K = 0.5;   //单位是 N/mm
+	m_K = 0.2;   //单位是 N/mm
 	m_B = 0.1;
 	m_FImpedPara.Last = 0;
 	m_FImpedPara.Now = 0;
@@ -326,6 +326,11 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendence(void)
 
 bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void)
 {
+	double RealAcc[4];
+	for (int i = 0; i < this->m_Robot->m_JointNumber; i++)
+	{
+		RealAcc[i] = (this->m_Robot->m_JointArray[i].MaxJointAcceleration) / ((this->m_Robot->m_JointArray[i].PulsePerMmOrDegree) * (2 * 0.0001)*(2 * 0.0001));
+	}
 	double Torque[3] = { 10, 10, 10 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
 	Torque[0] = timenum / 100.0;
 	Torque[1] = timenum / 100.0;
@@ -344,8 +349,21 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 	double GoalPos[4], GoalVel[4];
 	for (int i = 0; i < this->m_Robot->m_JointNumber; i++)
 	{
-		GoalPos[i] = (this->m_thetaImpedPara[i].Next) + 2;   //在这里直接加上一点多余的东西，防止减速
 		GoalVel[i] = this->m_angularVelImpedPara[i].Next;
+		if (GoalVel[i] >= 0)   //如果正向运动
+		{
+			GoalPos[i] = (this->m_thetaImpedPara[i].Next) + GoalVel[i] * GoalVel[i] / (2 * RealAcc[i])+0.3 ;   //在这里直接加上一点多余的东西，防止减速
+		}
+		else   //如果反向运动
+		{
+			GoalPos[i] = (this->m_thetaImpedPara[i].Next) - GoalVel[i] * GoalVel[i] / (2 * RealAcc[i])-0.3;   //在这里直接加上一点多余的东西，防止减速
+			GoalVel[i] = -GoalVel[i];
+		}
+
+
+		
+		//if (GoalVel[i] < 0) GoalVel[i] = -GoalVel[i];
+	//	GoalVel[i] = fabs(GoalVel[i]);   //在这里取绝对值
 	}
 	this->m_Robot->JointsTMove(GoalPos, GoalVel);
 	return true;
