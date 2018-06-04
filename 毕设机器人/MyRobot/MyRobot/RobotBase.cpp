@@ -231,7 +231,7 @@ short CRobotBase::JointsTMove(double goalPos[], double goalVel[])
 				vel1 = m_JointArray[0].NormalJointVelocity;
 				//加速度直接传过去，单位一直是Pulse/ST^2
 				///这里使用最大的加速度，以在阻抗控制是的误差
-				acc = m_JointArray[0].MaxJointAcceleration;
+				acc = m_JointArray[0].NormalJointAcc;
 				//acc = m_JointArray[0].NormalJointAcc;
 				if (m_pController->AxisMoveToWithTProfile(1, pos, vel1, acc) != 0)  //单轴梯形运动模式
 					return -1;
@@ -286,7 +286,7 @@ short CRobotBase::JointsTMove(double goalPos[], double goalVel[])
 	{
 		pos[i] = (long)(goalPos[i] * m_JointArray[i].PulsePerMmOrDegree);
 		vel[i] = goalVel[i] * m_JointArray[i].PulsePerMmOrDegree * 2 * 0.0001; //转化为板卡识别的速度：PLUSE/ST  ******@wqq 我觉得固高写错了 固高写的是0.000001
-		acc[i] = m_JointArray[i].NormalJointAcc;
+		acc[i] = m_JointArray[i].MaxJointAcceleration;
 	}
 	m_pController->MoveToWithTProfile(pos, vel, acc);
 	//	UpdateJointArray();   // @wqq  这个是师弟编写的刷新函数
