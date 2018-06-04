@@ -135,7 +135,7 @@ BOOL CMyRobotDlg::OnInitDialog()
 	//SetTimer(2, 100, NULL);  //设置定时器，定时周期为100ms,测试TCP/IP数据用
 
 	//*************TCP/IP的地址，设置初始化的TCP/IP地址
-	CString  strIP = _T("192.168.56.1");  //设置默认地址
+	CString  strIP = _T("192.168.1.100");  //设置默认地址
 	DWORD dwAddress;
 	char ch_ip[20];
 	CString2Char(strIP, ch_ip);//注意！这里调用了字符格式转换函数，此函数功能：CString类型转换为Char类型，实现代码在后面添加

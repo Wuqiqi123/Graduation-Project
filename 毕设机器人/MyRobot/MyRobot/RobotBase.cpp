@@ -230,7 +230,9 @@ short CRobotBase::JointsTMove(double goalPos[], double goalVel[])
 				//将速度转为板卡接受的速度,vel是角度每秒，得脉冲每周期   默认程序控制周期是200us,deg/s = 
 				vel1 = m_JointArray[0].NormalJointVelocity;
 				//加速度直接传过去，单位一直是Pulse/ST^2
-				acc = m_JointArray[0].NormalJointAcc;
+				///这里使用最大的加速度，以在阻抗控制是的误差
+				acc = m_JointArray[0].MaxJointAcceleration;
+				//acc = m_JointArray[0].NormalJointAcc;
 				if (m_pController->AxisMoveToWithTProfile(1, pos, vel1, acc) != 0)  //单轴梯形运动模式
 					return -1;
 				m_pController->wait_motion_finished(1);  //等待轴运动完成后停止

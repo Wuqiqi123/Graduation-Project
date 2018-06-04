@@ -39,7 +39,7 @@ void CGRB4Robot::InitJoints(void)
 		m_JointArray[i].LastJointPosition = 0.0;
 		m_JointArray[i].LastJointVelocity = 0.0;
 		m_JointArray[i].MaxJointVelocity = 15;     //单位是 deg/s    
-		m_JointArray[i].MaxJointAcceleration = 0.1;  //定义但是没有用到
+		m_JointArray[i].MaxJointAcceleration = 2;  //定义但是没有用到
 	}
 
 	////////////

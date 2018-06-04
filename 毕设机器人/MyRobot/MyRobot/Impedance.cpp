@@ -18,7 +18,7 @@ struct RobotData
 
 extern SOCKET sockClient; //全局变量，客户端的套接字
 //////定义定时周期
-#define Tms (10)   
+#define Tms (20)   
 #define T (Tms*0.001)
 ////////////////////////
 int testNUM = 0;
@@ -73,7 +73,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 //////////////////**********力的三角生成器开始
 		if (UpOrDown == 0)    //在上升沿
 		{
-			timenum++;
+			timenum=timenum+2;
 			if (timenum == 1000)
 			{
 				UpOrDown = 1;   //最高点，变成下降沿
@@ -81,7 +81,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 		}
 		else     //否则在下降沿
 		{
-			timenum--;
+			timenum = timenum - 2;
 			if (timenum == 0)
 			{
 				UpOrDown = 0;   //最低点，变成上升沿
@@ -99,7 +99,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 			}
 
 			TRACE("timeflag=%d\n", timenum);
-			pImpedence->GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile();  //计算下一个时刻的关节的角度和角速度并执行
+			pImpedence->GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile();  //计算下一个时刻的关节的角度和角速度并执行
 			
 			////下面是TCP/IP传输
 			memset(&MyRobotData, 0, sizeof(MyRobotData));
@@ -144,7 +144,7 @@ CImpedance::CImpedance(CRobotBase *Robot)
 	m_RunningFlag = false;
 	m_M = 0;
 	m_K = 0.5;   //单位是 N/mm
-	m_B = 0.51;
+	m_B = 0.1;
 	m_FImpedPara.Last = 0;
 	m_FImpedPara.Now = 0;
 	m_FImpedPara.Next = 0;
@@ -289,8 +289,12 @@ bool CImpedance::GetCurrentState(void)
 	for (int i = 0; i < m_Robot->m_JointNumber; i++)  //得到三个关节的角速度  人可以理解的速度
 	{
 		m_angularVelImpedPara[i].Last = m_angularVelImpedPara[i].Now;
-		m_angularVelImpedPara[i].Now = m_Robot->m_JointArray[i].CurrentJointVelocity;
+
+		//这里的速度直接使用板卡内置的角度函数是不好的
+		//m_angularVelImpedPara[i].Now = m_Robot->m_JointArray[i].CurrentJointVelocity;
+		m_angularVelImpedPara[i].Now = (m_thetaImpedPara[i].Now - m_thetaImpedPara[i].Last) / T;
 	}
+
 
 	//仅仅是做测试用，真正在用的时候需要直接采集力的信息
 	//m_FImpedPara.Last = 10;   //力是1N  ，单位是N
@@ -323,6 +327,10 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendence(void)
 bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void)
 {
 	double Torque[3] = { 10, 10, 10 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
+	Torque[0] = timenum / 100.0;
+	Torque[1] = timenum / 100.0;
+	Torque[2] = timenum / 100.0;
+
 	for (int i = 0; i < 3; i++)
 	{
 		m_angularVelImpedPara[i].Next = (Torque[i] - m_K*m_thetaImpedPara[i].Now) / (m_K*T + m_B);
