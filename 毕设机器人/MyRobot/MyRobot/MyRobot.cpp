@@ -26,6 +26,7 @@ CMyRobotApp::CMyRobotApp()
 	m_dwRestartManagerSupportFlags = AFX_RESTART_MANAGER_SUPPORT_RESTART;
 
 	// TODO:  在此处添加构造代码，
+	SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
 	// 将所有重要的初始化放置在 InitInstance 中
 }
 
