@@ -107,6 +107,7 @@
     <ClInclude Include="GRB4Robot.h" />
     <ClInclude Include="GTController.h" />
     <ClInclude Include="Impedance.h" />
+    <ClInclude Include="KalmanFilter.h" />
     <ClInclude Include="MyRobot.h" />
     <ClInclude Include="MyRobotDlg.h" />
     <ClInclude Include="Planner.h" />
@@ -119,6 +120,7 @@
     <ClCompile Include="GRB4Robot.cpp" />
     <ClCompile Include="GTController.cpp" />
     <ClCompile Include="Impedance.cpp" />
+    <ClCompile Include="KalmanFilter.cpp" />
     <ClCompile Include="MyRobot.cpp" />
     <ClCompile Include="MyRobotDlg.cpp" />
     <ClCompile Include="Planner.cpp" />
