@@ -1,6 +1,7 @@
 #pragma once
 #include "afx.h"
 #include "GRB4Robot.h"
+#include "KalmanFilter.h"
 
 struct ImpedancePara
 {
@@ -19,6 +20,8 @@ public:
 	ImpedancePara m_FImpedPara, m_xImpedPara[3], m_vImpedPara[3];   //该结构体里面储存了做阻抗控制时，需要用到的参数，力参数，笛卡尔坐标空间的位置和力；
 	ImpedancePara m_thetaImpedPara[4];  //该数组储存了四个关节空间的角度
 	ImpedancePara m_angularVelImpedPara[4];   //该数组储存了四个关节的角速度
+
+	CKalmanFilter JointFilter[4];  ///定义卡尔曼滤波器
 	
 
 public:

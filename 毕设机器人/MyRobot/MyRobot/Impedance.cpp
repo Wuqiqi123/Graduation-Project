@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Impedance.h"
 #include <conio.h> //使用命令行控制
+
 ///////////////////////////////////////////////////////////
 struct RobotData
 {
@@ -144,7 +145,7 @@ CImpedance::CImpedance(CRobotBase *Robot)
 	m_RunningFlag = false;
 	m_M = 0;
 	m_K = 0.2;   //单位是 N/mm  0.2
-	m_B = 0.01;
+	m_B = 0.1;
 	m_FImpedPara.Last = 0;
 	m_FImpedPara.Now = 0;
 	m_FImpedPara.Next = 0;
@@ -187,7 +188,13 @@ CImpedance::~CImpedance()
 //还是觉得把机器人传递给阻抗控制器比较好，因为阻抗控制是一种比机器人类更上层的控制，所以机器人并一定有阻抗控制，但是阻抗控制一定有机器人
 bool CImpedance::StartImpedanceController()
 {
-
+	////////////////////////////////初始化卡尔曼滤波器
+	
+	for (int i = 0; i < m_Robot->m_JointNumber; i++)
+	{
+		JointFilter[i].Init_Kalman(m_K, m_B, T);
+	}
+	//////////////////////////////////////
 	m_Robot->UpdateJointArray(); //刷新各个关节的值
 
 	for (int i = 0; i < m_Robot->m_JointNumber; i++)   //得到三个关节的角度,这里依旧用的是人直接理解的位置，角度或者mm
@@ -265,7 +272,7 @@ bool CImpedance::StopImpedanceController()
 			//加速度直接传过去，单位一直是Pulse/ST^2
 			acc = this->m_Robot->m_JointArray[0].NormalJointAcc;
 			if (this->m_Robot->m_pController->AxisMoveToWithTProfile(1, pos, vel1, acc) != 0)  //单轴梯形运动模式
-				return -1;
+				return false;
 			this->m_Robot->m_pController->wait_motion_finished(1);  //等待轴运动完成后停止
 			this->m_Robot->m_isGapCorrespond = true;     //现在匹配上了
 			this->m_Robot->m_JointGap[0].GapToPositive = 0;
@@ -294,6 +301,7 @@ bool CImpedance::GetCurrentState(void)
 		//m_angularVelImpedPara[i].Now = m_Robot->m_JointArray[i].CurrentJointVelocity;
 		m_angularVelImpedPara[i].Now = (m_thetaImpedPara[i].Now - m_thetaImpedPara[i].Last) / T;
 	}
+	/////////////////////////////使用卡尔曼滤波器
 
 
 	//仅仅是做测试用，真正在用的时候需要直接采集力的信息
@@ -324,6 +332,8 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendence(void)
 	
 }
 
+extern double States[2];
+
 bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void)
 {
 	double RealAcc[4];
@@ -337,10 +347,25 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 	Torque[1] = timenum / 100.0;
 	Torque[2] = timenum / 100.0;
 
+	//////////使用卡尔曼滤波器
+	for (int i = 0; i < 3; i++)
+	{
+		JointFilter[i].GetKalmanStates(m_thetaImpedPara[i].Now, m_angularVelImpedPara[i].Now, Torque[i]);
+		m_thetaImpedPara[i].Now = States[0];
+		//m_angularVelImpedPara[i].Now = States[1];
+		m_angularVelImpedPara[i].Now = (m_thetaImpedPara[i].Now - m_thetaImpedPara[i].Last) / T;
+	}
+	for (int i = 0; i < 3; i++)
+	{
+		TRACE("the %d’axis Kalmantheta is: %.3f\n", i, m_thetaImpedPara[i].Now);
+		TRACE("the %d' axis KalmanangelVel is: %.3f\n", i, m_angularVelImpedPara[i].Now);
+	}
+
 	for (int i = 0; i < 3; i++)
 	{
 		m_angularVelImpedPara[i].Next = (Torque[i] - m_K*m_thetaImpedPara[i].Now) / (m_K*T + m_B);
-		m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*T;
+		//m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*T;
+		m_thetaImpedPara[i].Next = m_B*m_thetaImpedPara[i].Now / (m_K*T + m_B) + T*Torque[i] / (m_K*T + m_B);
 	}
 	for (int i = 0; i < 4; i++)
 	{
