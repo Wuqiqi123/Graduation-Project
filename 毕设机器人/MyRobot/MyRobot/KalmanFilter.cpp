@@ -19,6 +19,13 @@ void CKalmanFilter::Init_Kalman(double k, double b, double dt)
 	m_dt = dt;
 	m_k = k;
 	m_b = b;
+#if Order==1   ///////一阶卡尔曼滤波器
+	A= b / (k * m_dt + b);
+	H= 1;
+	Q = 0.01;
+	R = 0.1;
+	P = 0.2;
+#elif Order==2   ///////二阶卡尔曼滤波器
 
 	A[0][0] = b / (k * dt + b);
 	A[0][1] = 0;
@@ -32,8 +39,8 @@ void CKalmanFilter::Init_Kalman(double k, double b, double dt)
 	H[1][1] = 1;
 
 	Q[0][0] = 0;
-	Q[0][1] = 0.1;
-	Q[1][0] = 0.1;
+	Q[0][1] = 0;
+	Q[1][0] = 0;
 	Q[0][1] = 0.5;
 
 	R[0][0] = 0.1;
@@ -41,19 +48,43 @@ void CKalmanFilter::Init_Kalman(double k, double b, double dt)
 	R[1][0] = 0.5;
 	R[1][1] = 1;
 
-	P[0][0] = 1;
-	P[1][0] = 1;
-	P[0][1] = 1;
-	P[1][1] = 2;
+	P[0][0] = 0.1;
+	P[1][0] = 0;
+	P[0][1] = 0;
+	P[1][1] = 0.5;
 
 
+	/////////一阶卡尔曼
+	A[0][0] = b / (k * dt + b);
+	A[0][1] = 0;
+	A[1][0] = (-k) / (k * dt + b);
+	A[1][1] = 0;
+#endif
 
 }
 
+
 double States[2];  //全局变量
+
 
 void CKalmanFilter::GetKalmanStates(double ObserveTheta, double ObserveVel, double torque)
 {
+#if Order==1   ///////一阶卡尔曼滤波器
+	////////////第一步
+	Bu = m_dt * torque / (m_k * m_dt + m_b);
+	double StatesEstimate;
+	StatesEstimate = A * States[0] + Bu;
+	///////////第二步
+	double StatesP;
+	StatesP = A * P * A + Q;
+	/////////第三步
+	K=StatesP*H/(H*StatesP*H+R);
+	////////第四步
+	States[0]=StatesEstimate+K*(ObserveTheta-H*StatesEstimate);
+	////////第五步
+	P=(1-K*H)*StatesP;
+#elif Order==2
+
 	//////////////////////////第一步
 	Bu[0] = m_dt * torque / (m_k * m_dt + m_b);
 	Bu[1] = torque / (m_k * m_dt + m_b);
@@ -169,5 +200,6 @@ void CKalmanFilter::GetKalmanStates(double ObserveTheta, double ObserveVel, doub
 	P[1][0] = Step3[1][0] * StatesP[0][0] + Step3[1][1] * StatesP[1][0];
 	P[1][1] = Step3[1][0] * StatesP[0][1] + Step3[1][1] * StatesP[1][1];
 
+#endif
 
 }

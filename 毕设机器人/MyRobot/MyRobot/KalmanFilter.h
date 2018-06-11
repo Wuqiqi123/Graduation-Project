@@ -1,13 +1,16 @@
 #pragma once
 #include "afx.h"
 
+////定义卡尔曼滤波器的阶数
+#define Order 1
 
 class CKalmanFilter : public CObject
 {
 	double m_dt;
 	double m_k;
 	double m_b;
-
+ //////一阶卡尔曼滤波器    
+#if Order==2  
 	double Q[2][2]; //系统的过程噪声的协方差矩阵
 	double R[2][2]; // 系统的观测噪声的协方差矩阵
 	double A[2][2];   //系统的状态方程
@@ -16,6 +19,22 @@ class CKalmanFilter : public CObject
 
 	double P[2][2]; // 误差协方差矩阵- This is a 2x2 matrix（矩阵）
 	double K[2][2]; //卡尔曼增益 - This is a 2x1 vector（向量）
+
+	
+	///////二阶卡尔曼滤波器
+#elif Order==1   
+
+	double Q; //系统的过程噪声的协方差矩阵
+	double R; // 系统的观测噪声的协方差矩阵
+	double A;   //系统的状态方程
+	double Bu;
+	double H;
+	double P; // 误差协方差矩阵- This is a 2x2 matrix（矩阵）
+	double K; //卡尔曼增益 - This is a 2x1 vector（向量）
+
+#endif
+
+
 
 public:
 	CKalmanFilter();
