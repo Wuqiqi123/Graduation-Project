@@ -2,6 +2,7 @@
 #include "afx.h"
 #include "GRB4Robot.h"
 #include "KalmanFilter.h"
+#include "VelFliter.h"
 
 struct ImpedancePara
 {
@@ -22,6 +23,7 @@ public:
 	ImpedancePara m_angularVelImpedPara[4];   //该数组储存了四个关节的角速度
 
 	CKalmanFilter JointFilter[4];  ///定义卡尔曼滤波器
+	CVelFliter JointVelFilter[4];  ///定义速度的卡尔曼滤波器
 	
 
 public:

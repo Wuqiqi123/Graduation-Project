@@ -2,6 +2,7 @@
 #include "Impedance.h"
 #include <conio.h> //使用命令行控制
 
+#define DEBUG
 ///////////////////////////////////////////////////////////
 struct RobotData
 {
@@ -52,6 +53,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 ///////////////////////////////////////////////调试时间代码结束
 		WaitForSingleObject(hSyncEvent, INFINITE);
 ////////////////////////////////////////////////调试时间代码开始
+#ifdef DEBUG
 		QueryPerformanceCounter(&litmp);
 		qt1last = qt1;
 		qt1 = litmp.QuadPart;//获得当前时间t2的值 
@@ -65,6 +67,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 		dft = dfm1 / dff;
 //		_cprintf("One cycle time:t1-t1last=%.3f\n", dft*1000);
 		TRACE("One cycle time:t1-t1last=%.3f\n", dft * 1000);
+#endif
 ///////////////////////////////////////////////调试时间代码结束
 
 		if (ImpedenceControllerStopflag)
@@ -93,6 +96,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 		if (!(pImpedence->m_Robot->m_isOnGap))
 		{
 			pImpedence->GetCurrentState();//获取当前的时刻的关节空间的速度，位置和直角坐标空间的位置，速度
+#ifdef DEBUG
 			for (int i = 0; i < 4; i++)
 			{
 				TRACE("the %d’axis theta is: %.3f\n",i,pImpedence->m_thetaImpedPara[i].Now);
@@ -100,6 +104,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 			}
 
 			TRACE("timeflag=%d\n", timenum);
+#endif
 			pImpedence->GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile();  //计算下一个时刻的关节的角度和角速度并执行
 			
 			////下面是TCP/IP传输
@@ -124,12 +129,14 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 
 		////////////处理代码完结
 ////////////////////////////////////////////调试时间代码开始
+#ifdef DEBUG
 		QueryPerformanceCounter(&litmp);
 		qt2 = litmp.QuadPart;//获得当前时间t3的值 
 		dfm2 = (double)(qt2 - qt1);
 		dft = dfm2 / dff;
 //		_cprintf("The program running time:t2-t1=%.3f\n", dft * 1000);
 		TRACE("The program running time:t2-t1=%.3f\n", dft * 1000);
+#endif
 ////////////////////////////////////////////调试时间代码结束
 		ResetEvent(hSyncEvent);//复位同步事件
 	}
@@ -279,7 +286,9 @@ bool CImpedance::StopImpedanceController()
 			this->m_Robot->m_JointGap[0].GapToNegative = this->m_Robot->m_JointGap[0].GapLength - this->m_Robot->m_JointGap[0].GapToPositive;
 			this->m_Robot->UpdateJointArray();			//@wqq师弟在这里加的
 			this->m_Robot->m_isOnGap = false;   //完成间隙，这时候可以在阻抗控制中继续任务
+#ifdef DEBUG
 			TRACE("pass the negetive to positive!\n");
+#endif
 		}
 	}
 }
@@ -354,12 +363,18 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 		m_thetaImpedPara[i].Now = States[0];
 		//m_angularVelImpedPara[i].Now = States[1];
 		m_angularVelImpedPara[i].Now = (m_thetaImpedPara[i].Now - m_thetaImpedPara[i].Last) / T;
+
+		//////使用互滤波器
+		m_angularVelImpedPara[i].Now = JointVelFilter[i].GetVelStates(m_angularVelImpedPara[i].Next, m_angularVelImpedPara[i].Now);
 	}
+
+#ifdef DEBUG
 	for (int i = 0; i < 3; i++)
 	{
 		TRACE("the %d’axis Kalmantheta is: %.3f\n", i, m_thetaImpedPara[i].Now);
 		TRACE("the %d' axis KalmanangelVel is: %.3f\n", i, m_angularVelImpedPara[i].Now);
 	}
+#endif
 
 	for (int i = 0; i < 3; i++)
 	{
@@ -367,21 +382,29 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 		//m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*T;
 		m_thetaImpedPara[i].Next = m_B*m_thetaImpedPara[i].Now / (m_K*T + m_B) + T*Torque[i] / (m_K*T + m_B);
 	}
+
+#ifdef DEBUG
 	for (int i = 0; i < 4; i++)
 	{
 		TRACE("the %d’axis next theta is: %.3f\n", i, this->m_thetaImpedPara[i].Next);
 		TRACE("the %d’axis next angelVel is: %.3f\n", i, this->m_angularVelImpedPara[i].Next);
 	}
+#endif
+
 	double GoalPos[4], GoalVel[4];
 	for (int i = 0; i < this->m_Robot->m_JointNumber; i++)
 	{
 		GoalVel[i] = this->m_angularVelImpedPara[i].Next;
+#ifdef DEBUG
 		TRACE("the %d’GoalVel is: %.6lf\n", i, GoalVel[i]);
+#endif
 		if (GoalVel[i] >= 0)   //如果正向运动
 		{
 			GoalPos[i] = (this->m_thetaImpedPara[i].Next) + GoalVel[i] * GoalVel[i] / (2 * RealAcc[i])+0.5;   //在这里直接加上一点多余的东西，防止减速
 			//GoalPos[i] = (this->m_thetaImpedPara[i].Next) ;   //在这里直接加上一点多余的东西，防止减速
+#ifdef DEBUG
 			TRACE("the %d’extro theta is: %.6lf\n", i, GoalVel[i] * GoalVel[i] / (2 * RealAcc[i]));
+#endif
 		}
 		else   //如果反向运动
 		{
@@ -415,10 +438,12 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile(v
 	//{
 	//	m_thetaImpedPara[i].Next = 1.0 / (m_B / T + m_K)*Torque[i] + 1.0 / (m_B / T + m_K)*(m_B / T)*m_thetaImpedPara[i].Now;
 	//}
+#ifdef DEBUG
 	for (int i = 0; i < 4; i++)
 	{
 		TRACE("the %d’axis next theta is: %.3f\n", i, this->m_thetaImpedPara[i].Next);
 	}
+#endif
 	double GoalPos[4];
 	for (int i = 0; i < this->m_Robot->m_JointNumber; i++)
 	{
@@ -435,10 +460,12 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithSProfile(v
 	{
 		m_thetaImpedPara[i].Next = 1.0 / (m_B / T + m_K)*Torque[i] + 1.0 / (m_B / T + m_K)*(m_B / T)*m_thetaImpedPara[i].Now;
 	}
+#ifdef DEBUG
 	for (int i = 0; i < 4; i++)
 	{
 		TRACE("the %d’axis next theta is: %.3f\n", i, this->m_thetaImpedPara[i].Next);
 	}
+#endif
 	double GoalPos[4];
 	for (int i = 0; i < this->m_Robot->m_JointNumber; i++)
 	{

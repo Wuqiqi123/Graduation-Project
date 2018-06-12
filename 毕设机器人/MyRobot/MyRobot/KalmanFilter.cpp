@@ -20,11 +20,13 @@ void CKalmanFilter::Init_Kalman(double k, double b, double dt)
 	m_k = k;
 	m_b = b;
 #if Order==1   ///////Ò»½×¿¨¶ûÂüÂË²¨Æ÷
-	A= b / (k * m_dt + b);
-	H= 1;
-	Q = 0.01;
-	R = 0.1;
-	P = 0.2;
+
+		A= b / (k * m_dt + b);
+		H= 1;
+		Q = 0.01;
+		R = 0.1;
+		P = 0.2;
+
 #elif Order==2   ///////¶ş½×¿¨¶ûÂüÂË²¨Æ÷
 
 	A[0][0] = b / (k * dt + b);
