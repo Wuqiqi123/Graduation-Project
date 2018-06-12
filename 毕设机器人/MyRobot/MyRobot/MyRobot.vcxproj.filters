@@ -51,6 +51,9 @@
     <ClInclude Include="KalmanFilter.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="VelFliter.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MyRobot.cpp">
@@ -78,6 +81,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="KalmanFilter.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="VelFliter.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

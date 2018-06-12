@@ -9,6 +9,7 @@ class CKalmanFilter : public CObject
 	double m_dt;
 	double m_k;
 	double m_b;
+	//int m_kalmanmode;    //如果是0是位置卡尔曼，如果是1则是速度卡尔曼;如果是二阶卡尔曼则这项无效
  //////一阶卡尔曼滤波器    
 #if Order==2  
 	double Q[2][2]; //系统的过程噪声的协方差矩阵
