@@ -138,8 +138,10 @@ BOOL CMyRobotDlg::OnInitDialog()
 	CString  strIP = _T("192.168.1.100");  //设置默认地址
 	DWORD dwAddress;
 	char ch_ip[20];
-	CString2Char(strIP, ch_ip);//注意！这里调用了字符格式转换函数，此函数功能：CString类型转换为Char类型，实现代码在后面添加
-	dwAddress = inet_addr(ch_ip);
+	char* ch_ip1;
+	ch_ip1 = (LPSTR)(LPCTSTR)strIP;
+	//CString2Char(strIP, ch_ip1);//注意！这里调用了字符格式转换函数，此函数功能：CString类型转换为Char类型，实现代码在后面添加
+	dwAddress = inet_addr(ch_ip1);
 	unsigned  char  *pIP = (unsigned  char*)&dwAddress;
 	m_ServerIPAddr.SetAddress(*pIP, *(pIP + 1), *(pIP + 2), *(pIP + 3));
 	this->SetDlgItemText(IDC_EDIT1_PORT, _T("8888"));
@@ -582,15 +584,15 @@ void CMyRobotDlg::OnBnClickedButtonJoint4Negative()
 
 void CString2Char(CString str, char ch[])//此函数就是字符转换函数的实现代码
 {
-	int i;
-	char *tmpch;
-	int wLen = WideCharToMultiByte(CP_ACP, 0, str, -1, NULL, 0, NULL, NULL);//得到Char的长度
-	tmpch = new char[wLen + 1];                                             //分配变量的地址大小
-	WideCharToMultiByte(CP_ACP, 0, str, -1, tmpch, wLen, NULL, NULL);       //将CString转换成char*
+	//int i;
+	//char *tmpch;
+	//int wLen = WideCharToMultiByte(CP_ACP, 0, str, -1, NULL, 0, NULL, NULL);//得到Char的长度
+	//tmpch = new char[wLen + 1];                                             //分配变量的地址大小
+	//WideCharToMultiByte(CP_ACP, 0, str, -1, tmpch, wLen, NULL, NULL);       //将CString转换成char*
 
 
-	for (i = 0; tmpch[i] != '\0'; i++) ch[i] = tmpch[i];
-	ch[i] = '\0';
+	//for (i = 0; tmpch[i] != '\0'; i++) ch[i] = tmpch[i];
+	//ch[i] = '\0';
 }
 
 
@@ -627,7 +629,9 @@ void CMyRobotDlg::OnBnClickedButtonConnectserver()
 	//设置要连接的服务器的信息
 	SOCKADDR_IN addrSrv;
 	char ch_ip[20];
-	CString2Char(strIP, ch_ip);//注意！这里调用了字符格式转换函数，此函数功能：CString类型转换为Char类型，实现代码在后面添加
+	char* ch_ip1;
+	ch_ip1 = (LPSTR)(LPCTSTR)strIP;
+	//CString2Char(strIP, ch_ip);//注意！这里调用了字符格式转换函数，此函数功能：CString类型转换为Char类型，实现代码在后面添加
 	addrSrv.sin_addr.S_un.S_addr = inet_addr(ch_ip);//案例服务器和客户端都在本地，固可以使用本地回路地址127.0.0.1
 	addrSrv.sin_family = AF_INET;
 	addrSrv.sin_port = htons(ServerPort);

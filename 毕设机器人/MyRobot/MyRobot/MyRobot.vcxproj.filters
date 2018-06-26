@@ -54,6 +54,12 @@
     <ClInclude Include="VelFliter.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="DAQSys.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ForceSensor.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MyRobot.cpp">
@@ -84,6 +90,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="VelFliter.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DAQSys.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ForceSensor.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
