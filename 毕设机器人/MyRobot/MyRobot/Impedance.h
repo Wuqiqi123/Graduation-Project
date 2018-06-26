@@ -3,6 +3,7 @@
 #include "GRB4Robot.h"
 #include "KalmanFilter.h"
 #include "VelFliter.h"
+#include "ForceSensor.h"
 
 struct ImpedancePara
 {
@@ -24,6 +25,8 @@ public:
 
 	CKalmanFilter JointFilter[4];  ///定义卡尔曼滤波器
 	CVelFliter JointVelFilter[4];  ///定义速度的卡尔曼滤波器
+
+	CForceSensor* ATIForceSensor;
 	
 
 public:

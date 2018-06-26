@@ -23,9 +23,9 @@ void CKalmanFilter::Init_Kalman(double k, double b, double dt)
 
 		A= b / (k * m_dt + b);
 		H= 1;
-		Q = 0.01;
-		R = 0.1;
-		P = 0.2;
+		Q = 0.0075;
+		R = 0.05;
+		P = 0.1;
 
 #elif Order==2   ///////¶þ½×¿¨¶ûÂüÂË²¨Æ÷
 

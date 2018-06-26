@@ -181,7 +181,9 @@ CImpedance::CImpedance(CRobotBase *Robot)
 		m_angularVelImpedPara[i].Next = 0;
 	}
 
-	m_hControlThread = NULL;	
+	m_hControlThread = NULL;
+	ATIForceSensor = new CForceSensor();
+
 
 }
 

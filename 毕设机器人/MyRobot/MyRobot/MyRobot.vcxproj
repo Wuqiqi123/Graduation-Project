@@ -20,7 +20,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
     <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -60,7 +60,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>gt400.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gt400.lib;NIDAQmx.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -104,6 +104,8 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DAQSys.h" />
+    <ClInclude Include="ForceSensor.h" />
     <ClInclude Include="GRB4Robot.h" />
     <ClInclude Include="GTController.h" />
     <ClInclude Include="Impedance.h" />
@@ -118,6 +120,8 @@
     <ClInclude Include="VelFliter.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DAQSys.cpp" />
+    <ClCompile Include="ForceSensor.cpp" />
     <ClCompile Include="GRB4Robot.cpp" />
     <ClCompile Include="GTController.cpp" />
     <ClCompile Include="Impedance.cpp" />
