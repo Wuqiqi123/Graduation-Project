@@ -15,7 +15,7 @@ public:
 	virtual ~CForceSensor();
 
 	bool m_isBias;   ////如果isBias=true,则使用偏置
-	double m_StainVoltage[6];
+	double m_StainVoltage[7];
 	double m_ForceScrew[6];
 	double m_Bias[6];   ///力的偏置值
 	void InitForceSensor(void);

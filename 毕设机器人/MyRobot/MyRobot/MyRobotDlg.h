@@ -23,6 +23,7 @@ public:
 	bool m_ImpedanceButtonflag;
 	void OnJointsDataShow();	
 	void OnToolDataShow();
+	void OnForceDataShow();
 
 // 对话框数据
 	enum { IDD = IDD_MYROBOT_DIALOG };
@@ -73,4 +74,5 @@ public:
 		m_TCPMessage.AddString(s);
 	}
 	CListBox m_TCPMessage;
+	afx_msg void OnBnClickedButtonForcetest();
 };

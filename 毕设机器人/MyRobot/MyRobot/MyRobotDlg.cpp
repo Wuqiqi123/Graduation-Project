@@ -96,6 +96,7 @@ ON_BN_CLICKED(IDC_BUTTON_JOINT4_POSITIVE, &CMyRobotDlg::OnBnClickedButtonJoint4P
 ON_BN_CLICKED(IDC_BUTTON_JOINT4_NEGATIVE, &CMyRobotDlg::OnBnClickedButtonJoint4Negative)
 ON_BN_CLICKED(IDC_BUTTON_GOHOME, &CMyRobotDlg::OnBnClickedButtonGohome)
 ON_BN_CLICKED(IDC_BUTTON_CONNECTSERVER, &CMyRobotDlg::OnBnClickedButtonConnectserver)
+ON_BN_CLICKED(IDC_BUTTON_FORCETEST, &CMyRobotDlg::OnBnClickedButtonForcetest)
 END_MESSAGE_MAP()
 
   
@@ -133,6 +134,7 @@ BOOL CMyRobotDlg::OnInitDialog()
 	// TODO:  在此添加额外的初始化代码
 	SetTimer(1, 100, NULL);  //设置定时器，定时周期为100ms
 	//SetTimer(2, 100, NULL);  //设置定时器，定时周期为100ms,测试TCP/IP数据用
+
 
 	//*************TCP/IP的地址，设置初始化的TCP/IP地址
 	CString  strIP = _T("192.168.1.100");  //设置默认地址
@@ -439,6 +441,38 @@ void CMyRobotDlg::OnToolDataShow()    //直角坐标系中的状态显示
 	SetDlgItemText(IDC_STATIC_GRIPPER_JOINT, str);
 }
 
+CForceSensor* ATIForceSensor;
+
+void CMyRobotDlg::OnForceDataShow()
+{
+	CString str;
+	str.Format(_T("%.4f"), ATIForceSensor->m_StainVoltage[0]);
+	SetDlgItemText(IDC_STATIC_NI_VOLTAGE0, str);
+	str.Format(_T("%.4f"), ATIForceSensor->m_StainVoltage[1]);
+	SetDlgItemText(IDC_STATIC_NI_VOLTAGE1, str);
+	str.Format(_T("%.4f"), ATIForceSensor->m_StainVoltage[2]);
+	SetDlgItemText(IDC_STATIC_NI_VOLTAGE2, str);
+	str.Format(_T("%.4f"), ATIForceSensor->m_StainVoltage[3]);
+	SetDlgItemText(IDC_STATIC_NI_VOLTAGE3, str);
+	str.Format(_T("%.4f"), ATIForceSensor->m_StainVoltage[4]);
+	SetDlgItemText(IDC_STATIC_NI_VOLTAGE4, str);
+	str.Format(_T("%.4f"), ATIForceSensor->m_StainVoltage[5]);
+	SetDlgItemText(IDC_STATIC_NI_VOLTAGE5, str);
+	
+	str.Format(_T("%.4f"), ATIForceSensor->m_ForceScrew[0]);
+	SetDlgItemText(IDC_STATIC_FORCESENSOR0, str);
+	str.Format(_T("%.4f"), ATIForceSensor->m_ForceScrew[1]);
+	SetDlgItemText(IDC_STATIC_FORCESENSOR1, str);
+	str.Format(_T("%.4f"), ATIForceSensor->m_ForceScrew[2]);
+	SetDlgItemText(IDC_STATIC_FORCESENSOR2, str);
+	str.Format(_T("%.4f"), ATIForceSensor->m_ForceScrew[3]);
+	SetDlgItemText(IDC_STATIC_FORCESENSOR3, str);
+	str.Format(_T("%.4f"), ATIForceSensor->m_ForceScrew[4]);
+	SetDlgItemText(IDC_STATIC_FORCESENSOR4, str);
+	str.Format(_T("%.4f"), ATIForceSensor->m_ForceScrew[5]);
+	SetDlgItemText(IDC_STATIC_FORCESENSOR5, str);
+}
+
 //定时器函数，在OnInitDialog（）函数中设置定时器的定时时间是100ms
 void CMyRobotDlg::OnTimer(UINT_PTR nIDEvent)
 {
@@ -469,7 +503,11 @@ void CMyRobotDlg::OnTimer(UINT_PTR nIDEvent)
 		//memcpy(buff, &MyRobotData, sizeof(MyRobotData));
 		//send(sockClient, buff, sizeof(buff), 0);
 	}
-
+	if (nIDEvent == 3)   //测试力传感器
+	{
+		ATIForceSensor->UpdataForceData();
+		OnForceDataShow();
+	}
 	CDialogEx::OnTimer(nIDEvent);
 }
 
@@ -652,4 +690,15 @@ void CMyRobotDlg::OnBnClickedButtonConnectserver()
 	//send(sockClient, buff, sizeof(buff), 0);
 
 
+}
+
+
+void CMyRobotDlg::OnBnClickedButtonForcetest()
+{
+	// TODO:  在此添加控件通知处理程序代码
+	ATIForceSensor = new CForceSensor();
+	ATIForceSensor->InitForceSensor();
+	ATIForceSensor->GetBias();
+	ATIForceSensor->OpenBias();
+	SetTimer(3, 100, NULL);   //设置定时器，定时周期为100ms,测试力传感器
 }
