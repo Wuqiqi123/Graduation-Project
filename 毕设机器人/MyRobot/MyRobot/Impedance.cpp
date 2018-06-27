@@ -3,6 +3,8 @@
 #include <conio.h> //使用命令行控制
 
 #define DEBUG
+
+#define ATIForce   //使用实际的力传感器
 ///////////////////////////////////////////////////////////
 struct RobotData
 {
@@ -182,6 +184,7 @@ CImpedance::CImpedance(CRobotBase *Robot)
 	}
 
 	m_hControlThread = NULL;
+
 	ATIForceSensor = new CForceSensor();
 
 

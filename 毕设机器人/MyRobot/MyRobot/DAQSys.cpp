@@ -78,8 +78,8 @@ int DAQSys::init(CString changeDeviceName, short changeFirstChannel, double chan
 		/* Configure the sample clock, and specify that this task does not end until
 		 * it is told to stop.  Sample on clock's rising edge, with at least 2 samples
 		 * in the buffer. */
-		status = DAQmxCfgSampClkTiming(m_th, NULL, scanRate, DAQmx_Val_Rising,
-			DAQmx_Val_ContSamps, 2); 
+		status = DAQmxCfgSampClkTiming(m_th, "", 10000, DAQmx_Val_Rising,
+			DAQmx_Val_ContSamps, 5); 
 	}
 	if ( !status )
 	{
@@ -122,7 +122,7 @@ int DAQSys::ScanGauges(double voltages[7], bool useStoredValues)
 	int i; /* generic loop/array index. */
 	int iSaturated = 0; /* whether or not we saturated. */
 	/* status of operations. */
-	int status = DAQmxReadAnalogF64( m_th, 1, 1, DAQmx_Val_GroupByScanNumber,
+	int status = DAQmxReadAnalogF64( m_th, 1, 0, DAQmx_Val_GroupByScanNumber,
 		voltages, 7, &lSampsRead, NULL );
 	if ( status )
 	{

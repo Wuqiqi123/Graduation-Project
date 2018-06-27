@@ -32,7 +32,15 @@ CForceSensor::~CForceSensor()
 void CForceSensor::InitForceSensor(void)
 {
 	NIDataCard = new DAQSys();
-	int iSaturated = NIDataCard->ScanGauges(m_StainVoltage, 1);
+	int iSaturated;
+startA:	try
+	{
+		iSaturated = NIDataCard->ScanGauges(m_StainVoltage, 1);
+	}
+	catch (DAQException*)
+	{
+		goto startA;
+	}
 	if (iSaturated)  //判断板卡是否饱和
 	{
 		AfxMessageBox(_T("板卡电压采集接近饱和!"), MB_OK);
@@ -43,7 +51,15 @@ void CForceSensor::InitForceSensor(void)
 ///如果返回1，则电压输出饱和；如果返回零，则电压输出非饱和
 int CForceSensor::UpdataForceData(void)  //这个函数被上层定时调用，所以叫做刷新函数
 {
-	int iSaturated = NIDataCard->ScanGauges(m_StainVoltage, 1);
+	int iSaturated;
+startB:	try
+	{
+		iSaturated = NIDataCard->ScanGauges(m_StainVoltage, 1);
+	}
+	catch (DAQException*)
+	{
+		goto startB;
+	}
 	CalculateForceData();
 	return iSaturated;
 }
@@ -56,6 +72,10 @@ void CForceSensor::CalculateForceData(void)
 		{
 			m_StainVoltage[i] = m_StainVoltage[i] - m_Bias[i];
 		}
+	}
+	for (int i = 0; i < 6; i++)
+	{
+		m_ForceScrew[i] = 0;
 	}
 	for (int i = 0; i < 6; i++)
 	{
@@ -72,16 +92,57 @@ void CForceSensor::CalculateForceData(void)
 
 void CForceSensor::GetBias(void)
 {
-	int iSaturated = NIDataCard->ScanGauges(m_StainVoltage, 1);
-	if (iSaturated)  //判断板卡是否饱和
+	LARGE_INTEGER litmp;
+	LONGLONG qt1 = 0, qt2 = 0;
+	double dft, dfm1,dff;
+	QueryPerformanceFrequency(&litmp);//获得时钟频率  
+	dff = (double)litmp.QuadPart;
+
+	double tmpVol[6] = { 0, 0, 0, 0, 0, 0};
+	int iSaturated;
+	for (int i = 0; i < 10; i++)      // 循环10次做平均值
 	{
-		AfxMessageBox(_T("板卡电压采集接近饱和!"), MB_OK);
+start:		try
+		{
+#ifdef DEBUG
+			QueryPerformanceCounter(&litmp);
+			qt1 = litmp.QuadPart;//获得当前时间t1的值 
+			TRACE("Prepare data acquisition\n");
+#endif
+			iSaturated = NIDataCard->ScanGauges(m_StainVoltage, 1);
+#ifdef DEBUG
+			TRACE("left data acquisition\n");
+#endif
+		}
+			catch (DAQException*)
+		{
+#ifdef DEBUG
+			TRACE("采集板出错，被catch到了！！！！！\n");
+#endif
+			goto start;
+		}
+#ifdef DEBUG
+		QueryPerformanceCounter(&litmp);
+		qt2 = litmp.QuadPart;//获得当前时间t2的值 
+		dfm1 = (double)(qt2 - qt1);
+		dft = dfm1 / dff;
+		TRACE("The program running time:t2-t1=%.3f\n", dft * 1000);
+#endif
+		if (iSaturated)  //判断板卡是否饱和
+		{
+			AfxMessageBox(_T("板卡电压采集接近饱和!"), MB_OK);
+		}
+		for (int j = 0; j < 6; j++)
+		{
+			tmpVol[j] += m_StainVoltage[j];
+		}
+		Sleep(20);
 	}
 	for (int i = 0; i < 6; i++)
 	{
-		m_Bias[i] = m_StainVoltage[i];
+		m_Bias[i] = tmpVol[i] / 10;    //除以十次平均值
 	}
-//	m_isBias = false;
+	m_isBias = false;
 }
 
 void CForceSensor::CloseBias(void)
