@@ -100,7 +100,7 @@ void CForceSensor::GetBias(void)
 
 	double tmpVol[6] = { 0, 0, 0, 0, 0, 0};
 	int iSaturated;
-	for (int i = 0; i < 10; i++)      // 循环10次做平均值
+	for (int i = 0; i < 10; i++)      // 循环20次做平均值
 	{
 start:		try
 		{
