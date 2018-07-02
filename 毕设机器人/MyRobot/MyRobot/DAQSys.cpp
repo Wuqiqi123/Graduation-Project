@@ -78,7 +78,7 @@ int DAQSys::init(CString changeDeviceName, short changeFirstChannel, double chan
 		/* Configure the sample clock, and specify that this task does not end until
 		 * it is told to stop.  Sample on clock's rising edge, with at least 2 samples
 		 * in the buffer. */
-		status = DAQmxCfgSampClkTiming(m_th, "", 10000, DAQmx_Val_Rising,
+		status = DAQmxCfgSampClkTiming(m_th, "", 30000, DAQmx_Val_Rising,
 			DAQmx_Val_ContSamps, 5); 
 	}
 	if ( !status )
