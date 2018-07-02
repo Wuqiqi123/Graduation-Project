@@ -136,9 +136,9 @@ short CGTController::InitCard(void)            //###################注释完成
 		}
 		if (i == 3)   //特地修改这几个值，以使得阻抗控制时轴同步
 		{
-			GT_SetKp(9);
-			GT_SetKi(3);
-			GT_SetKd(9);
+			GT_SetKp(5);
+			GT_SetKi(5);
+			GT_SetKd(8);
 		}
 		if (i == 4)
 		{

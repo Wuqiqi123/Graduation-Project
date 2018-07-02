@@ -29,7 +29,7 @@ int testNUM = 0;
 int timenum = 0;
 bool UpOrDown = 0;  //0为up,1为down
 HANDLE hSyncEvent;//同步事件句柄
-bool ImpedenceControllerStopflag; //线程结束标志
+bool ImpedenceControllerStopflag = true; //线程结束标志,全局变量初始化为一开始就是停止
 //阻抗控制从Home点开始运动，在Home点的时候，GaptoPositive=0;
 DWORD WINAPI ThreadProc(LPVOID lpParam)
 {
@@ -77,22 +77,22 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 			break;
 		}
 //////////////////**********力的三角生成器开始
-		if (UpOrDown == 0)    //在上升沿
-		{
-			timenum=timenum+2;
-			if (timenum == 1000)
-			{
-				UpOrDown = 1;   //最高点，变成下降沿
-			}
-		}
-		else     //否则在下降沿
-		{
-			timenum = timenum - 2;
-			if (timenum == 0)
-			{
-				UpOrDown = 0;   //最低点，变成上升沿
-			}
-		}
+		//if (UpOrDown == 0)    //在上升沿
+		//{
+		//	timenum=timenum+2;
+		//	if (timenum == 1000)
+		//	{
+		//		UpOrDown = 1;   //最高点，变成下降沿
+		//	}
+		//}
+		//else     //否则在下降沿
+		//{
+		//	timenum = timenum - 2;
+		//	if (timenum == 0)
+		//	{
+		//		UpOrDown = 0;   //最低点，变成上升沿
+		//	}
+		//}
 ////////////////***********力的三角形生成器结束
 		///////////在这里我需要处理的代码		
 		if (!(pImpedence->m_Robot->m_isOnGap))
@@ -105,7 +105,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 				TRACE("the %d' axis angelVel is: %.3f\n",i,pImpedence->m_angularVelImpedPara[i].Now);
 			}
 
-			TRACE("timeflag=%d\n", timenum);
+		//	TRACE("timeflag=%d\n", timenum);
 #endif
 			pImpedence->GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile();  //计算下一个时刻的关节的角度和角速度并执行
 			
@@ -153,8 +153,8 @@ CImpedance::CImpedance(CRobotBase *Robot)
 	m_Robot = Robot;
 	m_RunningFlag = false;
 	m_M = 0;
-	m_K = 0.2;   //单位是 N/mm  0.2
-	m_B = 0.1;
+	m_K = 0.01;   //单位是 N/mm  0.2
+	m_B = 0.002;
 	m_FImpedPara.Last = 0;
 	m_FImpedPara.Now = 0;
 	m_FImpedPara.Next = 0;
@@ -184,9 +184,7 @@ CImpedance::CImpedance(CRobotBase *Robot)
 	}
 
 	m_hControlThread = NULL;
-
-	ATIForceSensor = new CForceSensor();
-
+	ATIForceSensor = NULL;
 
 }
 
@@ -221,10 +219,20 @@ bool CImpedance::StartImpedanceController()
 		m_angularVelImpedPara[i].Now = m_Robot->m_JointArray[i].CurrentJointVelocity;
 	}
 
-	//仅仅是做测试用，真正在用的时候需要直接采集力的信息
+	//要直接采集力的信息
+	ATIForceSensor = new CForceSensor();
+	ATIForceSensor->InitForceSensor();
+	ATIForceSensor->GetBias();
+	ATIForceSensor->OpenBias();
 	m_FImpedPara.Last = 0;   //力是1N  ，单位是N
 	m_FImpedPara.Now = 0;   
 	m_FImpedPara.Next = 0;
+	for (int i = 0; i < 6; i++)
+	{
+		ForceSensor[i] = 0;
+	}
+	//ATIForceSensor->UpdataForceData();
+	//ForceSensor[2] = ATIForceSensor->m_ForceScrew[2];
 
 /////////////////直角坐标系的信息
 	m_xImpedPara[0].Last = m_Robot->m_HandCurrTn[0][3];   //沿X轴线的位移
@@ -319,6 +327,12 @@ bool CImpedance::GetCurrentState(void)
 
 
 	//仅仅是做测试用，真正在用的时候需要直接采集力的信息
+	ATIForceSensor->UpdataForceData();
+	ForceSensor[2] = ATIForceSensor->m_ForceScrew[2];
+	if (abs(ForceSensor[2]) < 0.5)
+	{
+		ForceSensor[2] = 0;
+	}
 	//m_FImpedPara.Last = 10;   //力是1N  ，单位是N
 	//m_FImpedPara.Now = 10;
 	//m_FImpedPara.Next = 10;
@@ -356,10 +370,10 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 		RealAcc[i] = (this->m_Robot->m_JointArray[i].MaxJointAcceleration) / ((this->m_Robot->m_JointArray[i].PulsePerMmOrDegree) * (2 * 0.0001)*(2 * 0.0001));
 		//TRACE("the %d’RealAcc is: %.3f\n", i, RealAcc[i]);
 	}
-	double Torque[3] = { 10, 10, 10 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
-	Torque[0] = timenum / 100.0;
-	Torque[1] = timenum / 100.0;
-	Torque[2] = timenum / 100.0;
+	double Torque[3] = { 0, 0, 0 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
+	Torque[0] = 0;
+	Torque[1] = 0;
+	Torque[2] = -ForceSensor[2];
 
 	//////////使用卡尔曼滤波器
 	for (int i = 0; i < 3; i++)
@@ -383,9 +397,13 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 
 	for (int i = 0; i < 3; i++)
 	{
-		m_angularVelImpedPara[i].Next = (Torque[i] - m_K*m_thetaImpedPara[i].Now) / (m_K*T + m_B);
-		//m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*T;
-		m_thetaImpedPara[i].Next = m_B*m_thetaImpedPara[i].Now / (m_K*T + m_B) + T*Torque[i] / (m_K*T + m_B);
+		if (i == 2)
+		{
+			m_angularVelImpedPara[i].Next = (Torque[i] - m_K*m_thetaImpedPara[i].Now) / (m_K*T + m_B);
+			//m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*T;
+			m_thetaImpedPara[i].Next = m_B*m_thetaImpedPara[i].Now / (m_K*T + m_B) + T*Torque[i] / (m_K*T + m_B);
+		}
+		
 	}
 
 #ifdef DEBUG
@@ -396,31 +414,36 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 	}
 #endif
 
-	double GoalPos[4], GoalVel[4];
+	double GoalPos[4] = { 0, 0, 0, 0 }, GoalVel[4] = { 0, 0, 0, 0 };
 	for (int i = 0; i < this->m_Robot->m_JointNumber; i++)
 	{
-		GoalVel[i] = this->m_angularVelImpedPara[i].Next;
-#ifdef DEBUG
-		TRACE("the %d’GoalVel is: %.6lf\n", i, GoalVel[i]);
-#endif
-		if (GoalVel[i] >= 0)   //如果正向运动
+		if (i == 2)
 		{
-			GoalPos[i] = (this->m_thetaImpedPara[i].Next) + GoalVel[i] * GoalVel[i] / (2 * RealAcc[i])+0.5;   //在这里直接加上一点多余的东西，防止减速
-			//GoalPos[i] = (this->m_thetaImpedPara[i].Next) ;   //在这里直接加上一点多余的东西，防止减速
-#ifdef DEBUG
-			TRACE("the %d’extro theta is: %.6lf\n", i, GoalVel[i] * GoalVel[i] / (2 * RealAcc[i]));
-#endif
+			GoalVel[i] = this->m_angularVelImpedPara[i].Next;
+	#ifdef DEBUG
+			TRACE("the %d’GoalVel is: %.6lf\n", i, GoalVel[i]);
+	#endif
+			if (GoalVel[i] >= 0)   //如果正向运动
+			{
+				GoalPos[i] = (this->m_thetaImpedPara[i].Next) + GoalVel[i] * GoalVel[i] / (2 * RealAcc[i])+0.5;   //在这里直接加上一点多余的东西，防止减速
+				//GoalPos[i] = (this->m_thetaImpedPara[i].Next) ;   //在这里直接加上一点多余的东西，防止减速
+	#ifdef DEBUG
+				TRACE("the %d’extro theta is: %.6lf\n", i, GoalVel[i] * GoalVel[i] / (2 * RealAcc[i]));
+	#endif
+			}
+			else   //如果反向运动
+			{
+				GoalPos[i] = (this->m_thetaImpedPara[i].Next) - GoalVel[i] * GoalVel[i] / (2 * RealAcc[i])-0.5;   //在这里直接加上一点多余的东西，防止减速
+				//GoalPos[i] = (this->m_thetaImpedPara[i].Next) ;   //在这里直接加上一点多余的东西，防止减速
+				GoalVel[i] = -GoalVel[i];
+			}
+			//if (GoalVel[i] < 0) GoalVel[i] = -GoalVel[i];
+		//	GoalVel[i] = fabs(GoalVel[i]);   //在这里取绝对值
+			this->m_Robot->JointsTMove(GoalPos, GoalVel);
 		}
-		else   //如果反向运动
-		{
-			GoalPos[i] = (this->m_thetaImpedPara[i].Next) - GoalVel[i] * GoalVel[i] / (2 * RealAcc[i])-0.5;   //在这里直接加上一点多余的东西，防止减速
-			//GoalPos[i] = (this->m_thetaImpedPara[i].Next) ;   //在这里直接加上一点多余的东西，防止减速
-			GoalVel[i] = -GoalVel[i];
-		}
-		//if (GoalVel[i] < 0) GoalVel[i] = -GoalVel[i];
-	//	GoalVel[i] = fabs(GoalVel[i]);   //在这里取绝对值
+		
 	}
-	this->m_Robot->JointsTMove(GoalPos, GoalVel);
+
 	return true;
 }
 
@@ -431,9 +454,9 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile(v
 	double Torque[3] = { 0, 0, 0 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
 
 
-		Torque[0] = timenum / 100.0;
-		Torque[1] = timenum / 100.0;
-		Torque[2] = timenum / 100.0;
+	//	Torque[0] = timenum / 100.0;
+	//	Torque[1] = timenum / 100.0;
+	Torque[2] = ForceSensor[2];
 
 	for (int i = 0; i < 3; i++)  //使用向后差分的形式
 	{

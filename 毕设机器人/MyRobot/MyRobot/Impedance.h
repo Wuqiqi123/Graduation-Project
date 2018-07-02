@@ -19,6 +19,7 @@ public:
 	bool m_RunningFlag;   //正在运行阻抗控制标志位
 	CRobotBase *m_Robot;    //机器人对象
 	double m_M, m_K, m_B;
+	double ForceSensor[6];
 	ImpedancePara m_FImpedPara, m_xImpedPara[3], m_vImpedPara[3];   //该结构体里面储存了做阻抗控制时，需要用到的参数，力参数，笛卡尔坐标空间的位置和力；
 	ImpedancePara m_thetaImpedPara[4];  //该数组储存了四个关节空间的角度
 	ImpedancePara m_angularVelImpedPara[4];   //该数组储存了四个关节的角速度

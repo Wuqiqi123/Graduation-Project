@@ -134,6 +134,7 @@ BOOL CMyRobotDlg::OnInitDialog()
 	// TODO:  在此添加额外的初始化代码
 	SetTimer(1, 100, NULL);  //设置定时器，定时周期为100ms
 	//SetTimer(2, 100, NULL);  //设置定时器，定时周期为100ms,测试TCP/IP数据用
+	SetTimer(3, 100, NULL);   //设定定时器，定时周期为100ms,主要用作力传感器的显示作用
 
 
 	//*************TCP/IP的地址，设置初始化的TCP/IP地址
@@ -406,9 +407,9 @@ void CMyRobotDlg::OnJointsDataShow()  //关节空间中的状态显示
 	str.Format(_T("%.1f"), Robot->m_JointArray[1].NegativeJointLimit);  
 	SetDlgItemText(IDC_STATIC_82, str);
 	str.Format(_T("%.1f"), Robot->m_JointArray[2].NegativeJointLimit);  
-	SetDlgItemText(IDC_STATIC_83, str);
-	str.Format(_T("%.1f"), Robot->m_JointArray[3].NegativeJointLimit);  
-	SetDlgItemText(IDC_STATIC_84, str);
+    SetDlgItemText(IDC_STATIC_83, str);
+    str.Format(_T("%.1f"), Robot->m_JointArray[3].NegativeJointLimit);
+    SetDlgItemText(IDC_STATIC_84, str);
 
 ////////////////////////////////////////////////
 	unsigned short sts;
@@ -446,30 +447,30 @@ CForceSensor* ATIForceSensor;
 void CMyRobotDlg::OnForceDataShow()
 {
 	CString str;
-	str.Format(_T("%.4f"), ATIForceSensor->m_StainVoltage[0]);
+	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_StainVoltage[0]);
 	SetDlgItemText(IDC_STATIC_NI_VOLTAGE0, str);
-	str.Format(_T("%.4f"), ATIForceSensor->m_StainVoltage[1]);
+	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_StainVoltage[1]);
 	SetDlgItemText(IDC_STATIC_NI_VOLTAGE1, str);
-	str.Format(_T("%.4f"), ATIForceSensor->m_StainVoltage[2]);
+	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_StainVoltage[2]);
 	SetDlgItemText(IDC_STATIC_NI_VOLTAGE2, str);
-	str.Format(_T("%.4f"), ATIForceSensor->m_StainVoltage[3]);
+	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_StainVoltage[3]);
 	SetDlgItemText(IDC_STATIC_NI_VOLTAGE3, str);
-	str.Format(_T("%.4f"), ATIForceSensor->m_StainVoltage[4]);
+	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_StainVoltage[4]);
 	SetDlgItemText(IDC_STATIC_NI_VOLTAGE4, str);
-	str.Format(_T("%.4f"), ATIForceSensor->m_StainVoltage[5]);
+	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_StainVoltage[5]);
 	SetDlgItemText(IDC_STATIC_NI_VOLTAGE5, str);
-	
-	str.Format(_T("%.4f"), ATIForceSensor->m_ForceScrew[0]);
+
+	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_ForceScrew[0]);
 	SetDlgItemText(IDC_STATIC_FORCESENSOR0, str);
-	str.Format(_T("%.4f"), ATIForceSensor->m_ForceScrew[1]);
+	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_ForceScrew[1]);
 	SetDlgItemText(IDC_STATIC_FORCESENSOR1, str);
-	str.Format(_T("%.4f"), ATIForceSensor->m_ForceScrew[2]);
+	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_ForceScrew[2]);
 	SetDlgItemText(IDC_STATIC_FORCESENSOR2, str);
-	str.Format(_T("%.4f"), ATIForceSensor->m_ForceScrew[3]);
+	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_ForceScrew[3]);
 	SetDlgItemText(IDC_STATIC_FORCESENSOR3, str);
-	str.Format(_T("%.4f"), ATIForceSensor->m_ForceScrew[4]);
+	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_ForceScrew[4]);
 	SetDlgItemText(IDC_STATIC_FORCESENSOR4, str);
-	str.Format(_T("%.4f"), ATIForceSensor->m_ForceScrew[5]);
+	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_ForceScrew[5]);
 	SetDlgItemText(IDC_STATIC_FORCESENSOR5, str);
 }
 
@@ -479,13 +480,13 @@ void CMyRobotDlg::OnTimer(UINT_PTR nIDEvent)
 	// TODO:  在此添加消息处理程序代码和/或调用默认值
 	if (nIDEvent == 1)
 	{
-		if (m_servoflag&&ImpedenceControllerStopflag==true)   //如果阻抗控制器不在工作，那么执行刷新函数
+		if (m_servoflag&&ImpedenceControllerStopflag == true)   //如果阻抗控制器不在工作，那么执行刷新函数
 		{
 			Robot->UpdateJointArray();
 			OnJointsDataShow();
 			OnToolDataShow();
 		}
-		if (m_servoflag&&ImpedenceControllerStopflag==false)   //如果阻抗正在工作，那么不用执行刷新函数
+		if (m_servoflag&&ImpedenceControllerStopflag == false)   //如果阻抗正在工作，那么不用执行刷新函数
 		{
 			OnJointsDataShow();
 			OnToolDataShow();
@@ -505,8 +506,19 @@ void CMyRobotDlg::OnTimer(UINT_PTR nIDEvent)
 	}
 	if (nIDEvent == 3)   //测试力传感器
 	{
-		ATIForceSensor->UpdataForceData();
-		OnForceDataShow();
+		if(ImpedanceController!= NULL)
+		{
+			if ((ImpedanceController->ATIForceSensor!=NULL)&&(ImpedenceControllerStopflag == true))  //如果阻抗控制器不在工作，那么执行刷新函数
+			{
+				ATIForceSensor->UpdataForceData();
+				OnForceDataShow();
+			}
+			if ((ImpedanceController->ATIForceSensor != NULL)&&(ImpedenceControllerStopflag == false))
+			{
+				OnForceDataShow();
+			}
+		}
+
 	}
 	CDialogEx::OnTimer(nIDEvent);
 }
@@ -696,9 +708,9 @@ void CMyRobotDlg::OnBnClickedButtonConnectserver()
 void CMyRobotDlg::OnBnClickedButtonForcetest()
 {
 	// TODO:  在此添加控件通知处理程序代码
-	ATIForceSensor = new CForceSensor();
-	ATIForceSensor->InitForceSensor();
-	ATIForceSensor->GetBias();
-	ATIForceSensor->OpenBias();
-	SetTimer(3, 100, NULL);   //设置定时器，定时周期为100ms,测试力传感器
+	//ATIForceSensor = new CForceSensor();
+	//ATIForceSensor->InitForceSensor();
+	//ATIForceSensor->GetBias();
+	//ATIForceSensor->OpenBias();
+	//SetTimer(3, 100, NULL);   //设置定时器，定时周期为100ms,测试力传感器
 }
