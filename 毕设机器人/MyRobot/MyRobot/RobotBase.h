@@ -54,6 +54,7 @@ public:
 
 	double   m_HandLastTn[3][4];    //上一次关节的位置；
 	double	 m_HandCurrTn[3][4];  	//当前末端当前位姿,临时变量  ///运动学正解结果存放在这
+	double   m_JacobiTn[6][4];    //雅可比矩阵
 	double	 m_HandGoalTn[3][4];	//末端目标位姿，		 ///反解输入
 	double	 m_JointGoal[4];	    //关节位置，临时变量 	///运动学反解结果存放在这
 
@@ -84,6 +85,7 @@ public:
 	virtual short JointsTest(void) = 0;
 	virtual short Home(void) = 0; //First position	
 	virtual bool ToolOperation(int toolIndex, int toolOperation) = 0;//工具操作实现函数，针对特定的机器人实现,一般不直接调用，请用ExecuteToolOperation()
+	virtual bool CalculateJacobiMatrix() = 0;
 	/// 
 
 	short JointsTMove(double goalPos[], double vel[]);

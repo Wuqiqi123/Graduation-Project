@@ -12,6 +12,7 @@ const unsigned short OpenMask[16] =
 };
 #define l1   250			
 #define l2   150
+#define l3   120
 //#define l3   4	
 class CGRB4Robot :
 	public CRobotBase
@@ -30,5 +31,6 @@ public:
 	virtual short JointsTest(void);
 	virtual short Home(void); //First position	
 	virtual bool ToolOperation(int toolIndex, int toolOperation);
+	virtual bool CalculateJacobiMatrix();
 };
 

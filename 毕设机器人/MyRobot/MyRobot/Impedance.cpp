@@ -231,6 +231,8 @@ bool CImpedance::StartImpedanceController()
 	{
 		ForceSensor[i] = 0;
 	}
+	for (int i = 0; i < 4; i++)
+		ExtTorque[i] = 0;
 	//ATIForceSensor->UpdataForceData();
 	//ForceSensor[2] = ATIForceSensor->m_ForceScrew[2];
 
@@ -328,7 +330,13 @@ bool CImpedance::GetCurrentState(void)
 
 	//仅仅是做测试用，真正在用的时候需要直接采集力的信息
 	ATIForceSensor->UpdataForceData();
-	ForceSensor[2] = ATIForceSensor->m_ForceScrew[2];
+	ATIForceSensor->ForceBaseAxia(m_Robot);
+	ForceSensor[0] = ATIForceSensor->m_ForceScrewBase[0];
+	ForceSensor[1] = ATIForceSensor->m_ForceScrewBase[1];
+	ForceSensor[2] = ATIForceSensor->m_ForceScrewBase[2];
+	ForceSensor[3] = ATIForceSensor->m_ForceScrewBase[3];
+	ForceSensor[4] = ATIForceSensor->m_ForceScrewBase[4];
+	ForceSensor[5] = ATIForceSensor->m_ForceScrewBase[5];
 	if (abs(ForceSensor[2]) < 0.5)
 	{
 		ForceSensor[2] = 0;
@@ -360,6 +368,24 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendence(void)
 	
 }
 
+
+bool CImpedance::CalculateTorque(void)
+{
+	m_Robot->CalculateJacobiMatrix();  ///计算雅克比矩阵
+	double InverseJacobiTn[4][6];
+	for (int i = 0; i < 4; i++)
+		for (int j = 0; j < 6; j++)
+			InverseJacobiTn[i][i] = m_Robot->m_JacobiTn[j][i];
+
+	for (int i = 0; i < 4; i++)    // t=J^T * F
+		for (int j = 0; j < 6; j++)
+			ExtTorque[i] = ExtTorque[i] + InverseJacobiTn[i][j] * ForceSensor[j];
+
+
+	return true;
+}
+
+
 extern double States[2];
 
 bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void)
@@ -370,13 +396,15 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 		RealAcc[i] = (this->m_Robot->m_JointArray[i].MaxJointAcceleration) / ((this->m_Robot->m_JointArray[i].PulsePerMmOrDegree) * (2 * 0.0001)*(2 * 0.0001));
 		//TRACE("the %d’RealAcc is: %.3f\n", i, RealAcc[i]);
 	}
-	double Torque[3] = { 0, 0, 0 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
+
+	CalculateTorque();
+	double Torque[4] = { 0, 0, 0, 0 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
 	Torque[0] = 0;
 	Torque[1] = 0;
-	Torque[2] = -ForceSensor[2];
-
+	Torque[2] = ExtTorque[2];
+	Torque[3] = ExtTorque[3];
 	//////////使用卡尔曼滤波器
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		JointFilter[i].GetKalmanStates(m_thetaImpedPara[i].Now, m_angularVelImpedPara[i].Now, Torque[i]);
 		m_thetaImpedPara[i].Now = States[0];
@@ -388,16 +416,16 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 	}
 
 #ifdef DEBUG
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		TRACE("the %d’axis Kalmantheta is: %.3f\n", i, m_thetaImpedPara[i].Now);
 		TRACE("the %d' axis KalmanangelVel is: %.3f\n", i, m_angularVelImpedPara[i].Now);
 	}
 #endif
 
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 4; i++)
 	{
-		if (i == 2)
+		if (i == 2||i==3)
 		{
 			m_angularVelImpedPara[i].Next = (Torque[i] - m_K*m_thetaImpedPara[i].Now) / (m_K*T + m_B);
 			//m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*T;
@@ -417,7 +445,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 	double GoalPos[4] = { 0, 0, 0, 0 }, GoalVel[4] = { 0, 0, 0, 0 };
 	for (int i = 0; i < this->m_Robot->m_JointNumber; i++)
 	{
-		if (i == 2)
+		if (i == 2||i==3)
 		{
 			GoalVel[i] = this->m_angularVelImpedPara[i].Next;
 	#ifdef DEBUG

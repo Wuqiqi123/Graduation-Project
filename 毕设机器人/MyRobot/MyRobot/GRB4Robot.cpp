@@ -178,7 +178,7 @@ short CGRB4Robot::Home()
 	m_pController->AxisCaptHomeWithLimit(1, long(/*120*/(33.)*m_JointArray[0].PulsePerMmOrDegree), 10);
 	m_pController->AxisCaptHomeWithLimit(2, long(/*185.*/(103.)*m_JointArray[1].PulsePerMmOrDegree), 10);
 	m_pController->AxisCaptHomeWithLimit(3, long(100.*m_JointArray[2].PulsePerMmOrDegree), 12);
-	m_pController->AxisCaptHomeWithoutLimit(4, 10);	//手爪需要修改来调零
+	m_pController->AxisCaptHomeWithoutLimit(4, 7);	//手爪需要修改来调零
 
 	//由于是原点归零是正向移动，所以正向移动的时候正向间隙时0，负向间隙时是GapLength-GapToPositive=GapLength
 	for (int i = 0; i < m_JointNumber; i++)   //由于机器人在回零的时候四根轴的都是正向移动的，所以正向的间隙都是0，而负向的间隙就是GapLength-0=GapLength
@@ -341,6 +341,37 @@ bool CGRB4Robot::InverseKinematics(void)
 */
 bool CGRB4Robot::FullForwardKinematics(void)
 {
+	double t0, t1, t2, t3;
+
+	t0 = m_JointArray[0].CurrentJointPositon * pi / 180.; //转化成弧度
+	t1 = m_JointArray[1].CurrentJointPositon * pi / 180.; //转化成弧度
+	t2 = m_JointArray[2].CurrentJointPositon;
+	t3 = m_JointArray[3].CurrentJointPositon * pi / 180;
+
+
+	for (int i = 0; i<3; i++)
+		for (int j = 0; j<4; j++)
+			m_HandCurrTn[i][j] = 0;
+
+	m_HandCurrTn[0][0] = cos(t0 + t1 + t3);
+	m_HandCurrTn[1][1] = m_HandCurrTn[0][0];
+	m_HandCurrTn[2][2] = 1;
+
+	m_HandCurrTn[1][0] = sin(t0 + t1 + t3);
+	m_HandCurrTn[0][1] = -m_HandCurrTn[1][0];
+
+	m_HandCurrTn[0][3] = l2 * cos(t0 + t1) + l1 * cos(t0);////求X位置
+	m_HandCurrTn[1][3] = l2 * sin(t0 + t1) + l1 * sin(t0);////求Y位置
+	m_HandCurrTn[2][3] = t2-l3;
+
+
+	////m_HandCurrTn[3][3]=t3;
+
+	//x=m_HandCurrTn[0][3];  //“X”位置
+	//y=m_HandCurrTn[1][3];  //“Y”位置
+	//z=m_HandCurrTn[2][3];  //“z”位置
+	//theta=m_HandCurrTn[3][3];  //“theta”位置
+
 	return true;
 }
 
@@ -352,3 +383,27 @@ bool CGRB4Robot::FullInverseKinematics(void)
 	return true;
 }
 
+bool CGRB4Robot::CalculateJacobiMatrix()
+{
+	double t0, t1, t2, t3;
+
+	t0 = m_JointArray[0].CurrentJointPositon * pi / 180.; //转化成弧度
+	t1 = m_JointArray[1].CurrentJointPositon * pi / 180.; //转化成弧度
+	t2 = m_JointArray[2].CurrentJointPositon;
+	t3 = m_JointArray[3].CurrentJointPositon * pi / 180;
+
+	for (int i = 0; i<6; i++)
+		for (int j = 0; j<4; j++)
+			m_JacobiTn[i][j] = 0;
+
+	m_JacobiTn[0][0] = -l1 * sin(t0) - l2 * sin(t0 + t1);
+	m_JacobiTn[0][1] = -l2 * sin(t0 + t1);
+	m_JacobiTn[1][0] = l1 * cos(t0) + l2 * cos(t0 + t1);
+	m_JacobiTn[1][1] = l2 * cos(t0 + t1);
+	m_JacobiTn[2][2] = 1;
+	m_JacobiTn[5][0] = 1;
+	m_JacobiTn[5][1] = 1;
+	m_JacobiTn[5][3] = 1;
+
+	return true;
+}
