@@ -142,7 +142,7 @@ short CGTController::InitCard(void)            //###################注释完成
 		}
 		if (i == 4)
 		{
-			GT_SetKp(16);
+			GT_SetKp(13);
 			GT_SetKi(4);
 			GT_SetKd(5);
 		}
@@ -521,7 +521,7 @@ short CGTController::AxisCaptHomeWithoutLimit(int axisno, double vel)     //####
 	//***********************************这里我觉得需要修改，为什么不直接读原点开关的位置了，或许是原点位置开关安装位置比较偏。
 	GT_SetVel(vel);
 	GT_SetAcc(0.01);
-	GT_SetPos(long((96)*10000.*24. / 360.));		//lty  
+	GT_SetPos(long((-68)*10000.*24. / 360.));		//调整力传感器的角度为Y+ 在前面
 	//GT_SetPos(long(/*-17.*/(-51.+1.7415)*10000.*24./360.));
 	GT_Update();
 	GT_GetSts(&str);
