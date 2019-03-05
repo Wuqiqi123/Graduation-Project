@@ -337,10 +337,18 @@ bool CImpedance::GetCurrentState(void)
 	ForceSensor[3] = ATIForceSensor->m_ForceScrewBase[3];
 	ForceSensor[4] = ATIForceSensor->m_ForceScrewBase[4];
 	ForceSensor[5] = ATIForceSensor->m_ForceScrewBase[5];
-	if (abs(ForceSensor[2]) < 0.5)
+	for (int i = 0; i <= 6; i++)
 	{
-		ForceSensor[2] = 0;
+		if (i<3&&abs(ForceSensor[i]) < 0.5)
+		{
+			ForceSensor[i] = 0;
+		}
+		if (i>3 && abs(ForceSensor[i]) < 0.1)
+		{
+			ForceSensor[i] = 0;
+		}
 	}
+
 	//m_FImpedPara.Last = 10;   //力是1N  ，单位是N
 	//m_FImpedPara.Now = 10;
 	//m_FImpedPara.Next = 10;
@@ -372,10 +380,14 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendence(void)
 bool CImpedance::CalculateTorque(void)
 {
 	m_Robot->CalculateJacobiMatrix();  ///计算雅克比矩阵
+	
+	for (int i = 0; i < 4; i++)
+		ExtTorque[i] = 0;
+
 	double InverseJacobiTn[4][6];
 	for (int i = 0; i < 4; i++)
 		for (int j = 0; j < 6; j++)
-			InverseJacobiTn[i][i] = m_Robot->m_JacobiTn[j][i];
+			InverseJacobiTn[i][j] = m_Robot->m_JacobiTn[j][i];
 
 	for (int i = 0; i < 4; i++)    // t=J^T * F
 		for (int j = 0; j < 6; j++)
@@ -400,7 +412,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 	CalculateTorque();
 	double Torque[4] = { 0, 0, 0, 0 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
 	Torque[0] = 0;
-	Torque[1] = 0;
+	Torque[1] = ExtTorque[1];
 	Torque[2] = ExtTorque[2];
 	Torque[3] = ExtTorque[3];
 	//////////使用卡尔曼滤波器
@@ -425,7 +437,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 
 	for (int i = 0; i < 4; i++)
 	{
-		if (i == 2||i==3)
+		if (i == 2||i==3||i==1)
 		{
 			m_angularVelImpedPara[i].Next = (Torque[i] - m_K*m_thetaImpedPara[i].Now) / (m_K*T + m_B);
 			//m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*T;
@@ -445,7 +457,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 	double GoalPos[4] = { 0, 0, 0, 0 }, GoalVel[4] = { 0, 0, 0, 0 };
 	for (int i = 0; i < this->m_Robot->m_JointNumber; i++)
 	{
-		if (i == 2||i==3)
+		if (i == 2||i==3||i==1)
 		{
 			GoalVel[i] = this->m_angularVelImpedPara[i].Next;
 	#ifdef DEBUG
