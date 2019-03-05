@@ -94,7 +94,7 @@ void CForceSensor::CalculateForceData(void)
 void CForceSensor::ForceBaseAxia(CRobotBase *Robot)
 {
 	double t0, t1, t2, t3;
-	double  T05[3][4];  //矩阵这个矩阵是力坐标系转化到机器人极坐标的转化矩阵
+	double  T05[3][4];  //这个矩阵是力坐标系转化到机器人基坐标的转化矩阵
 
 	t0 = Robot->m_JointArray[0].CurrentJointPositon * pi / 180.; //转化成弧度
 	t1 = Robot->m_JointArray[1].CurrentJointPositon * pi / 180.; //转化成弧度
