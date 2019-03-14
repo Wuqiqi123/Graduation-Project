@@ -154,11 +154,17 @@ CImpedance::CImpedance(CRobotBase *Robot)
 	m_RunningFlag = false;
 	for (int i = 0; i < 4; i++)
 	{
-		if (i == 0 || i == 1 || i == 2)
+		if (i == 0 || i == 1 )
 		{
 			m_M[i]= 0;
 			m_K[i]= 0.01;   //单位是 N/mm  0.2
-			m_B[i] = 0.002;
+			m_B[i] = 0.01;
+		}
+		else if (i == 2)
+		{
+			m_M[i] = 0;
+			m_K[i] = 0.008;   //单位是 N/mm  0.2
+			m_B[i] = 0.02;
 		}
 		else
 		{
@@ -353,13 +359,24 @@ bool CImpedance::GetCurrentState(void)
 	ForceSensor[5] = ATIForceSensor->m_ForceScrewBase[5];
 	for (int i = 0; i < 6; i++)
 	{
-		if (i<3&&abs(ForceSensor[i]) < 0.5)
+		switch (i)
 		{
-			ForceSensor[i] = 0;
-		}
-		if (i>=3 && abs(ForceSensor[i]) < 0.001)
-		{
-			ForceSensor[i] = 0;
+		case 0:
+		case 1:
+		case 2:
+				{
+					if (abs(ForceSensor[i]) < 0.1)
+						ForceSensor[i] = 0;
+					break;
+				}
+		case 3:
+		case 4:
+		case 5:
+				{
+					if (abs(ForceSensor[i]) < 0.008)
+						ForceSensor[i] = 0;
+					break;
+				}
 		}
 	}
 
@@ -407,6 +424,9 @@ bool CImpedance::CalculateTorque(void)
 		for (int j = 0; j < 6; j++)
 			ExtTorque[i] = ExtTorque[i] + InverseJacobiTn[i][j] * ForceSensor[j];
 
+	if (abs(ExtTorque[1]) < 0.2) ExtTorque[1] = 0;
+	if (abs(ExtTorque[2]) < 0.2) ExtTorque[2] = 0;
+	if (abs(ExtTorque[3]) < 0.05) ExtTorque[3] = 0;
 
 	return true;
 }
@@ -457,7 +477,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 
 	for (int i = 0; i < 4; i++)
 	{
-		if (i == 3)
+		if (i==1||i==2||i == 3)
 		{
 			m_angularVelImpedPara[i].Next = (Torque[i] - m_K[i]*m_thetaImpedPara[i].Now) / (m_K[i]*T + m_B[i]);
 			//m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*T;
@@ -477,7 +497,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 	double GoalPos[4] = { 0, 0, 0, 0 }, GoalVel[4] = { 0, 0, 0, 0 };
 	for (int i = 0; i < this->m_Robot->m_JointNumber; i++)
 	{
-		if (i == 3)
+		if (i==1||i==2||i == 3)
 		{
 			GoalVel[i] = this->m_angularVelImpedPara[i].Next;
 	#ifdef DEBUG
