@@ -43,7 +43,7 @@ public:
 
 	void Init_Kalman(double k, double b, double dt);
 
-	void GetKalmanStates(double ObserveTheta, double ObserveVel, double torque);
+	void GetKalmanStates(double ObserveTheta, double ObserveVel, double torque,int i);
 
 private:
 	

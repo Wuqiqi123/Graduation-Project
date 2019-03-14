@@ -66,23 +66,23 @@ void CKalmanFilter::Init_Kalman(double k, double b, double dt)
 }
 
 
-double States[2];  //全局变量
+double States[4][2];  //全局变量
 
 
-void CKalmanFilter::GetKalmanStates(double ObserveTheta, double ObserveVel, double torque)
+void CKalmanFilter::GetKalmanStates(double ObserveTheta, double ObserveVel, double torque,int i)
 {
 #if Order==1   ///////一阶卡尔曼滤波器
 	////////////第一步
 	Bu = m_dt * torque / (m_k * m_dt + m_b);
 	double StatesEstimate;
-	StatesEstimate = A * States[0] + Bu;
+	StatesEstimate = A * States[i][0] + Bu;
 	///////////第二步
 	double StatesP;
 	StatesP = A * P * A + Q;
 	/////////第三步
 	K=StatesP*H/(H*StatesP*H+R);
 	////////第四步
-	States[0]=StatesEstimate+K*(ObserveTheta-H*StatesEstimate);
+	States[i][0]=StatesEstimate+K*(ObserveTheta-H*StatesEstimate);
 	////////第五步
 	P=(1-K*H)*StatesP;
 #elif Order==2

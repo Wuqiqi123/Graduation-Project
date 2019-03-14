@@ -152,9 +152,23 @@ CImpedance::CImpedance(CRobotBase *Robot)
 {
 	m_Robot = Robot;
 	m_RunningFlag = false;
-	m_M = 0;
-	m_K = 0.01;   //单位是 N/mm  0.2
-	m_B = 0.002;
+	for (int i = 0; i < 4; i++)
+	{
+		if (i == 0 || i == 1 || i == 2)
+		{
+			m_M[i]= 0;
+			m_K[i]= 0.01;   //单位是 N/mm  0.2
+			m_B[i] = 0.002;
+		}
+		else
+		{
+			m_M[i] = 0;
+			m_K[i] = 0.001;   //单位是 N/mm  0.2
+			m_B[i] = 0.0002;
+		}
+
+	}
+
 	m_FImpedPara.Last = 0;
 	m_FImpedPara.Now = 0;
 	m_FImpedPara.Next = 0;
@@ -202,7 +216,7 @@ bool CImpedance::StartImpedanceController()
 	
 	for (int i = 0; i < m_Robot->m_JointNumber; i++)
 	{
-		JointFilter[i].Init_Kalman(m_K, m_B, T);
+		JointFilter[i].Init_Kalman(m_K[i], m_B[i], T);
 	}
 	//////////////////////////////////////
 	m_Robot->UpdateJointArray(); //刷新各个关节的值
@@ -337,13 +351,13 @@ bool CImpedance::GetCurrentState(void)
 	ForceSensor[3] = ATIForceSensor->m_ForceScrewBase[3];
 	ForceSensor[4] = ATIForceSensor->m_ForceScrewBase[4];
 	ForceSensor[5] = ATIForceSensor->m_ForceScrewBase[5];
-	for (int i = 0; i <= 6; i++)
+	for (int i = 0; i < 6; i++)
 	{
 		if (i<3&&abs(ForceSensor[i]) < 0.5)
 		{
 			ForceSensor[i] = 0;
 		}
-		if (i>3 && abs(ForceSensor[i]) < 0.1)
+		if (i>=3 && abs(ForceSensor[i]) < 0.001)
 		{
 			ForceSensor[i] = 0;
 		}
@@ -369,7 +383,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendence(void)
 	//double Torque[3] = { 10, 10, 10 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
 	//for (int i = 0; i < 3; i++)
 	//{
-	//	m_angularVelImpedPara[i].Next = (Torque[i] - m_K*m_thetaImpedPara[i].Now) / (m_K*0.01 + m_B);
+	//	m_angularVelImpedPara[i].Next = (Torque[i] - m_K[i]*m_thetaImpedPara[i].Now) / (m_K[i]*0.01 + m_B[i]);
 	//	m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*0.01;
 	//}
 	return true;
@@ -398,7 +412,7 @@ bool CImpedance::CalculateTorque(void)
 }
 
 
-extern double States[2];
+extern double States[4][2];
 
 bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void)
 {
@@ -415,11 +429,17 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 	Torque[1] = ExtTorque[1];
 	Torque[2] = ExtTorque[2];
 	Torque[3] = ExtTorque[3];
+#ifdef DEBUG
+	for (int i = 0; i < 4; i++)
+	{
+		TRACE("the %d’Torque is: %.3f\n", i, Torque[i]);
+	}
+#endif
 	//////////使用卡尔曼滤波器
 	for (int i = 0; i < 4; i++)
 	{
-		JointFilter[i].GetKalmanStates(m_thetaImpedPara[i].Now, m_angularVelImpedPara[i].Now, Torque[i]);
-		m_thetaImpedPara[i].Now = States[0];
+		JointFilter[i].GetKalmanStates(m_thetaImpedPara[i].Now, m_angularVelImpedPara[i].Now, Torque[i],i);
+		m_thetaImpedPara[i].Now = States[i][0];
 		//m_angularVelImpedPara[i].Now = States[1];
 		m_angularVelImpedPara[i].Now = (m_thetaImpedPara[i].Now - m_thetaImpedPara[i].Last) / T;
 
@@ -437,11 +457,11 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 
 	for (int i = 0; i < 4; i++)
 	{
-		if (i == 2||i==3||i==1)
+		if (i == 3)
 		{
-			m_angularVelImpedPara[i].Next = (Torque[i] - m_K*m_thetaImpedPara[i].Now) / (m_K*T + m_B);
+			m_angularVelImpedPara[i].Next = (Torque[i] - m_K[i]*m_thetaImpedPara[i].Now) / (m_K[i]*T + m_B[i]);
 			//m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*T;
-			m_thetaImpedPara[i].Next = m_B*m_thetaImpedPara[i].Now / (m_K*T + m_B) + T*Torque[i] / (m_K*T + m_B);
+			m_thetaImpedPara[i].Next = m_B[i]*m_thetaImpedPara[i].Now / (m_K[i]*T + m_B[i]) + T*Torque[i] / (m_K[i]*T + m_B[i]);
 		}
 		
 	}
@@ -457,7 +477,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 	double GoalPos[4] = { 0, 0, 0, 0 }, GoalVel[4] = { 0, 0, 0, 0 };
 	for (int i = 0; i < this->m_Robot->m_JointNumber; i++)
 	{
-		if (i == 2||i==3||i==1)
+		if (i == 3)
 		{
 			GoalVel[i] = this->m_angularVelImpedPara[i].Next;
 	#ifdef DEBUG
@@ -465,7 +485,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 	#endif
 			if (GoalVel[i] >= 0)   //如果正向运动
 			{
-				GoalPos[i] = (this->m_thetaImpedPara[i].Next) + GoalVel[i] * GoalVel[i] / (2 * RealAcc[i])+0.5;   //在这里直接加上一点多余的东西，防止减速
+				GoalPos[i] = (this->m_thetaImpedPara[i].Next) + GoalVel[i] * GoalVel[i] / (2 * RealAcc[i]) + 0.4;   //在这里直接加上一点多余的东西，防止减速
 				//GoalPos[i] = (this->m_thetaImpedPara[i].Next) ;   //在这里直接加上一点多余的东西，防止减速
 	#ifdef DEBUG
 				TRACE("the %d’extro theta is: %.6lf\n", i, GoalVel[i] * GoalVel[i] / (2 * RealAcc[i]));
@@ -473,7 +493,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 			}
 			else   //如果反向运动
 			{
-				GoalPos[i] = (this->m_thetaImpedPara[i].Next) - GoalVel[i] * GoalVel[i] / (2 * RealAcc[i])-0.5;   //在这里直接加上一点多余的东西，防止减速
+				GoalPos[i] = (this->m_thetaImpedPara[i].Next) - GoalVel[i] * GoalVel[i] / (2 * RealAcc[i]) - 0.4;   //在这里直接加上一点多余的东西，防止减速
 				//GoalPos[i] = (this->m_thetaImpedPara[i].Next) ;   //在这里直接加上一点多余的东西，防止减速
 				GoalVel[i] = -GoalVel[i];
 			}
@@ -500,11 +520,11 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile(v
 
 	for (int i = 0; i < 3; i++)  //使用向后差分的形式
 	{
-		m_thetaImpedPara[i].Next = 1.0 / (m_B / T + m_K)*Torque[i] + 1.0 / (m_B / T + m_K)*(m_B / T)*m_thetaImpedPara[i].Now;
+		m_thetaImpedPara[i].Next = 1.0 / (m_B[i] / T + m_K[i])*Torque[i] + 1.0 / (m_B[i] / T + m_K[i])*(m_B[i] / T)*m_thetaImpedPara[i].Now;
 	}
 	//for (int i = 0; i < 3; i++)   //直接使用微分方程
 	//{
-	//	m_thetaImpedPara[i].Next = 1.0 / (m_B / T + m_K)*Torque[i] + 1.0 / (m_B / T + m_K)*(m_B / T)*m_thetaImpedPara[i].Now;
+	//	m_thetaImpedPara[i].Next = 1.0 / (m_B[i] / T + m_K[i])*Torque[i] + 1.0 / (m_B[i] / T + m_K[i])*(m_B[i] / T)*m_thetaImpedPara[i].Now;
 	//}
 #ifdef DEBUG
 	for (int i = 0; i < 4; i++)
@@ -526,7 +546,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithSProfile(v
 	double Torque[3] = { 10, 10, 10 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
 	for (int i = 0; i < 3; i++)
 	{
-		m_thetaImpedPara[i].Next = 1.0 / (m_B / T + m_K)*Torque[i] + 1.0 / (m_B / T + m_K)*(m_B / T)*m_thetaImpedPara[i].Now;
+		m_thetaImpedPara[i].Next = 1.0 / (m_B[i] / T + m_K[i])*Torque[i] + 1.0 / (m_B[i] / T + m_K[i])*(m_B[i] / T)*m_thetaImpedPara[i].Now;
 	}
 #ifdef DEBUG
 	for (int i = 0; i < 4; i++)
