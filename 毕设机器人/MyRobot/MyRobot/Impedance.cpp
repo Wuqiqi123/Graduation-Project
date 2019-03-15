@@ -445,7 +445,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 
 	CalculateTorque();
 	double Torque[4] = { 0, 0, 0, 0 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
-	Torque[0] = 0;
+	Torque[0] = ExtTorque[0];
 	Torque[1] = ExtTorque[1];
 	Torque[2] = ExtTorque[2];
 	Torque[3] = ExtTorque[3];
@@ -477,7 +477,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 
 	for (int i = 0; i < 4; i++)
 	{
-		if (i==1||i==2||i == 3)
+		if ( i==0 || i==1 || i==2 ||i == 3)
 		{
 			m_angularVelImpedPara[i].Next = (Torque[i] - m_K[i]*m_thetaImpedPara[i].Now) / (m_K[i]*T + m_B[i]);
 			//m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*T;
@@ -497,7 +497,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 	double GoalPos[4] = { 0, 0, 0, 0 }, GoalVel[4] = { 0, 0, 0, 0 };
 	for (int i = 0; i < this->m_Robot->m_JointNumber; i++)
 	{
-		if (i==1||i==2||i == 3)
+		if (i==0||i==1||i==2||i == 3)
 		{
 			GoalVel[i] = this->m_angularVelImpedPara[i].Next;
 	#ifdef DEBUG
