@@ -477,7 +477,13 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 
 	for (int i = 0; i < 4; i++)
 	{
-		if ( i==0 || i==1 || i==2 ||i == 3)
+		if ( i == 1 )
+		{
+			m_angularVelImpedPara[i].Next = (Torque[i] + m_K[i] * 60 - m_K[i] * m_thetaImpedPara[i].Now) / (m_K[i] * T + m_B[i]);
+			m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*T;
+			//m_thetaImpedPara[i].Next = m_B[i] * m_thetaImpedPara[i].Now / (m_K[i] * T + m_B[i]) + T*Torque[i] / (m_K[i] * T + m_B[i]);
+		}
+		if ( i==0 || i==2 ||i == 3)
 		{
 			m_angularVelImpedPara[i].Next = (Torque[i] - m_K[i]*m_thetaImpedPara[i].Now) / (m_K[i]*T + m_B[i]);
 			//m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*T;
