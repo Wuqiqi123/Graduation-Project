@@ -46,7 +46,11 @@ CGTController::CGTController()              //###################注释完成
 CGTController::~CGTController()        //###################注释完成
 {
 	if (m_AxisArray != NULL)
-		delete[]m_AxisArray;
+	{
+		delete[] m_AxisArray;
+		m_AxisArray = NULL;
+	}
+	
 	GT_ExOpt(0xffff);    //该函数设置运动控制器通用数字量输出的状态。Bit(i)----->EXO(i)  i=0~15
 
 	//如果有线程关闭线程的句柄

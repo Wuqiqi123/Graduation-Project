@@ -21,6 +21,7 @@ public:
 	bool m_deviceflag;
 	bool m_servoflag;
 	bool m_ImpedanceButtonflag;
+	CForceSensor* DlgATIForceSensor;
 	void OnJointsDataShow();	
 	void OnToolDataShow();
 	void OnForceDataShow();

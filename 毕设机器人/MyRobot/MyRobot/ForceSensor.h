@@ -7,12 +7,14 @@ class CForceSensor :
 	public CObject
 {
 private:
+	CForceSensor();  //单例模式，隐藏构造函数
 	DAQSys* NIDataCard;
 	double m_GainCorrectionFactor[6];
-	 double m_CalibrationMatrix[6][6];
+	double m_CalibrationMatrix[6][6];
+	static CForceSensor* pForceSense;
 public:
 	
-	CForceSensor();
+	static CForceSensor* getForceSensorInstance();
 	
 	virtual ~CForceSensor();
 	virtual void ForceBaseAxia(CRobotBase *Robot);

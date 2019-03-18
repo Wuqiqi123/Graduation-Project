@@ -18,11 +18,20 @@ CRobotBase::CRobotBase()
 CRobotBase::~CRobotBase()
 {
 	if (m_pController != NULL)  //删除控制器
+	{
 		delete m_pController;
+		m_pController = NULL;
+	}
 	if (m_pPlanner != NULL)    //删除规划期
+	{
 		delete m_pPlanner;
+		m_pPlanner = NULL;
+	}
 	if (m_JointArray != NULL)   //删除关节数组
-		delete[]m_JointArray;
+	{
+		delete[] m_JointArray;
+		m_JointArray = NULL;
+	}
 }
 
 /*
