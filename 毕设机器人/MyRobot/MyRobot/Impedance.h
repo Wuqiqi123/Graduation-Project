@@ -28,7 +28,7 @@ public:
 	CKalmanFilter JointFilter[4];  ///定义卡尔曼滤波器
 	CVelFliter JointVelFilter[4];  ///定义速度的卡尔曼滤波器
 
-	CForceSensor* ATIForceSensor;
+	 CForceSensor* ATIForceSensor;
 	
 
 public:
@@ -43,6 +43,7 @@ public:
 	bool GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile(void);
 	bool GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithSProfile(void);
 	bool CalculateTorque(void);
+	CForceSensor* DeliverForceSensor(void);
 
 };
 

@@ -61,6 +61,7 @@ CMyRobotDlg::CMyRobotDlg(CWnd* pParent /*=NULL*/)
 	m_deviceflag = false;
 	m_servoflag = false;
 	m_ImpedanceButtonflag = false;
+	CForceSensor* DlgATIForceSensor = NULL;
 
 }
 
@@ -356,6 +357,8 @@ void CMyRobotDlg::OnBnClickedButtonImpedance()
 		ImpedanceController->StopImpedanceController();
 		m_ImpedanceButton.SetWindowText(_T("阻抗控制开启"));
 		m_ImpedanceButtonflag = false;
+		delete ImpedanceController;
+		ImpedanceController = NULL;
 	}
 
 
@@ -442,36 +445,37 @@ void CMyRobotDlg::OnToolDataShow()    //直角坐标系中的状态显示
 	SetDlgItemText(IDC_STATIC_GRIPPER_JOINT, str);
 }
 
-CForceSensor* ATIForceSensor;
 
 void CMyRobotDlg::OnForceDataShow()
 {
-	CString str;
-	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_StainVoltage[0]);
-	SetDlgItemText(IDC_STATIC_NI_VOLTAGE0, str);
-	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_StainVoltage[1]);
-	SetDlgItemText(IDC_STATIC_NI_VOLTAGE1, str);
-	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_StainVoltage[2]);
-	SetDlgItemText(IDC_STATIC_NI_VOLTAGE2, str);
-	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_StainVoltage[3]);
-	SetDlgItemText(IDC_STATIC_NI_VOLTAGE3, str);
-	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_StainVoltage[4]);
-	SetDlgItemText(IDC_STATIC_NI_VOLTAGE4, str);
-	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_StainVoltage[5]);
-	SetDlgItemText(IDC_STATIC_NI_VOLTAGE5, str);
+	
+	    CString str;
+		str.Format(_T("%.4f"), DlgATIForceSensor->m_StainVoltage[0]);
+		SetDlgItemText(IDC_STATIC_NI_VOLTAGE0, str);
+		str.Format(_T("%.4f"), DlgATIForceSensor->m_StainVoltage[1]);
+		SetDlgItemText(IDC_STATIC_NI_VOLTAGE1, str);
+		str.Format(_T("%.4f"), DlgATIForceSensor->m_StainVoltage[2]);
+		SetDlgItemText(IDC_STATIC_NI_VOLTAGE2, str);
+		str.Format(_T("%.4f"), DlgATIForceSensor->m_StainVoltage[3]);
+		SetDlgItemText(IDC_STATIC_NI_VOLTAGE3, str);
+		str.Format(_T("%.4f"), DlgATIForceSensor->m_StainVoltage[4]);
+		SetDlgItemText(IDC_STATIC_NI_VOLTAGE4, str);
+		str.Format(_T("%.4f"), DlgATIForceSensor->m_StainVoltage[5]);
+		SetDlgItemText(IDC_STATIC_NI_VOLTAGE5, str);
 
-	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_ForceScrew[0]);
-	SetDlgItemText(IDC_STATIC_FORCESENSOR0, str);
-	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_ForceScrew[1]);
-	SetDlgItemText(IDC_STATIC_FORCESENSOR1, str);
-	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_ForceScrew[2]);
-	SetDlgItemText(IDC_STATIC_FORCESENSOR2, str);
-	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_ForceScrew[3]);
-	SetDlgItemText(IDC_STATIC_FORCESENSOR3, str);
-	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_ForceScrew[4]);
-	SetDlgItemText(IDC_STATIC_FORCESENSOR4, str);
-	str.Format(_T("%.4f"), ImpedanceController->ATIForceSensor->m_ForceScrew[5]);
-	SetDlgItemText(IDC_STATIC_FORCESENSOR5, str);
+		str.Format(_T("%.4f"), DlgATIForceSensor->m_ForceScrew[0]);
+		SetDlgItemText(IDC_STATIC_FORCESENSOR0, str);
+		str.Format(_T("%.4f"), DlgATIForceSensor->m_ForceScrew[1]);
+		SetDlgItemText(IDC_STATIC_FORCESENSOR1, str);
+		str.Format(_T("%.4f"), DlgATIForceSensor->m_ForceScrew[2]);
+		SetDlgItemText(IDC_STATIC_FORCESENSOR2, str);
+		str.Format(_T("%.4f"), DlgATIForceSensor->m_ForceScrew[3]);
+		SetDlgItemText(IDC_STATIC_FORCESENSOR3, str);
+		str.Format(_T("%.4f"), DlgATIForceSensor->m_ForceScrew[4]);
+		SetDlgItemText(IDC_STATIC_FORCESENSOR4, str);
+		str.Format(_T("%.4f"), DlgATIForceSensor->m_ForceScrew[5]);
+		SetDlgItemText(IDC_STATIC_FORCESENSOR5, str);
+	
 }
 
 //定时器函数，在OnInitDialog（）函数中设置定时器的定时时间是100ms
@@ -506,18 +510,39 @@ void CMyRobotDlg::OnTimer(UINT_PTR nIDEvent)
 	}
 	if (nIDEvent == 3)   //测试力传感器
 	{
-		if(ImpedanceController!= NULL)
-		{
-			if ((ImpedanceController->ATIForceSensor!=NULL)&&(ImpedenceControllerStopflag == true))  //如果阻抗控制器不在工作，那么执行刷新函数
-			{
-				ATIForceSensor->UpdataForceData();
-				OnForceDataShow();
-			}
-			if ((ImpedanceController->ATIForceSensor != NULL)&&(ImpedenceControllerStopflag == false))
-			{
-				OnForceDataShow();
-			}
-		}
+		DlgATIForceSensor = CForceSensor::getForceSensorInstance();  //单例模式
+		DlgATIForceSensor->UpdataForceData();
+		OnForceDataShow();
+
+		//if(ImpedanceController!= NULL)
+		//{
+		//	if (DlgATIForceSensor != NULL)
+		//	{
+		//		delete DlgATIForceSensor;
+		//		DlgATIForceSensor = NULL;
+		//	}
+		//		
+		//	DlgATIForceSensor = ImpedanceController->DeliverForceSensor();
+		//	DlgATIForceSensor->UpdataForceData();
+		//	OnForceDataShow();
+		//	//if (ImpedenceControllerStopflag == true)  //如果阻抗控制器不在工作，那么执行刷新函数
+		//	//{
+		//	//	DlgATIForceSensor->UpdataForceData();
+		//	//	OnForceDataShow();
+		//	//}
+		//	//else(ImpedenceControllerStopflag == false)
+		//	//{
+		//	//	OnForceDataShow();
+		//	//}
+		//}
+		//else
+		//{
+		//	if (DlgATIForceSensor == NULL)
+		//	{
+		//		DlgATIForceSensor = CForceSensor::getForceSensorInstance();
+
+		//	}
+		//}
 
 	}
 	CDialogEx::OnTimer(nIDEvent);

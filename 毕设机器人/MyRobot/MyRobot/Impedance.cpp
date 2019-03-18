@@ -45,14 +45,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 	dff = (double)litmp.QuadPart;
 	while (1)
 	{	
-////////////////////////////////////////////////调试时间代码开始
-		////获得初始值  
-		//QueryPerformanceCounter(&litmp);
-		//qt1 = litmp.QuadPart;//获得当前时间t1的值	
-		//dfm1 = (double)(qt1 - qt2);
-		//dft = dfm1 / dff;
-		//_cprintf("t1-t2=%.3f\n", dft * 1000);
-///////////////////////////////////////////////调试时间代码结束
+
 		WaitForSingleObject(hSyncEvent, INFINITE);
 ////////////////////////////////////////////////调试时间代码开始
 #ifdef DEBUG
@@ -62,12 +55,10 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 		//获得对应的时间值，转到毫秒单位上  
 		dfm1 = (double)(qt1 - qt2);
 		dft = dfm1 / dff;
-//		_cprintf("waited time:t1-t2=%.3f\n", dft * 1000);
 		TRACE("waited time:t1-t2=%.3f\n", dft * 1000);
 //		TRACE("testNUM=%d\n", testNUM);	
 		dfm1 = (double)(qt1 - qt1last);
 		dft = dfm1 / dff;
-//		_cprintf("One cycle time:t1-t1last=%.3f\n", dft*1000);
 		TRACE("One cycle time:t1-t1last=%.3f\n", dft * 1000);
 #endif
 ///////////////////////////////////////////////调试时间代码结束
@@ -105,23 +96,22 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 				TRACE("the %d' axis angelVel is: %.3f\n",i,pImpedence->m_angularVelImpedPara[i].Now);
 			}
 
-		//	TRACE("timeflag=%d\n", timenum);
 #endif
 			pImpedence->GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile();  //计算下一个时刻的关节的角度和角速度并执行
 			
 			////下面是TCP/IP传输
 			memset(&MyRobotData, 0, sizeof(MyRobotData));
-			MyRobotData.JointsNow[0] = pImpedence->m_thetaImpedPara[0].Now;
-			MyRobotData.JointsVelNow[0] = pImpedence->m_angularVelImpedPara[0].Now;
-			MyRobotData.JointsTorque[0] = timenum / 20.0;
+			for (int i = 0; i < 4; i++)
+			{
+				MyRobotData.JointsNow[i] = pImpedence->m_thetaImpedPara[i].Now;
+				MyRobotData.JointsVelNow[i] = pImpedence->m_angularVelImpedPara[i].Now;
+				MyRobotData.JointsTorque[i] = pImpedence->ExtTorque[i];
+			}
+			for (int i = 0; i < 6; i++)
+			{
+				MyRobotData.Origin6axisForce[i] = pImpedence->ForceSensor[i];
+			}
 
-			MyRobotData.JointsNow[1] = pImpedence->m_thetaImpedPara[1].Now;
-			MyRobotData.JointsVelNow[1] = pImpedence->m_angularVelImpedPara[1].Now;
-			MyRobotData.JointsTorque[1] = timenum / 20.0;
-
-			MyRobotData.JointsNow[2] = pImpedence->m_thetaImpedPara[2].Now;
-			MyRobotData.JointsVelNow[2] = pImpedence->m_angularVelImpedPara[2].Now;
-			MyRobotData.JointsTorque[2] = timenum / 20.0;
 			char buff[sizeof(MyRobotData)];
 			memset(buff, 0, sizeof(MyRobotData));
 			memcpy(buff, &MyRobotData, sizeof(MyRobotData));
@@ -129,17 +119,13 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 		}
 
 
-		////////////处理代码完结
-////////////////////////////////////////////调试时间代码开始
-#ifdef DEBUG
+#ifdef DEBUG  ////////////////////////////////调试时间代码开始
 		QueryPerformanceCounter(&litmp);
 		qt2 = litmp.QuadPart;//获得当前时间t3的值 
 		dfm2 = (double)(qt2 - qt1);
 		dft = dfm2 / dff;
-//		_cprintf("The program running time:t2-t1=%.3f\n", dft * 1000);
 		TRACE("The program running time:t2-t1=%.3f\n", dft * 1000);
 #endif
-////////////////////////////////////////////调试时间代码结束
 		ResetEvent(hSyncEvent);//复位同步事件
 	}
 	GT_SetIntSyncEvent(NULL);//通知设备ISR 释放事件
@@ -211,7 +197,11 @@ CImpedance::CImpedance(CRobotBase *Robot)
 
 CImpedance::~CImpedance()
 {
-
+	if (ATIForceSensor != NULL);
+	{
+		delete ATIForceSensor;
+		ATIForceSensor = NULL;
+	}
 }
 
 
@@ -240,7 +230,7 @@ bool CImpedance::StartImpedanceController()
 	}
 
 	//要直接采集力的信息
-	ATIForceSensor = new CForceSensor();
+	ATIForceSensor = CForceSensor::getForceSensorInstance();
 	ATIForceSensor->InitForceSensor();
 	ATIForceSensor->GetBias();
 	ATIForceSensor->OpenBias();
@@ -586,4 +576,13 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithSProfile(v
 		GoalPos[i] = (this->m_thetaImpedPara[i].Next);
 	}
 	return true;
+}
+
+
+CForceSensor* CImpedance::DeliverForceSensor(void)
+{
+	if (ATIForceSensor != NULL)
+	{
+		return ATIForceSensor;
+	}
 }

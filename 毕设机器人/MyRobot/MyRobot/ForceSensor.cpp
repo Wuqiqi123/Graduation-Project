@@ -1,10 +1,11 @@
 #include "stdafx.h"
 #include "ForceSensor.h"
 
+CForceSensor* CForceSensor::pForceSense=NULL;
 
 CForceSensor::CForceSensor()
 {
-	NIDataCard = NULL;
+	NIDataCard = new DAQSys();
 	m_isBias = false;
 	double CalibrationMatrix[6][6] = {
 			{ 0.19862, 0.00298, -0.07043, -35.91298, -0.82461, -35.09399 },
@@ -23,15 +24,25 @@ CForceSensor::CForceSensor()
 	memcpy(m_Bias, tmp, sizeof(double) * 6);
 }
 
-
+CForceSensor* CForceSensor::getForceSensorInstance()   //单例模式的初始化
+{
+	if (pForceSense == NULL)
+	{
+		pForceSense = new CForceSensor();
+	}
+	return pForceSense;
+}
 CForceSensor::~CForceSensor()
 {
-	delete NIDataCard;
+	if (NIDataCard != NULL)
+	{
+		delete NIDataCard;
+		NIDataCard = NULL;
+	}
 }
 
 void CForceSensor::InitForceSensor(void)
 {
-	NIDataCard = new DAQSys();
 	int iSaturated;
 startA:	try
 	{
