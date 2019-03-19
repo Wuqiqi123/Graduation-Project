@@ -241,7 +241,6 @@ void CMyRobotDlg::OnBnClickedServoOn()
 	if (!m_servoflag)
 	{
 		Robot->m_pController->ServoOn();
-
 		m_opendevice.EnableWindow(false);
 		GetDlgItem(IDC_BUTTON_HOME)->EnableWindow(true);
 		GetDlgItem(IDC_BUTTON_IMPEDANCE)->EnableWindow(true);
@@ -350,6 +349,7 @@ void CMyRobotDlg::OnBnClickedButtonImpedance()
 		ImpedenceControllerStopflag = false;
 		m_ImpedanceButton.SetWindowText(_T("阻抗控制关闭"));
 		m_ImpedanceButtonflag = true;
+		DlgATIForceSensor = ImpedanceController->DeliverForceSensor();
 	}
 	else
 	{                                                                                                                                                                                                                                                                                                                                                                                                                  
@@ -510,10 +510,12 @@ void CMyRobotDlg::OnTimer(UINT_PTR nIDEvent)
 	}
 	if (nIDEvent == 3)   //测试力传感器
 	{
-		DlgATIForceSensor = CForceSensor::getForceSensorInstance();  //单例模式
-		DlgATIForceSensor->UpdataForceData();
-		OnForceDataShow();
-
+		if (DlgATIForceSensor != NULL)
+		{
+			DlgATIForceSensor = CForceSensor::getForceSensorInstance();  //单例模式
+			DlgATIForceSensor->UpdataForceData();
+			OnForceDataShow();
+		}
 		//if(ImpedanceController!= NULL)
 		//{
 		//	if (DlgATIForceSensor != NULL)

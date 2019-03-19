@@ -197,11 +197,11 @@ CImpedance::CImpedance(CRobotBase *Robot)
 
 CImpedance::~CImpedance()
 {
-	if (ATIForceSensor != NULL);
-	{
-		delete ATIForceSensor;
-		ATIForceSensor = NULL;
-	}
+	//if (ATIForceSensor != NULL);
+	//{
+	//	delete ATIForceSensor;
+	//	ATIForceSensor = NULL;
+	//}
 }
 
 

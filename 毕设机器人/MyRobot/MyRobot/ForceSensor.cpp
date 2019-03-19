@@ -1,11 +1,12 @@
 #include "stdafx.h"
 #include "ForceSensor.h"
 
+#define NUM_AVERAGE_BIAOS  10
 CForceSensor* CForceSensor::pForceSense=NULL;
 
 CForceSensor::CForceSensor()
 {
-	NIDataCard = new DAQSys();
+	NIDataCard = NULL;
 	m_isBias = false;
 	double CalibrationMatrix[6][6] = {
 			{ 0.19862, 0.00298, -0.07043, -35.91298, -0.82461, -35.09399 },
@@ -43,6 +44,11 @@ CForceSensor::~CForceSensor()
 
 void CForceSensor::InitForceSensor(void)
 {
+	if (NIDataCard == NULL)
+	{
+		NIDataCard = new DAQSys();
+	}
+
 	int iSaturated;
 startA:	try
 	{
@@ -146,7 +152,7 @@ void CForceSensor::GetBias(void)
 
 	double tmpVol[6] = { 0, 0, 0, 0, 0, 0};
 	int iSaturated;
-	for (int i = 0; i < 10; i++)      // 循环20次做平均值
+	for (int i = 0; i < NUM_AVERAGE_BIAOS; i++)      // 循环20次做平均值
 	{
 start:		try
 		{
@@ -172,7 +178,7 @@ start:		try
 		qt2 = litmp.QuadPart;//获得当前时间t2的值 
 		dfm1 = (double)(qt2 - qt1);
 		dft = dfm1 / dff;
-		TRACE("The program running time:t2-t1=%.3f\n", dft * 1000);
+		TRACE("The single NICard's running time:t2-t1=%.3f\n", dft * 1000);
 #endif
 		if (iSaturated)  //判断板卡是否饱和
 		{
@@ -186,7 +192,7 @@ start:		try
 	}
 	for (int i = 0; i < 6; i++)
 	{
-		m_Bias[i] = tmpVol[i] / 10;    //除以十次平均值
+		m_Bias[i] = tmpVol[i] / NUM_AVERAGE_BIAOS;    //除以十次平均值
 	}
 	m_isBias = false;
 }
