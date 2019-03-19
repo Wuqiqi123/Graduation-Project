@@ -46,90 +46,95 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 	while (1)
 	{	
 
-		WaitForSingleObject(hSyncEvent, INFINITE);
-////////////////////////////////////////////////调试时间代码开始
-#ifdef DEBUG
-		QueryPerformanceCounter(&litmp);
-		qt1last = qt1;
-		qt1 = litmp.QuadPart;//获得当前时间t2的值 
-		//获得对应的时间值，转到毫秒单位上  
-		dfm1 = (double)(qt1 - qt2);
-		dft = dfm1 / dff;
-		TRACE("waited time:t1-t2=%.3f\n", dft * 1000);
-//		TRACE("testNUM=%d\n", testNUM);	
-		dfm1 = (double)(qt1 - qt1last);
-		dft = dfm1 / dff;
-		TRACE("One cycle time:t1-t1last=%.3f\n", dft * 1000);
-#endif
-///////////////////////////////////////////////调试时间代码结束
-
 		if (ImpedenceControllerStopflag)
 		{
 			break;
 		}
-//////////////////**********力的三角生成器开始
-		//if (UpOrDown == 0)    //在上升沿
-		//{
-		//	timenum=timenum+2;
-		//	if (timenum == 1000)
-		//	{
-		//		UpOrDown = 1;   //最高点，变成下降沿
-		//	}
-		//}
-		//else     //否则在下降沿
-		//{
-		//	timenum = timenum - 2;
-		//	if (timenum == 0)
-		//	{
-		//		UpOrDown = 0;   //最低点，变成上升沿
-		//	}
-		//}
-////////////////***********力的三角形生成器结束
-		///////////在这里我需要处理的代码		
-		if (!(pImpedence->m_Robot->m_isOnGap))
+		else
 		{
-			pImpedence->GetCurrentState();//获取当前的时刻的关节空间的速度，位置和直角坐标空间的位置，速度
+			WaitForSingleObject(hSyncEvent, INFINITE);
+			////////////////////////////////////////////////调试时间代码开始
 #ifdef DEBUG
-			for (int i = 0; i < 4; i++)
+			QueryPerformanceCounter(&litmp);
+			qt1last = qt1;
+			qt1 = litmp.QuadPart;//获得当前时间t2的值 
+			//获得对应的时间值，转到毫秒单位上  
+			dfm1 = (double)(qt1 - qt2);
+			dft = dfm1 / dff;
+			TRACE("waited time:t1-t2=%.3f\n", dft * 1000);
+			//		TRACE("testNUM=%d\n", testNUM);	
+			dfm1 = (double)(qt1 - qt1last);
+			dft = dfm1 / dff;
+			TRACE("One cycle time:t1-t1last=%.3f\n", dft * 1000);
+#endif
+			///////////////////////////////////////////////调试时间代码结束
+			//////////////////**********力的三角生成器开始
+			//if (UpOrDown == 0)    //在上升沿
+			//{
+			//	timenum=timenum+2;
+			//	if (timenum == 1000)
+			//	{
+			//		UpOrDown = 1;   //最高点，变成下降沿
+			//	}
+			//}
+			//else     //否则在下降沿
+			//{
+			//	timenum = timenum - 2;
+			//	if (timenum == 0)
+			//	{
+			//		UpOrDown = 0;   //最低点，变成上升沿
+			//	}
+			//}
+			////////////////***********力的三角形生成器结束
+			///////////在这里我需要处理的代码		
+			if (!(pImpedence->m_Robot->m_isOnGap))
 			{
-				TRACE("the %d’axis theta is: %.3f\n",i,pImpedence->m_thetaImpedPara[i].Now);
-				TRACE("the %d' axis angelVel is: %.3f\n",i,pImpedence->m_angularVelImpedPara[i].Now);
-			}
+				pImpedence->GetCurrentState();//获取当前的时刻的关节空间的速度，位置和直角坐标空间的位置，速度
+#ifdef DEBUG
+				for (int i = 0; i < 4; i++)
+				{
+					TRACE("the %d’axis theta is: %.3f\n", i, pImpedence->m_thetaImpedPara[i].Now);
+					TRACE("the %d' axis angelVel is: %.3f\n", i, pImpedence->m_angularVelImpedPara[i].Now);
+				}
 
 #endif
-			pImpedence->GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile();  //计算下一个时刻的关节的角度和角速度并执行
-			
-			////下面是TCP/IP传输
-			memset(&MyRobotData, 0, sizeof(MyRobotData));
-			for (int i = 0; i < 4; i++)
-			{
-				MyRobotData.JointsNow[i] = pImpedence->m_thetaImpedPara[i].Now;
-				MyRobotData.JointsVelNow[i] = pImpedence->m_angularVelImpedPara[i].Now;
-				MyRobotData.JointsTorque[i] = pImpedence->ExtTorque[i];
-			}
-			for (int i = 0; i < 6; i++)
-			{
-				MyRobotData.Origin6axisForce[i] = pImpedence->ForceSensor[i];
-			}
+				pImpedence->GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile();  //计算下一个时刻的关节的角度和角速度并执行
 
-			char buff[sizeof(MyRobotData)];
-			memset(buff, 0, sizeof(MyRobotData));
-			memcpy(buff, &MyRobotData, sizeof(MyRobotData));
-			send(sockClient, buff, sizeof(buff), 0);
-		}
+				////下面是TCP/IP传输
+				memset(&MyRobotData, 0, sizeof(MyRobotData));
+				for (int i = 0; i < 4; i++)
+				{
+					MyRobotData.JointsNow[i] = pImpedence->m_thetaImpedPara[i].Now;
+					MyRobotData.JointsVelNow[i] = pImpedence->m_angularVelImpedPara[i].Now;
+					MyRobotData.JointsTorque[i] = pImpedence->ExtTorque[i];
+				}
+				for (int i = 0; i < 6; i++)
+				{
+					MyRobotData.Origin6axisForce[i] = pImpedence->ForceSensor[i];
+				}
+
+				char buff[sizeof(MyRobotData)];
+				memset(buff, 0, sizeof(MyRobotData));
+				memcpy(buff, &MyRobotData, sizeof(MyRobotData));
+				send(sockClient, buff, sizeof(buff), 0);
+			}
 
 
 #ifdef DEBUG  ////////////////////////////////调试时间代码开始
-		QueryPerformanceCounter(&litmp);
-		qt2 = litmp.QuadPart;//获得当前时间t3的值 
-		dfm2 = (double)(qt2 - qt1);
-		dft = dfm2 / dff;
-		TRACE("The program running time:t2-t1=%.3f\n", dft * 1000);
+			QueryPerformanceCounter(&litmp);
+			qt2 = litmp.QuadPart;//获得当前时间t3的值 
+			dfm2 = (double)(qt2 - qt1);
+			dft = dfm2 / dff;
+			TRACE("The program running time:t2-t1=%.3f\n", dft * 1000);
 #endif
-		ResetEvent(hSyncEvent);//复位同步事件
+			ResetEvent(hSyncEvent);//复位同步事件
+		}
 	}
+
 	GT_SetIntSyncEvent(NULL);//通知设备ISR 释放事件
 	CloseHandle(hSyncEvent); //关闭同步事件句柄
+	delete pImpedence;
+	pImpedence = NULL;
 	ExitThread(0);
 	return 0;
 }
@@ -434,7 +439,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 	}
 
 	CalculateTorque();
-	double Torque[4] = { 0, 0, 0, 0 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
+	double Torque[4] = { 0, 0, 0, 0 };   
 	Torque[0] = ExtTorque[0];
 	Torque[1] = ExtTorque[1];
 	Torque[2] = ExtTorque[2];
@@ -469,7 +474,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 	{
 		if ( i == 1 )
 		{
-			m_angularVelImpedPara[i].Next = (Torque[i] + m_K[i] * 60 - m_K[i] * m_thetaImpedPara[i].Now) / (m_K[i] * T + m_B[i]);
+			m_angularVelImpedPara[i].Next = (Torque[i] + /*m_K[i] * 60*/ - m_K[i] * m_thetaImpedPara[i].Now) / (m_K[i] * T + m_B[i]);
 			m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*T;
 			//m_thetaImpedPara[i].Next = m_B[i] * m_thetaImpedPara[i].Now / (m_K[i] * T + m_B[i]) + T*Torque[i] / (m_K[i] * T + m_B[i]);
 		}

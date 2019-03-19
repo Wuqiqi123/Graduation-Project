@@ -357,8 +357,7 @@ void CMyRobotDlg::OnBnClickedButtonImpedance()
 		ImpedanceController->StopImpedanceController();
 		m_ImpedanceButton.SetWindowText(_T("阻抗控制开启"));
 		m_ImpedanceButtonflag = false;
-		delete ImpedanceController;
-		ImpedanceController = NULL;
+
 	}
 
 
@@ -435,7 +434,7 @@ void CMyRobotDlg::OnToolDataShow()    //直角坐标系中的状态显示
 {
 	CString str;
 	//直角坐标区的信息显示，保留小数点后4位有效数字
-	str.Format(_T("%.4f"), Robot->m_HandCurrTn[0][3]);   //取机器人缓存区里面直角坐标系当前的X的坐标
+	str.Format(_T("%.4f"), Robot->m_HandCurrTn[0][3]);   //取机器人缓存区里面m_Robot直角坐标系当前的X的坐标
 	SetDlgItemText(IDC_STATIC_XPOS, str);
 	str.Format(_T("%.4f"), Robot->m_HandCurrTn[1][3]);   //取机器人缓存区里面直角坐标系当前的Y的坐标
 	SetDlgItemText(IDC_STATIC_YPOS, str);
