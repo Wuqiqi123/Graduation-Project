@@ -359,7 +359,6 @@ void CMyRobotDlg::OnBnClickedButtonImpedance()
 		ImpedanceController = NULL;
 		m_ImpedanceButton.SetWindowText(_T("×è¿¹¿ØÖÆ¿ªÆô"));
 		m_ImpedanceButtonflag = false;
-
 	}
 
 

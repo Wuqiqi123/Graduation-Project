@@ -49,6 +49,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 	ImpedanceStopMutex = CreateMutex(NULL, false, NULL); //该线程立马获得
 	while (1)
 	{	
+
 		WaitForSingleObject(ImpedanceStopMutex, INFINITE);
 		if (ImpedenceControllerStopflag)
 		{
@@ -127,9 +128,16 @@ CImpedance::CImpedance(CRobotBase *Robot)
 {
 	m_Robot = Robot;
 	m_RunningFlag = false;
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 4; i++)   //阻抗参数的初始化
 	{
-		if (i == 0 || i == 1 )
+
+		if (i == 0)
+		{
+			m_M[i] = 0;
+			m_K[i] = 0.3;   //单位是 N/mm  0.2
+			m_B[i] = 0.2;
+		}
+		else if ( i == 1 )
 		{
 			m_M[i]= 0;
 			m_K[i]= 0.05;   //单位是 N/mm  0.2
@@ -186,11 +194,7 @@ CImpedance::CImpedance(CRobotBase *Robot)
 
 CImpedance::~CImpedance()
 {
-	//if (ATIForceSensor != NULL);
-	//{
-	//	delete ATIForceSensor;
-	//	ATIForceSensor = NULL;
-	//}
+
 }
 
 
@@ -405,6 +409,7 @@ bool CImpedance::CalculateTorque(void)
 		for (int j = 0; j < 6; j++)
 			ExtTorque[i] = ExtTorque[i] + InverseJacobiTn[i][j] * ForceSensor[j];
 
+	if (abs(ExtTorque[0]) < 0.5) ExtTorque[0] = 0;
 	if (abs(ExtTorque[1]) < 0.2) ExtTorque[1] = 0;
 	if (abs(ExtTorque[2]) < 0.2) ExtTorque[2] = 0;
 	if (abs(ExtTorque[3]) < 0.05) ExtTorque[3] = 0;
@@ -458,7 +463,15 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 
 	for (int i = 0; i < 4; i++)
 	{
-		if ( i==1 || i==2 ||i == 3)
+
+		if ( i == 1 )
+		{
+			m_angularVelImpedPara[i].Next = (Torque[i] + m_K[i] * 90 - m_K[i] * m_thetaImpedPara[i].Now) / (m_K[i] * T + m_B[i]);
+			m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*T;
+			if (abs(m_thetaImpedPara[i].Next - m_thetaImpedPara[i].Now) < 0.05) m_thetaImpedPara[i].Next = 0;
+			//m_thetaImpedPara[i].Next = m_B[i] * m_thetaImpedPara[i].Now / (m_K[i] * T + m_B[i]) + T*Torque[i] / (m_K[i] * T + m_B[i]);
+		}
+		if ( i==0 || i==2 ||i == 3)
 		{
 			m_angularVelImpedPara[i].Next = (Torque[i] - m_K[i]*m_thetaImpedPara[i].Now) / (m_K[i]*T + m_B[i]);
 			//m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*T;
