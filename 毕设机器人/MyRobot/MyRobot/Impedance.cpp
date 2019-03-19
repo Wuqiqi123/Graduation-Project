@@ -31,6 +31,8 @@ bool UpOrDown = 0;  //0为up,1为down
 HANDLE hSyncEvent;//同步事件句柄
 bool ImpedenceControllerStopflag = true; //线程结束标志,全局变量初始化为一开始就是停止
 //阻抗控制从Home点开始运动，在Home点的时候，GaptoPositive=0;
+
+HANDLE ImpedanceStopMutex; //保证
 DWORD WINAPI ThreadProc(LPVOID lpParam)
 {
 	CImpedance *pImpedence = (CImpedance *)lpParam;  //获取该指针
@@ -43,15 +45,18 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 	//获得时钟频率  
 	QueryPerformanceFrequency(&litmp);//获得时钟频率  
 	dff = (double)litmp.QuadPart;
+
+	ImpedanceStopMutex = CreateMutex(NULL, false, NULL); //该线程立马获得
 	while (1)
 	{	
-
+		WaitForSingleObject(ImpedanceStopMutex, INFINITE);
 		if (ImpedenceControllerStopflag)
 		{
+			ReleaseMutex(ImpedanceStopMutex);
 			break;
-		}
+		}   
 		else
-		{
+		{   
 			WaitForSingleObject(hSyncEvent, INFINITE);
 			////////////////////////////////////////////////调试时间代码开始
 #ifdef DEBUG
@@ -67,26 +72,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 			dft = dfm1 / dff;
 			TRACE("One cycle time:t1-t1last=%.3f\n", dft * 1000);
 #endif
-			///////////////////////////////////////////////调试时间代码结束
-			//////////////////**********力的三角生成器开始
-			//if (UpOrDown == 0)    //在上升沿
-			//{
-			//	timenum=timenum+2;
-			//	if (timenum == 1000)
-			//	{
-			//		UpOrDown = 1;   //最高点，变成下降沿
-			//	}
-			//}
-			//else     //否则在下降沿
-			//{
-			//	timenum = timenum - 2;
-			//	if (timenum == 0)
-			//	{
-			//		UpOrDown = 0;   //最低点，变成上升沿
-			//	}
-			//}
-			////////////////***********力的三角形生成器结束
-			///////////在这里我需要处理的代码		
+	
 			if (!(pImpedence->m_Robot->m_isOnGap))
 			{
 				pImpedence->GetCurrentState();//获取当前的时刻的关节空间的速度，位置和直角坐标空间的位置，速度
@@ -128,11 +114,13 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 			TRACE("The program running time:t2-t1=%.3f\n", dft * 1000);
 #endif
 			ResetEvent(hSyncEvent);//复位同步事件
+			ReleaseMutex(ImpedanceStopMutex);
 		}
 	}
 
 	GT_SetIntSyncEvent(NULL);//通知设备ISR 释放事件
 	CloseHandle(hSyncEvent); //关闭同步事件句柄
+	CloseHandle(ImpedanceStopMutex);
 	delete pImpedence;
 	pImpedence = NULL;
 	ExitThread(0);
@@ -235,7 +223,7 @@ bool CImpedance::StartImpedanceController()
 	}
 
 	//要直接采集力的信息
-	ATIForceSensor = CForceSensor::getForceSensorInstance();
+	ATIForceSensor = CForceSensor::getForceSensorInstance();  //单例的初始化
 	ATIForceSensor->InitForceSensor();
 	ATIForceSensor->GetBias();
 	ATIForceSensor->OpenBias();
@@ -266,7 +254,7 @@ bool CImpedance::StartImpedanceController()
 	{
 		AfxMessageBox(_T("创建定时器句柄失败!"), MB_OK);
 	}
-	GT_SetIntrTm(5*Tms);  //设置定时器的定时长度为50*200us = 10ms
+	GT_SetIntrTm(100);  //设置定时器的定时长度为100*200us = 20ms
 	GT_TmrIntr();   //向主机申请定时中断
 	//GT_GetIntr(&Status);   //这个windows环境下面禁用这个函数 
 //	if (&Status != 0)
@@ -293,6 +281,7 @@ bool CImpedance::StartImpedanceController()
 bool CImpedance::StopImpedanceController()
 {
 	ImpedenceControllerStopflag = true;
+	WaitForSingleObject(ImpedanceStopMutex, INFINITE);
 	this->m_Robot->m_pController->wait_motion_finished(0);
 	if (this->m_Robot->m_JointGap[0].GapToPositive != 0)
 	{
@@ -321,6 +310,7 @@ bool CImpedance::StopImpedanceController()
 #endif
 		}
 	}
+	ReleaseMutex(ImpedanceStopMutex);
 }
 
 bool CImpedance::GetCurrentState(void)
