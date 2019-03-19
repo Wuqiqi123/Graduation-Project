@@ -2,6 +2,8 @@
 #include "Impedance.h"
 #include <conio.h> //使用命令行控制
 
+//测试变基之后的分支
+
 #define DEBUG
 
 #define ATIForce   //使用实际的力传感器
