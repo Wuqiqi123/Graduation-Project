@@ -85,7 +85,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 
 #endif
 				pImpedence->GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile();  //计算下一个时刻的关节的角度和角速度并执行
-
+				ReleaseMutex(ImpedanceStopMutex);
 				////下面是TCP/IP传输
 				memset(&MyRobotData, 0, sizeof(MyRobotData));
 				for (int i = 0; i < 4; i++)
@@ -104,7 +104,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 				memcpy(buff, &MyRobotData, sizeof(MyRobotData));
 				send(sockClient, buff, sizeof(buff), 0);
 			}
-
+			ReleaseMutex(ImpedanceStopMutex);
 
 #ifdef DEBUG  ////////////////////////////////调试时间代码开始
 			QueryPerformanceCounter(&litmp);
@@ -114,7 +114,6 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 			TRACE("The program running time:t2-t1=%.3f\n", dft * 1000);
 #endif
 			ResetEvent(hSyncEvent);//复位同步事件
-			ReleaseMutex(ImpedanceStopMutex);
 		}
 	}
 
@@ -282,7 +281,7 @@ bool CImpedance::StopImpedanceController()
 {
 	ImpedenceControllerStopflag = true;
 	WaitForSingleObject(ImpedanceStopMutex, INFINITE);
-	this->m_Robot->m_pController->wait_motion_finished(0);
+	this->m_Robot->m_pController->wait_motion_finished(1);
 	if (this->m_Robot->m_JointGap[0].GapToPositive != 0)
 	{
 		if (this->m_Robot->m_isGapCorrespond == false)     //在负-->正转折点处

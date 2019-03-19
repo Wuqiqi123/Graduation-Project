@@ -338,6 +338,7 @@ extern bool ImpedenceControllerStopflag;  //在阻抗控制内部开启一个线程，此变量用
 void CMyRobotDlg::OnBnClickedButtonImpedance()
 {
 	// TODO:  在此添加控件通知处理程序代码
+	CWaitCursor wc;
 	if (ImpedanceController == NULL)
 	{
 		ImpedanceController = new CImpedance(Robot);
@@ -352,8 +353,7 @@ void CMyRobotDlg::OnBnClickedButtonImpedance()
 		DlgATIForceSensor = ImpedanceController->DeliverForceSensor();
 	}
 	else
-	{                                                                                                                                                                                                                                                                                                                                                                                                                  
-		ImpedenceControllerStopflag = true;
+	{
 		ImpedanceController->StopImpedanceController();
 		m_ImpedanceButton.SetWindowText(_T("阻抗控制开启"));
 		m_ImpedanceButtonflag = false;
