@@ -22,7 +22,7 @@ struct RobotData
 
 extern SOCKET sockClient; //全局变量，客户端的套接字
 //////定义定时周期
-#define Tms (20)   
+#define Tms (15)   
 #define T (Tms*0.001)
 ////////////////////////
 int testNUM = 0;
@@ -85,7 +85,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 
 #endif
 				pImpedence->GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile();  //计算下一个时刻的关节的角度和角速度并执行
-				ReleaseMutex(ImpedanceStopMutex);
+
 				////下面是TCP/IP传输
 				memset(&MyRobotData, 0, sizeof(MyRobotData));
 				for (int i = 0; i < 4; i++)
@@ -119,9 +119,6 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 
 	GT_SetIntSyncEvent(NULL);//通知设备ISR 释放事件
 	CloseHandle(hSyncEvent); //关闭同步事件句柄
-	CloseHandle(ImpedanceStopMutex);
-	delete pImpedence;
-	pImpedence = NULL;
 	ExitThread(0);
 	return 0;
 }
@@ -135,20 +132,20 @@ CImpedance::CImpedance(CRobotBase *Robot)
 		if (i == 0 || i == 1 )
 		{
 			m_M[i]= 0;
-			m_K[i]= 0.01;   //单位是 N/mm  0.2
-			m_B[i] = 0.01;
+			m_K[i]= 0.05;   //单位是 N/mm  0.2
+			m_B[i] = 0.03;
 		}
 		else if (i == 2)
 		{
 			m_M[i] = 0;
-			m_K[i] = 0.008;   //单位是 N/mm  0.2
-			m_B[i] = 0.02;
+			m_K[i] = 0.05;   //单位是 N/mm  0.2
+			m_B[i] = 0.1;
 		}
 		else
 		{
 			m_M[i] = 0;
 			m_K[i] = 0.001;   //单位是 N/mm  0.2
-			m_B[i] = 0.0002;
+			m_B[i] = 0.02;
 		}
 
 	}
@@ -253,7 +250,7 @@ bool CImpedance::StartImpedanceController()
 	{
 		AfxMessageBox(_T("创建定时器句柄失败!"), MB_OK);
 	}
-	GT_SetIntrTm(100);  //设置定时器的定时长度为100*200us = 20ms
+	GT_SetIntrTm(75);  //设置定时器的定时长度为75*200us = 15ms
 	GT_TmrIntr();   //向主机申请定时中断
 	//GT_GetIntr(&Status);   //这个windows环境下面禁用这个函数 
 //	if (&Status != 0)
@@ -271,7 +268,6 @@ bool CImpedance::StartImpedanceController()
 		AfxMessageBox(_T("创建线程失败!"), MB_OK);
 		return false;
 	}
-
 
 	return true;
 }
@@ -310,6 +306,7 @@ bool CImpedance::StopImpedanceController()
 		}
 	}
 	ReleaseMutex(ImpedanceStopMutex);
+	CloseHandle(ImpedanceStopMutex);
 }
 
 bool CImpedance::GetCurrentState(void)
@@ -429,7 +426,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 
 	CalculateTorque();
 	double Torque[4] = { 0, 0, 0, 0 };   
-	Torque[0] = ExtTorque[0];
+	Torque[0] = 0;
 	Torque[1] = ExtTorque[1];
 	Torque[2] = ExtTorque[2];
 	Torque[3] = ExtTorque[3];
@@ -461,13 +458,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 
 	for (int i = 0; i < 4; i++)
 	{
-		if ( i == 1 )
-		{
-			m_angularVelImpedPara[i].Next = (Torque[i] + /*m_K[i] * 60*/ - m_K[i] * m_thetaImpedPara[i].Now) / (m_K[i] * T + m_B[i]);
-			m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*T;
-			//m_thetaImpedPara[i].Next = m_B[i] * m_thetaImpedPara[i].Now / (m_K[i] * T + m_B[i]) + T*Torque[i] / (m_K[i] * T + m_B[i]);
-		}
-		if ( i==0 || i==2 ||i == 3)
+		if ( i==1 || i==2 ||i == 3)
 		{
 			m_angularVelImpedPara[i].Next = (Torque[i] - m_K[i]*m_thetaImpedPara[i].Now) / (m_K[i]*T + m_B[i]);
 			//m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*T;
@@ -487,7 +478,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 	double GoalPos[4] = { 0, 0, 0, 0 }, GoalVel[4] = { 0, 0, 0, 0 };
 	for (int i = 0; i < this->m_Robot->m_JointNumber; i++)
 	{
-		if (i==0||i==1||i==2||i == 3)
+		if (i==1||i==2||i == 3)
 		{
 			GoalVel[i] = this->m_angularVelImpedPara[i].Next;
 	#ifdef DEBUG
