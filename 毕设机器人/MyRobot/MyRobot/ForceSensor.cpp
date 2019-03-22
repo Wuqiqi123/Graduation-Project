@@ -1,11 +1,16 @@
 #include "stdafx.h"
 #include "ForceSensor.h"
 
+
 #define NUM_AVERAGE_BIAOS  10
+
 CForceSensor* CForceSensor::pForceSense=NULL;
 
 CForceSensor::CForceSensor()
 {
+#ifdef OPENVITUAL
+
+#else
 	NIDataCard = NULL;
 	m_isBias = false;
 	double CalibrationMatrix[6][6] = {
@@ -23,6 +28,7 @@ CForceSensor::CForceSensor()
 	memcpy(m_StainVoltage, tmp, sizeof(double) * 6);
 	memcpy(m_ForceScrew, tmp, sizeof(double) * 6);
 	memcpy(m_Bias, tmp, sizeof(double) * 6);
+#endif
 }
 
 CForceSensor* CForceSensor::getForceSensorInstance()   //单例模式的初始化
@@ -35,15 +41,22 @@ CForceSensor* CForceSensor::getForceSensorInstance()   //单例模式的初始化
 }
 CForceSensor::~CForceSensor()
 {
+#ifdef OPENVITUAL
+
+#else
 	if (NIDataCard != NULL)
 	{
 		delete NIDataCard;
 		NIDataCard = NULL;
 	}
+#endif
 }
 
 void CForceSensor::InitForceSensor(void)
 {
+#ifdef  OPENVITUAL
+
+#else
 	if (NIDataCard == NULL)
 	{
 		NIDataCard = new DAQSys();
@@ -63,11 +76,16 @@ startA:	try
 		AfxMessageBox(_T("板卡电压采集接近饱和!"), MB_OK);
 	}
 	CalculateForceData();
+#endif
 }
 
 ///如果返回1，则电压输出饱和；如果返回零，则电压输出非饱和
 int CForceSensor::UpdataForceData(void)  //这个函数被上层定时调用，所以叫做刷新函数
 {
+#ifdef OPENVITUAL
+
+	return 0;
+#else
 	int iSaturated;
 startB:	try
 	{
@@ -79,10 +97,14 @@ startB:	try
 	}
 	CalculateForceData();
 	return iSaturated;
+#endif
 }
 
 void CForceSensor::CalculateForceData(void)
 {
+#ifdef OPENVITUAL
+
+#else
 	if (m_isBias)  //启用偏置
 	{
 		for (int i = 0; i < 6; i++)   //减去偏置值
@@ -105,6 +127,7 @@ void CForceSensor::CalculateForceData(void)
 	{
 		m_ForceScrew[i] = m_ForceScrew[i] / m_GainCorrectionFactor[i];
 	}
+#endif
 }
 
 
@@ -144,6 +167,9 @@ void CForceSensor::ForceBaseAxia(CRobotBase *Robot)
 
 void CForceSensor::GetBias(void)
 {
+#ifdef OPENVITUAL
+
+#else
 	LARGE_INTEGER litmp;
 	LONGLONG qt1 = 0, qt2 = 0;
 	double dft, dfm1,dff;
@@ -195,6 +221,7 @@ start:		try
 		m_Bias[i] = tmpVol[i] / NUM_AVERAGE_BIAOS;    //除以十次平均值
 	}
 	m_isBias = false;
+#endif
 }
 
 void CForceSensor::CloseBias(void)
