@@ -451,6 +451,8 @@ void CMyRobotDlg::OnForceDataShow()
 {
 	
 	    CString str;
+#ifdef OPENVITUAL
+#else
 		str.Format(_T("%.4f"), DlgATIForceSensor->m_StainVoltage[0]);
 		SetDlgItemText(IDC_STATIC_NI_VOLTAGE0, str);
 		str.Format(_T("%.4f"), DlgATIForceSensor->m_StainVoltage[1]);
@@ -463,7 +465,7 @@ void CMyRobotDlg::OnForceDataShow()
 		SetDlgItemText(IDC_STATIC_NI_VOLTAGE4, str);
 		str.Format(_T("%.4f"), DlgATIForceSensor->m_StainVoltage[5]);
 		SetDlgItemText(IDC_STATIC_NI_VOLTAGE5, str);
-
+#endif
 		str.Format(_T("%.4f"), DlgATIForceSensor->m_ForceScrew[0]);
 		SetDlgItemText(IDC_STATIC_FORCESENSOR0, str);
 		str.Format(_T("%.4f"), DlgATIForceSensor->m_ForceScrew[1]);
