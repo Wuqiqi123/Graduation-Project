@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "ForceSensor.h"
 
-
 #define NUM_AVERAGE_BIAOS  10
 
 CForceSensor* CForceSensor::pForceSense=NULL;
@@ -9,7 +8,11 @@ CForceSensor* CForceSensor::pForceSense=NULL;
 CForceSensor::CForceSensor()
 {
 #ifdef OPENVITUAL
-
+	m_isBias = false;
+	double tmp[6] = { 0, 0, 0, 0, 0, 0 };
+	memcpy(m_ForceScrew, tmp, sizeof(double) * 6);
+	memcpy(m_ForceScrewBase, tmp, sizeof(double) * 6);
+	FGFunc = NULL;
 #else
 	NIDataCard = NULL;
 	m_isBias = false;
@@ -55,7 +58,7 @@ CForceSensor::~CForceSensor()
 void CForceSensor::InitForceSensor(void)
 {
 #ifdef  OPENVITUAL
-
+	FGFunc = bind("Mode_1");  //使用模式1
 #else
 	if (NIDataCard == NULL)
 	{
@@ -83,7 +86,7 @@ startA:	try
 int CForceSensor::UpdataForceData(void)  //这个函数被上层定时调用，所以叫做刷新函数
 {
 #ifdef OPENVITUAL
-
+	getNextPoint();
 	return 0;
 #else
 	int iSaturated;
@@ -224,6 +227,10 @@ start:		try
 #endif
 }
 
+void CForceSensor::getNextPoint(void)
+{
+
+}
 void CForceSensor::CloseBias(void)
 {
 	m_isBias = false;
@@ -232,4 +239,37 @@ void CForceSensor::CloseBias(void)
 void CForceSensor::OpenBias(void)
 {
 	m_isBias = true;
+}
+
+// Mode_1  Mode_2 ... Mode_3
+FG CForceSensor::bind(CString funcName)
+{
+	CString last = funcName.Right(1);
+	char *temp = (LPSTR)(LPCTSTR)last;
+	char mode = temp[0];
+	switch (mode)
+	{
+	case '1': FGFunc = Mode_1; break;
+	case '2': FGFunc = Mode_2; break;
+	default:  FGFunc = NOTFUNC; 
+	}
+	return FGFunc;
+}
+
+double Mode_1(int T_Head)
+{
+	double Force = 0;
+	return Force;
+}
+double Mode_2(int T_Head)
+{
+	double Force = 0;
+	return Force;
+}
+double NOTFUNC(int T_Head)
+{
+	double Force = 0;
+	AfxMessageBox(_T("没有合适的力生成函数绑定!"), MB_OK);
+	exit(0);
+	return Force;
 }

@@ -4,6 +4,7 @@
 #include "GRB4Robot.h"
 
 #define OPENVITUAL
+typedef double(*FG)(int);  //force generate 力的生成器，指向函数的指针
 class CForceSensor :
 	public CObject
 {
@@ -28,6 +29,16 @@ public:
 	bool m_isBias;   ////如果isBias=true,则使用偏置
 	double m_ForceScrew[6];
 	double m_ForceScrewBase[6];
+	/*使用虚拟力的时候，该力使用一系列点运行，从起始点一直到终止点，运行到终止点之后力停止*/
+	int T_start;  //使用虚拟力的时候的开始点
+	int T_end;    //使用虚拟力的时候的终止点
+	int T_head;   //现在指向的点
+	int interval; //指定每次运行的间隔
+	FG FGFunc;
+	FG bind(CString funcName);
+	void getNextPoint(void);
+	
+
 #else
 	bool m_isBias;   ////如果isBias=true,则使用偏置
 	double m_StainVoltage[7];
@@ -43,3 +54,8 @@ public:
 	void OpenBias(void);
 };
 
+
+//不同的函数，但是在类中函数指针，指向同一个函数
+double Mode_1(int T_Head);
+double Mode_2(int T_Head);
+double NOTFUNC(int T_Head);
