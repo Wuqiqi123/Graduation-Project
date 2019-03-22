@@ -2,7 +2,7 @@
 #include "afx.h"
 #include "DAQSys.h"
 #include "GRB4Robot.h"
-
+#include <utility>
 #define OPENVITUAL
 typedef double(*FG)(int);  //force generate 力的生成器，指向函数的指针
 class CForceSensor :
@@ -35,7 +35,8 @@ public:
 	int T_head;   //现在指向的点
 	int interval; //指定每次运行的间隔
 	FG FGFunc;
-	FG bind(CString funcName);
+	std::pair<int, FG> fchannelANDfunc[6];
+	bool bind(int ForceChannel,CString funcName);
 	void getNextPoint(void);
 	
 
@@ -59,3 +60,4 @@ public:
 double Mode_1(int T_Head);
 double Mode_2(int T_Head);
 double NOTFUNC(int T_Head);
+double Mode_Zero(int T_Head);

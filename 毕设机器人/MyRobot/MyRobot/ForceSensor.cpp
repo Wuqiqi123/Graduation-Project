@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "ForceSensor.h"
-
 #define NUM_AVERAGE_BIAOS  10
 
 CForceSensor* CForceSensor::pForceSense=NULL;
@@ -13,6 +12,11 @@ CForceSensor::CForceSensor()
 	memcpy(m_ForceScrew, tmp, sizeof(double) * 6);
 	memcpy(m_ForceScrewBase, tmp, sizeof(double) * 6);
 	FGFunc = NULL;
+	for (int i = 0; i < 6;i++)
+	{
+		fchannelANDfunc[i].first = i;
+		fchannelANDfunc[i].second = NULL;
+	}
 #else
 	NIDataCard = NULL;
 	m_isBias = false;
@@ -58,7 +62,18 @@ CForceSensor::~CForceSensor()
 void CForceSensor::InitForceSensor(void)
 {
 #ifdef  OPENVITUAL
-	FGFunc = bind("Mode_1");  //使用模式1
+	for (int i = 0; i < 6; i++)
+	{
+		switch (i)
+		{
+		case 0:  {if (bind(i, "Mode_1")) break; else { AfxMessageBox(_T("将力传感器通道与函数绑定出错!"), MB_OK); exit(0); } }
+		case 1:  {if (bind(i, "Mode_1")) break; else { AfxMessageBox(_T("将力传感器通道与函数绑定出错!"), MB_OK); exit(0); } }
+		case 2:  {if (bind(i, "Mode_1")) break; else { AfxMessageBox(_T("将力传感器通道与函数绑定出错!"), MB_OK); exit(0); } }
+		case 3:  {if (bind(i, "Mode_Zero")) break; else { AfxMessageBox(_T("将力传感器通道与函数绑定出错!"), MB_OK); exit(0); } }
+		case 4:  {if (bind(i, "Mode_Zero")) break; else { AfxMessageBox(_T("将力传感器通道与函数绑定出错!"), MB_OK); exit(0); } }
+		case 5:  {if (bind(i, "Mode_Zero")) break; else { AfxMessageBox(_T("将力传感器通道与函数绑定出错!"), MB_OK); exit(0); } }
+		}
+	}
 #else
 	if (NIDataCard == NULL)
 	{
@@ -241,21 +256,30 @@ void CForceSensor::OpenBias(void)
 	m_isBias = true;
 }
 
-// Mode_1  Mode_2 ... Mode_3
-FG CForceSensor::bind(CString funcName)
+/*
+Mode_1  Mode_2 ... Mode_3
+*/ 
+bool CForceSensor::bind(int ForceChannel,CString funcName)
 {
+
 	CString last = funcName.Right(1);
 	char *temp = (LPSTR)(LPCTSTR)last;
 	char mode = temp[0];
 	switch (mode)
 	{
-	case '1': FGFunc = Mode_1; break;
-	case '2': FGFunc = Mode_2; break;
-	default:  FGFunc = NOTFUNC; 
+	case '1': fchannelANDfunc[ForceChannel].second = Mode_1; break;
+	case '2': fchannelANDfunc[ForceChannel].second = Mode_2; break;
+	case 'o': fchannelANDfunc[ForceChannel].second = Mode_Zero; break;
+	default:  fchannelANDfunc[ForceChannel].second = NOTFUNC;
 	}
-	return FGFunc;
+	return (fchannelANDfunc[ForceChannel].first == ForceChannel);
 }
 
+double Mode_Zero(int T_Head)
+{
+	double Force = 0;
+	return Force;
+}
 double Mode_1(int T_Head)
 {
 	double Force = 0;
@@ -269,7 +293,5 @@ double Mode_2(int T_Head)
 double NOTFUNC(int T_Head)
 {
 	double Force = 0;
-	AfxMessageBox(_T("没有合适的力生成函数绑定!"), MB_OK);
-	exit(0);
 	return Force;
 }
