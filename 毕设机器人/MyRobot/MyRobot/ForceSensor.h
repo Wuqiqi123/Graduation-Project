@@ -38,6 +38,7 @@ public:
 	std::pair<int, FG> fchannelANDfunc[6];
 	bool bind(int ForceChannel,CString funcName);
 	void getNextPoint(void);
+	void getForceData(void); 
 	
 
 #else

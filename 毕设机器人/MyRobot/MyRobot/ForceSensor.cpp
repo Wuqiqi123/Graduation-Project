@@ -74,6 +74,11 @@ void CForceSensor::InitForceSensor(void)
 		case 5:  {if (bind(i, "Mode_Zero")) break; else { AfxMessageBox(_T("将力传感器通道与函数绑定出错!"), MB_OK); exit(0); } }
 		}
 	}
+	interval=1;
+	T_start=0;
+	T_head=0;
+	T_end=200;
+
 #else
 	if (NIDataCard == NULL)
 	{
@@ -101,7 +106,7 @@ startA:	try
 int CForceSensor::UpdataForceData(void)  //这个函数被上层定时调用，所以叫做刷新函数
 {
 #ifdef OPENVITUAL
-	getNextPoint();
+	getForceData();
 	return 0;
 #else
 	int iSaturated;
@@ -242,10 +247,6 @@ start:		try
 #endif
 }
 
-void CForceSensor::getNextPoint(void)
-{
-
-}
 void CForceSensor::CloseBias(void)
 {
 	m_isBias = false;
@@ -275,6 +276,22 @@ bool CForceSensor::bind(int ForceChannel,CString funcName)
 	return (fchannelANDfunc[ForceChannel].first == ForceChannel);
 }
 
+void CForceSensor::getForceData(void)
+{
+	getNextPoint();
+	for (int i = 0; i < 6; i++)
+	{
+		m_ForceScrew[i]=fchannelANDfunc[i].second(T_head);
+	}
+	
+}
+
+void CForceSensor::getNextPoint(void)
+{
+	if (T_head < T_end)
+		T_head += interval;
+}
+
 double Mode_Zero(int T_Head)
 {
 	double Force = 0;
@@ -283,6 +300,7 @@ double Mode_Zero(int T_Head)
 double Mode_1(int T_Head)
 {
 	double Force = 0;
+	Force = T_Head*0.05;
 	return Force;
 }
 double Mode_2(int T_Head)
