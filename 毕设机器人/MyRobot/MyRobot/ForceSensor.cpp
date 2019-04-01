@@ -267,6 +267,7 @@ void CForceSensor::OpenBias(void)
 	m_isBias = true;
 }
 
+#ifdef OPENVITUAL
 /*
 Mode_1  Mode_2 ... Mode_3
 */ 
@@ -323,3 +324,6 @@ double NOTFUNC(int T_Head)
 	double Force = 0;
 	return Force;
 }
+
+
+#endif

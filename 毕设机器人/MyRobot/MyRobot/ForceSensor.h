@@ -26,6 +26,7 @@ public:
 	virtual void ForceBaseAxia(CRobotBase *Robot);
 
 #ifdef OPENVITUAL
+	/*使用函数的生成力方式*/
 	bool m_isBias;   ////如果isBias=true,则使用偏置
 	double m_ForceScrew[6];
 	double m_ForceScrewBase[6];
@@ -57,8 +58,12 @@ public:
 };
 
 
-//不同的函数，但是在类中函数指针，指向同一个函数
+#ifdef OPENVITUAL
+
+//使用函数生成力的方式不同的函数，但是在类中函数指针，指向同一个函数
 double Mode_1(int T_Head);
 double Mode_2(int T_Head);
 double NOTFUNC(int T_Head);
 double Mode_Zero(int T_Head);
+
+#endif
