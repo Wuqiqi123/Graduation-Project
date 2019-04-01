@@ -73,6 +73,7 @@ public:
 	void CMyRobotDlg::update(CString s)
 	{
 		m_TCPMessage.AddString(s);
+		m_TCPMessage.SetTopIndex(m_TCPMessage.GetCount() - 1);
 	}
 	CListBox m_TCPMessage;
 	afx_msg void OnBnClickedButtonForcetest();
