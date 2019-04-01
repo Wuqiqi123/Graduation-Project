@@ -8,7 +8,7 @@
 #include "Impedance.h"
 #include "afxwin.h"
 #include "afxcmn.h"
-
+#include "Resource.h"
 
 // CMyRobotDlg ¶Ô»°¿ò
 class CMyRobotDlg : public CDialogEx

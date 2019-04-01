@@ -754,6 +754,7 @@ DWORD WINAPI ThreadForRecvFromServer(LPVOID lp)
 	char recbuf[sizeof(RobotData)] = "";
 	CMyRobotDlg * dlg = (CMyRobotDlg *)AfxGetApp()->GetMainWnd();  //获取界面的指针
 	CString str;
+	CString strNum;
 #ifdef OPENVITUAL
 	RecData_hMutex = CreateMutex(NULL, FALSE, NULL); //创建无名的互斥量，这个互斥量不被任何线程占有
 #endif
@@ -780,20 +781,24 @@ DWORD WINAPI ThreadForRecvFromServer(LPVOID lp)
 				str.Format("%s", recbuf);
 				dlg->update(str);
 #ifdef OPENVITUAL
+
 				if (str.Find("摇杆") != -1)
 				{
 					VitualForceMode = 0;
-					dlg->update(_T("机器人虚拟力生成器连接到摇杆!"));
+					strNum.Format(_T("%d"),VitualForceMode);
+					dlg->update(_T("VitualForceMode:") + strNum);
 				}
 				else if (str.Find("键盘") != -1)
 				{
 					VitualForceMode = 1;
-					dlg->update(_T("机器人虚拟力生成器连接到键盘!"));
+					strNum.Format(_T("%d"), VitualForceMode);
+					dlg->update(_T("VitualForceMode:") + strNum);
 				}
 				else if (str.Find("函数") != -1)
 				{
 					VitualForceMode = 2;
-					dlg->update(_T("机器人虚拟力生成器连接到函数!"));
+					strNum.Format(_T("%d"), VitualForceMode);
+					dlg->update(_T("VitualForceMode:") + strNum);
 				}
 				else
 				{
