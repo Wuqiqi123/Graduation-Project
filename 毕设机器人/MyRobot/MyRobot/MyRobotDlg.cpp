@@ -735,9 +735,9 @@ void CMyRobotDlg::OnBnClickedButtonConnectserver()
 	//send(sockClient, buff, sizeof(buff), 0);
 }
 
-
+#ifdef OPENVITUAL
 /*VitualForceMode定义虚拟力模式
-  0:摇杆
+  0: 摇杆
   1：键盘
   2：自身函数
 */
@@ -785,6 +785,8 @@ DWORD WINAPI ThreadForRecvFromServer(LPVOID lp)
 	}
 	return 0;
 }
+
+#endif
 
 
 void CMyRobotDlg::OnBnClickedButtonForcetest()
