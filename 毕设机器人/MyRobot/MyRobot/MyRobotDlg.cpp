@@ -13,6 +13,8 @@
 #endif
 
 SOCKET sockClient; //全局变量，客户端的套接字
+DWORD WINAPI ThreadForRecvFromServer(LPVOID lp);
+
 void CString2Char(CString str, char ch[]);//此函数就是字符转换函数的实现代码，函数原型说明
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 
@@ -712,7 +714,7 @@ void CMyRobotDlg::OnBnClickedButtonConnectserver()
 	char* ch_ip1;
 	ch_ip1 = (LPSTR)(LPCTSTR)strIP;
 	//CString2Char(strIP, ch_ip);//注意！这里调用了字符格式转换函数，此函数功能：CString类型转换为Char类型，实现代码在后面添加
-	addrSrv.sin_addr.S_un.S_addr = inet_addr(ch_ip);//案例服务器和客户端都在本地，固可以使用本地回路地址127.0.0.1
+	addrSrv.sin_addr.S_un.S_addr = inet_addr(ch_ip1);//案例服务器和客户端都在本地，固可以使用本地回路地址127.0.0.1
 	addrSrv.sin_family = AF_INET;
 	addrSrv.sin_port = htons(ServerPort);
 	if (connect(sockClient, (SOCKADDR*)&addrSrv, sizeof(SOCKADDR)) == INVALID_SOCKET)   //这个connect函数是非阻塞模式
@@ -722,6 +724,7 @@ void CMyRobotDlg::OnBnClickedButtonConnectserver()
 	else
 	{
 		update(_T("连接服务器成功"));
+		CreateThread(NULL, 0, ThreadForRecvFromServer, NULL, 0, NULL);
 	}
 	//测试用
 	//RobotData MyRobotData;
@@ -730,8 +733,57 @@ void CMyRobotDlg::OnBnClickedButtonConnectserver()
 	//memset(buff, 0, sizeof(MyRobotData));
 	//memcpy(buff, &MyRobotData, sizeof(MyRobotData));
 	//send(sockClient, buff, sizeof(buff), 0);
+}
 
 
+/*VitualForceMode定义虚拟力模式
+  0:摇杆
+  1：键盘
+  2：自身函数
+*/
+int VitualForceMode = 2;   //默认是自身函数
+
+DWORD WINAPI ThreadForRecvFromServer(LPVOID lp)
+{
+	int res;
+	char recbuf[128]="";
+	CMyRobotDlg * dlg = (CMyRobotDlg *)AfxGetApp()->GetMainWnd();  //获取界面的指针
+	CString str;
+	while (true)
+	{
+		if ((res = recv(sockClient, recbuf, sizeof(recbuf), 0)) == -1)    //这个rev函数也是阻塞模式
+		{
+			dlg->update(_T("失去服务器的连接"));
+			break;
+		}
+		else
+		{
+			str.Format("%s", recbuf);
+			dlg->update(str);
+			if (str.Find("摇杆") != -1)
+			{
+				VitualForceMode = 0;
+				dlg->update(_T("机器人虚拟力生成器连接到摇杆!"));
+			}
+			else if (str.Find("键盘") != -1)
+			{
+				VitualForceMode = 1;
+				dlg->update(_T("机器人虚拟力生成器连接到键盘!"));
+			}
+			else if (str.Find("函数") != -1)
+			{
+				VitualForceMode = 2;
+				dlg->update(_T("机器人虚拟力生成器连接到函数!"));
+			}
+			else
+			{
+				dlg->update(_T("没有被识别的虚拟力生成器，请重新发送"));
+			}
+
+		}
+
+	}
+	return 0;
 }
 
 
