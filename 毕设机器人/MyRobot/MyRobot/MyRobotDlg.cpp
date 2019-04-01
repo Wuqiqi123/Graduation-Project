@@ -724,6 +724,7 @@ void CMyRobotDlg::OnBnClickedButtonConnectserver()
 	else
 	{
 		update(_T("连接服务器成功"));
+
 		CreateThread(NULL, 0, ThreadForRecvFromServer, NULL, 0, NULL);
 	}
 	//测试用
@@ -743,6 +744,7 @@ void CMyRobotDlg::OnBnClickedButtonConnectserver()
 */
 int VitualForceMode = 2;   //默认是自身函数
 
+#endif
 DWORD WINAPI ThreadForRecvFromServer(LPVOID lp)
 {
 	int res;
@@ -760,6 +762,7 @@ DWORD WINAPI ThreadForRecvFromServer(LPVOID lp)
 		{
 			str.Format("%s", recbuf);
 			dlg->update(str);
+#ifdef OPENVITUAL
 			if (str.Find("摇杆") != -1)
 			{
 				VitualForceMode = 0;
@@ -779,14 +782,13 @@ DWORD WINAPI ThreadForRecvFromServer(LPVOID lp)
 			{
 				dlg->update(_T("没有被识别的虚拟力生成器，请重新发送"));
 			}
-
+#endif
 		}
 
 	}
 	return 0;
 }
 
-#endif
 
 
 void CMyRobotDlg::OnBnClickedButtonForcetest()
