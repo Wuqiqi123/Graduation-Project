@@ -4,6 +4,20 @@
 #include "GRB4Robot.h"
 #include <utility>
 #define OPENVITUAL
+
+struct RobotData
+{
+	double JointsNow[4];
+	double JointsNext[4];
+	double JointsVelNow[4];
+	double JointsVelNext[4];
+	double Origin6axisForce[6];
+	double JointsTorque[4];
+	double CartesianPositionNow[4];
+	double CartesianPositionNext[4];
+	double CartesianVelNow[4];
+	double CartesianVelNext[4];
+};
 typedef double(*FG)(int);  //force generate 力的生成器，指向函数的指针
 class CForceSensor :
 	public CObject
@@ -39,8 +53,8 @@ public:
 	std::pair<int, FG> fchannelANDfunc[6];
 	bool bind(int ForceChannel,CString funcName);
 	void getNextPoint(void);
-	void getForceData(void); 
-	
+	void getForceDataUseFunc(void);   //使用函数
+	void getForceDataUse_JS_Key(void);   //使用摇杆
 
 #else
 	bool m_isBias;   ////如果isBias=true,则使用偏置

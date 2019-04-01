@@ -113,9 +113,18 @@ startA:	try
 int CForceSensor::UpdataForceData(void)  //这个函数被上层定时调用，所以叫做刷新函数
 {
 #ifdef OPENVITUAL
-	if (VitualForceMode == 2)
+	if (VitualForceMode == 0 || VitualForceMode == 1)  //如果是0：摇杆和1：键盘使用一个函数
 	{
-		getForceData();
+		getForceDataUse_JS_Key();
+		return 0;
+	}
+	else if (VitualForceMode == 2)
+	{
+		getForceDataUseFunc();
+		return 0;
+	}
+	else
+	{
 		return 0;
 	}
 #else
@@ -166,6 +175,52 @@ void CForceSensor::CalculateForceData(void)
 
 void CForceSensor::ForceBaseAxia(CRobotBase *Robot)
 {
+#ifdef OPENVITUAL
+	if (VitualForceMode == 0 || VitualForceMode == 1)
+	{	//////如果既然是虚拟力，那么就认为生成的虚拟力直接就是相对于世界坐标系的力，省的转化了
+		m_ForceScrewBase[0] = m_ForceScrew[0];
+		m_ForceScrewBase[1] = m_ForceScrew[1];
+		m_ForceScrewBase[2] = m_ForceScrew[2];
+		m_ForceScrewBase[3] = m_ForceScrew[3];
+		m_ForceScrewBase[4] = m_ForceScrew[4];
+		m_ForceScrewBase[5] = m_ForceScrew[5];
+	}
+	else if (VitualForceMode == 2)   //但是函数生成的保证原来的样子，由于一开始写函数生成就是这样写的
+	{
+		double t0, t1, t2, t3;
+		double  T05[3][4];  //这个矩阵是力坐标系转化到机器人基坐标的转化矩阵
+
+		t0 = Robot->m_JointArray[0].CurrentJointPositon * pi / 180.; //转化成弧度
+		t1 = Robot->m_JointArray[1].CurrentJointPositon * pi / 180.; //转化成弧度
+		t2 = Robot->m_JointArray[2].CurrentJointPositon;
+		t3 = Robot->m_JointArray[3].CurrentJointPositon * pi / 180;
+
+		for (int i = 0; i<3; i++)
+			for (int j = 0; j<4; j++)
+				T05[i][j] = 0;
+
+		T05[0][0] = sin(t0 + t1 + t3);
+		T05[1][1] = -T05[0][0];
+		T05[2][2] = -1;
+
+		T05[1][0] = -cos(t0 + t1 + t3);
+		T05[0][1] = T05[1][0];
+
+		T05[0][3] = l2 * cos(t0 + t1) + l1 * cos(t0);////求X位置
+		T05[1][3] = l2 * sin(t0 + t1) + l1 * sin(t0);////求Y位置
+		T05[2][3] = t2 - l3;
+
+		m_ForceScrewBase[0] = T05[0][0] * m_ForceScrew[0] + T05[0][1] * m_ForceScrew[1];
+		m_ForceScrewBase[1] = T05[1][0] * m_ForceScrew[0] + T05[1][1] * m_ForceScrew[1];
+		m_ForceScrewBase[2] = -m_ForceScrew[2];
+		m_ForceScrewBase[3] = T05[0][0] * m_ForceScrew[3] + T05[0][1] * m_ForceScrew[4];
+		m_ForceScrewBase[4] = T05[0][0] * m_ForceScrew[3] + T05[0][1] * m_ForceScrew[4];
+		m_ForceScrewBase[5] = -m_ForceScrew[5];
+	}
+	else
+	{
+	}
+#else
 	double t0, t1, t2, t3;
 	double  T05[3][4];  //这个矩阵是力坐标系转化到机器人基坐标的转化矩阵
 
@@ -195,7 +250,7 @@ void CForceSensor::ForceBaseAxia(CRobotBase *Robot)
 	m_ForceScrewBase[3] = T05[0][0] * m_ForceScrew[3] + T05[0][1] * m_ForceScrew[4];
 	m_ForceScrewBase[4] = T05[0][0] * m_ForceScrew[3] + T05[0][1] * m_ForceScrew[4];
 	m_ForceScrewBase[5] = -m_ForceScrew[5];
-
+#endif
 }
 
 void CForceSensor::GetBias(void)
@@ -287,7 +342,7 @@ bool CForceSensor::bind(int ForceChannel,CString funcName)
 	return (fchannelANDfunc[ForceChannel].first == ForceChannel);
 }
 
-void CForceSensor::getForceData(void)
+void CForceSensor::getForceDataUseFunc(void)
 {
 	getNextPoint();
 	for (int i = 0; i < 6; i++)
@@ -325,5 +380,18 @@ double NOTFUNC(int T_Head)
 	return Force;
 }
 
+extern HANDLE RecData_hMutex; //互斥量句柄
+extern RobotData recvDataFromServer;  //从服务器接受的力信息
+/*摇杆和键盘都是由服务器产生的虚拟力，从数据格式上都是一样的，所以在这里就直接使用一个函数*/
+void CForceSensor::getForceDataUse_JS_Key(void)
+{
+	int i = 0;
+	WaitForSingleObject(RecData_hMutex, INFINITE); //使用互斥量来保护读取变量
+	for (i = 0; i < 6; i++)
+	{
+		m_ForceScrew[i] = recvDataFromServer.Origin6axisForce[i];
+	}
+	ReleaseMutex(RecData_hMutex);
+}
 
 #endif

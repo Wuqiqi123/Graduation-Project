@@ -8,19 +8,7 @@
 
 #define ATIForce   //使用实际的力传感器
 ///////////////////////////////////////////////////////////
-struct RobotData
-{
-	double JointsNow[4];
-	double JointsNext[4];
-	double JointsVelNow[4];
-	double JointsVelNext[4];
-	double Origin6axisForce[6];
-	double JointsTorque[4];
-	double CartesianPositionNow[4];
-	double CartesianPositionNext[4];
-	double CartesianVelNow[4];
-	double CartesianVelNext[4];
-};
+
 
 extern SOCKET sockClient; //全局变量，客户端的套接字
 //////定义定时周期

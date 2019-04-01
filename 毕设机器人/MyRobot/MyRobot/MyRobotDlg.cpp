@@ -743,14 +743,20 @@ void CMyRobotDlg::OnBnClickedButtonConnectserver()
   2：自身函数
 */
 int VitualForceMode = 2;   //默认是自身函数
-
+HANDLE RecData_hMutex; //互斥量句柄
+RobotData recvDataFromServer;
 #endif
+
 DWORD WINAPI ThreadForRecvFromServer(LPVOID lp)
 {
+
 	int res;
-	char recbuf[128]="";
+	char recbuf[sizeof(RobotData)] = "";
 	CMyRobotDlg * dlg = (CMyRobotDlg *)AfxGetApp()->GetMainWnd();  //获取界面的指针
 	CString str;
+#ifdef OPENVITUAL
+	RecData_hMutex = CreateMutex(NULL, FALSE, NULL); //创建无名的互斥量，这个互斥量不被任何线程占有
+#endif
 	while (true)
 	{
 		if ((res = recv(sockClient, recbuf, sizeof(recbuf), 0)) == -1)    //这个rev函数也是阻塞模式
@@ -760,29 +766,41 @@ DWORD WINAPI ThreadForRecvFromServer(LPVOID lp)
 		}
 		else
 		{
-			str.Format("%s", recbuf);
-			dlg->update(str);
+			if (res == sizeof(RobotData)) //如果接受的数据是 RobotData类型的结构体，那么是服务器给机器人客户端的驱动数据
+			{
 #ifdef OPENVITUAL
-			if (str.Find("摇杆") != -1)
-			{
-				VitualForceMode = 0;
-				dlg->update(_T("机器人虚拟力生成器连接到摇杆!"));
-			}
-			else if (str.Find("键盘") != -1)
-			{
-				VitualForceMode = 1;
-				dlg->update(_T("机器人虚拟力生成器连接到键盘!"));
-			}
-			else if (str.Find("函数") != -1)
-			{
-				VitualForceMode = 2;
-				dlg->update(_T("机器人虚拟力生成器连接到函数!"));
-			}
-			else
-			{
-				dlg->update(_T("没有被识别的虚拟力生成器，请重新发送"));
-			}
+				WaitForSingleObject(RecData_hMutex, INFINITE); //使用互斥量来保护写接受到的变量
+				memset(&recvDataFromServer, 0, sizeof(recvDataFromServer));
+				memcpy(&recvDataFromServer, recbuf, sizeof(recvDataFromServer));
+				ReleaseMutex(RecData_hMutex);
 #endif
+			}
+			else   //那么接受的是其他类型，判断是不是字符串类型的命令
+			{
+				str.Format("%s", recbuf);
+				dlg->update(str);
+#ifdef OPENVITUAL
+				if (str.Find("摇杆") != -1)
+				{
+					VitualForceMode = 0;
+					dlg->update(_T("机器人虚拟力生成器连接到摇杆!"));
+				}
+				else if (str.Find("键盘") != -1)
+				{
+					VitualForceMode = 1;
+					dlg->update(_T("机器人虚拟力生成器连接到键盘!"));
+				}
+				else if (str.Find("函数") != -1)
+				{
+					VitualForceMode = 2;
+					dlg->update(_T("机器人虚拟力生成器连接到函数!"));
+				}
+				else
+				{
+					dlg->update(_T("没有被识别的虚拟力生成器，请重新发送"));
+				}
+#endif
+			}
 		}
 
 	}
