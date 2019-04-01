@@ -1,15 +1,14 @@
 #include "stdafx.h"
 #include "ForceSensor.h"
 #define NUM_AVERAGE_BIAOS  10
-
+#include "MyRobotDlg.h"
 CForceSensor* CForceSensor::pForceSense=NULL;
 
 extern int VitualForceMode;
 CForceSensor::CForceSensor()
 {
 #ifdef OPENVITUAL
-	if (VitualForceMode == 2)
-	{
+
 		m_isBias = false;
 		double tmp[6] = { 0, 0, 0, 0, 0, 0 };
 		memcpy(m_ForceScrew, tmp, sizeof(double) * 6);
@@ -20,7 +19,7 @@ CForceSensor::CForceSensor()
 			fchannelANDfunc[i].first = i;
 			fchannelANDfunc[i].second = NULL;
 		}
-	}
+
 
 #else
 	NIDataCard = NULL;
@@ -67,7 +66,16 @@ CForceSensor::~CForceSensor()
 void CForceSensor::InitForceSensor(void)
 {
 #ifdef  OPENVITUAL
-	if (VitualForceMode == 2)
+	CMyRobotDlg * dlg = (CMyRobotDlg *)AfxGetApp()->GetMainWnd();  //获取界面的指针
+	if (VitualForceMode == 0)
+	{
+		dlg->update("机器人虚拟力生成器成功连接到摇杆!");
+	}
+	else if (VitualForceMode == 1)
+	{
+		dlg->update("机器人虚拟力生成器成功连接到键盘!");
+	}
+	else if (VitualForceMode == 2)
 	{
 		for (int i = 0; i < 6; i++)
 		{
@@ -85,6 +93,11 @@ void CForceSensor::InitForceSensor(void)
 		T_start = 0;
 		T_head = 0;
 		T_end = 200;
+		dlg->update("机器人虚拟力生成器成功连接到函数!");
+	}
+	else
+	{
+		dlg->update("机器人没有连接到任何虚拟器!");
 	}
 #else
 	if (NIDataCard == NULL)
