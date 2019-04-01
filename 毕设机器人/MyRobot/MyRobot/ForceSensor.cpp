@@ -4,19 +4,24 @@
 
 CForceSensor* CForceSensor::pForceSense=NULL;
 
+extern int VitualForceMode;
 CForceSensor::CForceSensor()
 {
 #ifdef OPENVITUAL
-	m_isBias = false;
-	double tmp[6] = { 0, 0, 0, 0, 0, 0 };
-	memcpy(m_ForceScrew, tmp, sizeof(double) * 6);
-	memcpy(m_ForceScrewBase, tmp, sizeof(double) * 6);
-	FGFunc = NULL;
-	for (int i = 0; i < 6;i++)
+	if (VitualForceMode == 2)
 	{
-		fchannelANDfunc[i].first = i;
-		fchannelANDfunc[i].second = NULL;
+		m_isBias = false;
+		double tmp[6] = { 0, 0, 0, 0, 0, 0 };
+		memcpy(m_ForceScrew, tmp, sizeof(double) * 6);
+		memcpy(m_ForceScrewBase, tmp, sizeof(double) * 6);
+		FGFunc = NULL;
+		for (int i = 0; i < 6; i++)
+		{
+			fchannelANDfunc[i].first = i;
+			fchannelANDfunc[i].second = NULL;
+		}
 	}
+
 #else
 	NIDataCard = NULL;
 	m_isBias = false;
@@ -62,23 +67,25 @@ CForceSensor::~CForceSensor()
 void CForceSensor::InitForceSensor(void)
 {
 #ifdef  OPENVITUAL
-	for (int i = 0; i < 6; i++)
+	if (VitualForceMode == 2)
 	{
-		switch (i)
+		for (int i = 0; i < 6; i++)
 		{
-		case 0:  {if (bind(i, "Mode_1")) break; else { AfxMessageBox(_T("将力传感器通道与函数绑定出错!"), MB_OK); exit(0); } }
-		case 1:  {if (bind(i, "Mode_1")) break; else { AfxMessageBox(_T("将力传感器通道与函数绑定出错!"), MB_OK); exit(0); } }
-		case 2:  {if (bind(i, "Mode_1")) break; else { AfxMessageBox(_T("将力传感器通道与函数绑定出错!"), MB_OK); exit(0); } }
-		case 3:  {if (bind(i, "Mode_Zero")) break; else { AfxMessageBox(_T("将力传感器通道与函数绑定出错!"), MB_OK); exit(0); } }
-		case 4:  {if (bind(i, "Mode_Zero")) break; else { AfxMessageBox(_T("将力传感器通道与函数绑定出错!"), MB_OK); exit(0); } }
-		case 5:  {if (bind(i, "Mode_Zero")) break; else { AfxMessageBox(_T("将力传感器通道与函数绑定出错!"), MB_OK); exit(0); } }
+			switch (i)
+			{
+			case 0:  {if (bind(i, "Mode_1")) break; else { AfxMessageBox(_T("将力传感器通道与函数绑定出错!"), MB_OK); exit(0); } }
+			case 1:  {if (bind(i, "Mode_1")) break; else { AfxMessageBox(_T("将力传感器通道与函数绑定出错!"), MB_OK); exit(0); } }
+			case 2:  {if (bind(i, "Mode_1")) break; else { AfxMessageBox(_T("将力传感器通道与函数绑定出错!"), MB_OK); exit(0); } }
+			case 3:  {if (bind(i, "Mode_Zero")) break; else { AfxMessageBox(_T("将力传感器通道与函数绑定出错!"), MB_OK); exit(0); } }
+			case 4:  {if (bind(i, "Mode_Zero")) break; else { AfxMessageBox(_T("将力传感器通道与函数绑定出错!"), MB_OK); exit(0); } }
+			case 5:  {if (bind(i, "Mode_Zero")) break; else { AfxMessageBox(_T("将力传感器通道与函数绑定出错!"), MB_OK); exit(0); } }
+			}
 		}
+		interval = 1;
+		T_start = 0;
+		T_head = 0;
+		T_end = 200;
 	}
-	interval=1;
-	T_start=0;
-	T_head=0;
-	T_end=200;
-
 #else
 	if (NIDataCard == NULL)
 	{
@@ -106,8 +113,11 @@ startA:	try
 int CForceSensor::UpdataForceData(void)  //这个函数被上层定时调用，所以叫做刷新函数
 {
 #ifdef OPENVITUAL
-	getForceData();
-	return 0;
+	if (VitualForceMode == 2)
+	{
+		getForceData();
+		return 0;
+	}
 #else
 	int iSaturated;
 startB:	try
