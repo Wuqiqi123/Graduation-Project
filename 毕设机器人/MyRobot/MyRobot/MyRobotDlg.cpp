@@ -744,14 +744,14 @@ void CMyRobotDlg::OnBnClickedButtonConnectserver()
 */
 int VitualForceMode = 2;   //默认是自身函数
 HANDLE RecData_hMutex; //互斥量句柄
-RobotData recvDataFromServer;
+MiniRecvData recvDataFromServer;
 #endif
 
 DWORD WINAPI ThreadForRecvFromServer(LPVOID lp)
 {
 
 	int res;
-	char recbuf[sizeof(RobotData)] = "";
+	char recbuf[sizeof(MiniRecvData)] = "";
 	CMyRobotDlg * dlg = (CMyRobotDlg *)AfxGetApp()->GetMainWnd();  //获取界面的指针
 	CString str;
 	CString strNum;
@@ -767,8 +767,9 @@ DWORD WINAPI ThreadForRecvFromServer(LPVOID lp)
 		}
 		else
 		{
-			if (res == sizeof(RobotData)) //如果接受的数据是 RobotData类型的结构体，那么是服务器给机器人客户端的驱动数据
+			if (res == sizeof(MiniRecvData)) //如果接受的数据是 RobotData类型的结构体，那么是服务器给机器人客户端的驱动数据
 			{
+
 #ifdef OPENVITUAL
 				WaitForSingleObject(RecData_hMutex, INFINITE); //使用互斥量来保护写接受到的变量
 				memset(&recvDataFromServer, 0, sizeof(recvDataFromServer));
@@ -802,7 +803,10 @@ DWORD WINAPI ThreadForRecvFromServer(LPVOID lp)
 				}
 				else
 				{
-					dlg->update(_T("没有被识别的虚拟力生成器，请重新发送"));
+#ifdef DEBUG
+					TRACE("res shold be 112, but now res=: %d\n", res);
+#endif
+					//dlg->update(_T("没有被识别的虚拟力生成器，请重新发送"));
 				}
 #endif
 			}

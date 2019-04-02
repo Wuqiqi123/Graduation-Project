@@ -18,6 +18,14 @@ struct RobotData
 	double CartesianVelNow[4];
 	double CartesianVelNext[4];
 };
+
+struct MiniRecvData
+{
+	double JointsNow[4];
+	double JointsVelNow[4];
+	double Origin6axisForce[6];
+};
+
 typedef double(*FG)(int);  //force generate 力的生成器，指向函数的指针
 class CForceSensor :
 	public CObject

@@ -155,13 +155,13 @@ CImpedance::CImpedance(CRobotBase *Robot)
 		m_vImpedPara[i].Next = 0;
 	}
 
-	for (int i = 0; i < m_Robot->m_JointNumber; i++)    //现在只用三个关节
+	for (int i = 0; i < m_Robot->m_JointNumber; i++)    
 	{
 		m_thetaImpedPara[i].Last = 0;
 		m_thetaImpedPara[i].Now = 0;
 		m_thetaImpedPara[i].Next = 0;
 	}
-	for (int i = 0; i < m_Robot->m_JointNumber; i++)    //现在只用三个关节
+	for (int i = 0; i < m_Robot->m_JointNumber; i++)    
 	{
 		m_angularVelImpedPara[i].Last = 0;
 		m_angularVelImpedPara[i].Now = 0;
