@@ -444,7 +444,7 @@ void CMyRobotDlg::OnToolDataShow()    //直角坐标系中的状态显示
 	SetDlgItemText(IDC_STATIC_YPOS, str);
 	str.Format(_T("%.4f"), Robot->m_HandCurrTn[2][3]);       //取机器人缓存区里面直角坐标系当前的Z的坐标
 	SetDlgItemText(IDC_STATIC_ZPOS, str);
-	str.Format(_T("%.4f"), Robot->m_JointArray[3].CurrentJointPositon);
+	str.Format(_T("%.4f"), Robot->m_HandCurrAlpha);  //原来的 Robot->m_JointArray[3].CurrentJointPositon);
 	SetDlgItemText(IDC_STATIC_GRIPPER_JOINT, str);
 }
 

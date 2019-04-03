@@ -194,7 +194,7 @@ bool CImpedance::StartImpedanceController()
 		JointFilter[i].Init_Kalman(m_K[i], m_B[i], T);
 	}
 	//////////////////////////////////////
-	m_Robot->UpdateJointArray(); //刷新各个关节的值
+	m_Robot->UpdateJointArray(); //刷新各个关节的值并进行运动学求解
 
 	for (int i = 0; i < m_Robot->m_JointNumber; i++)   //得到三个关节的角度,这里依旧用的是人直接理解的位置，角度或者mm
 	{	
@@ -229,6 +229,7 @@ bool CImpedance::StartImpedanceController()
 	m_xImpedPara[0].Last = m_Robot->m_HandCurrTn[0][3];   //沿X轴线的位移
 	m_xImpedPara[1].Last = m_Robot->m_HandCurrTn[1][3];   //沿Y轴线的位移
 	m_xImpedPara[2].Last = m_Robot->m_HandCurrTn[2][3];   //沿z轴线的位移
+	m_xImpedPara[3].Last = m_Robot->m_HandCurrAlpha;   //由于SCARA只能有一个角度，所以只设计一个角度
 
 //此处应该还有速度，需要添加
 
@@ -316,6 +317,10 @@ bool CImpedance::GetCurrentState(void)
 		//m_angularVelImpedPara[i].Now = m_Robot->m_JointArray[i].CurrentJointVelocity;
 		m_angularVelImpedPara[i].Now = (m_thetaImpedPara[i].Now - m_thetaImpedPara[i].Last) / T;
 	}
+	for (int i = 0; i < m_Robot->m_JointNumber; i++)  //得到机器人直角坐标空间的位姿
+	{
+		m_xImpedPara[i].Last = m_xImpedPara[i].Now;
+	}
 	/////////////////////////////使用卡尔曼滤波器
 
 
@@ -356,10 +361,10 @@ bool CImpedance::GetCurrentState(void)
 	//m_FImpedPara.Next = 10;
 
 	/////////////////直角坐标系的信息
-	m_xImpedPara[0].Last = m_Robot->m_HandCurrTn[0][3];   //沿X轴线的位移
-	m_xImpedPara[1].Last = m_Robot->m_HandCurrTn[1][3];   //沿Y轴线的位移
-	m_xImpedPara[2].Last = m_Robot->m_HandCurrTn[2][3];   //沿z轴线的位移
-
+	m_xImpedPara[0].Now = m_Robot->m_HandCurrTn[0][3];   //沿X轴线的位移
+	m_xImpedPara[1].Now = m_Robot->m_HandCurrTn[1][3];   //沿Y轴线的位移
+	m_xImpedPara[2].Now = m_Robot->m_HandCurrTn[2][3];   //沿z轴线的位移
+	m_xImpedPara[3].Now = m_Robot->m_HandCurrAlpha;
 
 	//此处应该还有直角坐标空间的速度，需要用到雅克比矩阵，但是机器人类中添加，但是我这里还没有定义
 
@@ -504,32 +509,32 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile(v
 	
 	double F[6] = { 0, 0, 0, 0, 0, 0};   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
 	
-	double Torque[6];
-	//	Torque[0] = timenum / 100.0;
-	//	Torque[1] = timenum / 100.0;
-	for (int i = 0; i < 6; i++)
-		F[i]= ForceSensor[i]; 
-
-	for (int i = 0; i < 3; i++)  //使用向后差分的形式
-	{
-		m_thetaImpedPara[i].Next = 1.0 / (m_B[i] / T + m_K[i])*Torque[i] + 1.0 / (m_B[i] / T + m_K[i])*(m_B[i] / T)*m_thetaImpedPara[i].Now;
-	}
-	//for (int i = 0; i < 3; i++)   //直接使用微分方程
-	//{
-	//	m_thetaImpedPara[i].Next = 1.0 / (m_B[i] / T + m_K[i])*Torque[i] + 1.0 / (m_B[i] / T + m_K[i])*(m_B[i] / T)*m_thetaImpedPara[i].Now;
-	//}
-#ifdef DEBUG
-	for (int i = 0; i < 4; i++)
-	{
-		TRACE("the %d’axis next theta is: %.3f\n", i, this->m_thetaImpedPara[i].Next);
-	}
-#endif
-	double GoalPos[4];
-	for (int i = 0; i < this->m_Robot->m_JointNumber; i++)
-	{
-		GoalPos[i] = (this->m_thetaImpedPara[i].Next);  
-	}
-	this->m_Robot->JointSynTMove(GoalPos,T);
+//	double Torque[6];
+//	//	Torque[0] = timenum / 100.0;
+//	//	Torque[1] = timenum / 100.0;
+//	for (int i = 0; i < 6; i++)
+//		F[i]= ForceSensor[i]; 
+//
+//	for (int i = 0; i < 3; i++)  //使用向后差分的形式
+//	{
+//		m_thetaImpedPara[i].Next = 1.0 / (m_B[i] / T + m_K[i])*Torque[i] + 1.0 / (m_B[i] / T + m_K[i])*(m_B[i] / T)*m_thetaImpedPara[i].Now;
+//	}
+//	//for (int i = 0; i < 3; i++)   //直接使用微分方程
+//	//{
+//	//	m_thetaImpedPara[i].Next = 1.0 / (m_B[i] / T + m_K[i])*Torque[i] + 1.0 / (m_B[i] / T + m_K[i])*(m_B[i] / T)*m_thetaImpedPara[i].Now;
+//	//}
+//#ifdef DEBUG
+//	for (int i = 0; i < 4; i++)
+//	{
+//		TRACE("the %d’axis next theta is: %.3f\n", i, this->m_thetaImpedPara[i].Next);
+//	}
+//#endif
+//	double GoalPos[4];
+//	for (int i = 0; i < this->m_Robot->m_JointNumber; i++)
+//	{
+//		GoalPos[i] = (this->m_thetaImpedPara[i].Next);  
+//	}
+//	this->m_Robot->JointSynTMove(GoalPos,T);
 	return true;
 }
 

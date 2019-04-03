@@ -57,10 +57,11 @@ void CGRB4Robot::InitJoints(void)
 	//	m_JointGap[i].GapToPositive = 0;
 	//	m_JointGap[i].GapToNegative = m_JointGap[i].GapLength - m_JointGap[i].GapToPositive;
 	}
-	ForwardKinematics();
+	FullForwardKinematics();
 	for (int i = 0; i<3; i++)
 		for (int j = 0; j<4; j++)
 			m_HandLastTn[i][j] =m_HandCurrTn[i][j] ;
+	m_HandLastAlpha = m_HandCurrAlpha;
 
 
 	/*
@@ -364,7 +365,7 @@ bool CGRB4Robot::FullForwardKinematics(void)
 	m_HandCurrTn[1][3] = l2 * sin(t0 + t1) + l1 * sin(t0);////ÇóYÎ»ÖÃ
 	m_HandCurrTn[2][3] = t2 - l3 + l4;
 
-
+	m_HandCurrAlpha = m_JointArray[0].CurrentJointPositon + m_JointArray[1].CurrentJointPositon + m_JointArray[3].CurrentJointPositon;
 	////m_HandCurrTn[3][3]=t3;
 
 	//x=m_HandCurrTn[0][3];  //¡°X¡±Î»ÖÃ
