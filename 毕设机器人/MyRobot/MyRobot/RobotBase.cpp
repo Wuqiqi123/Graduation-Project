@@ -459,7 +459,7 @@ void CRobotBase::UpdateJointArray()
 				m_JointArray[i].CurrentJointVelocity = (double)vel[i] / (m_JointArray[i].PulsePerMmOrDegree * 0.0002);
 			}
 			//末端位置运动学正解存放在m_HandCurrTn[3][4]; 
-			ForwardKinematics();
+			FullForwardKinematics();
 		}
 	}
 	else
@@ -486,7 +486,7 @@ void CRobotBase::UpdateJointArray()
 				m_JointArray[i].CurrentJointVelocity = (double)vel[i] / (m_JointArray[i].PulsePerMmOrDegree * 0.0002);
 			}
 			//末端位置运动学正解存放在m_HandCurrTn[3][4]; 
-			ForwardKinematics();
+			FullForwardKinematics();
 		}
 	}
 

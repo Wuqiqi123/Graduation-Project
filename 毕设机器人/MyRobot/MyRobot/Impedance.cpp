@@ -502,12 +502,13 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile(void)
 {
 	
-	double Torque[3] = { 0, 0, 0 };   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
-
-
+	double F[6] = { 0, 0, 0, 0, 0, 0};   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
+	
+	double Torque[6];
 	//	Torque[0] = timenum / 100.0;
 	//	Torque[1] = timenum / 100.0;
-	Torque[2] = ForceSensor[2];
+	for (int i = 0; i < 6; i++)
+		F[i]= ForceSensor[i]; 
 
 	for (int i = 0; i < 3; i++)  //使用向后差分的形式
 	{

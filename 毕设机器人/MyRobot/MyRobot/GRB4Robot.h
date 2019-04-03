@@ -12,7 +12,8 @@ const unsigned short OpenMask[16] =
 };
 #define l1   (250*0.001)		
 #define l2   (150*0.001)
-#define l3   (120*0.001)
+#define l3   (140*0.001)
+#define l4   (335*0.001)
 //#define l3   4	
 class CGRB4Robot :
 	public CRobotBase

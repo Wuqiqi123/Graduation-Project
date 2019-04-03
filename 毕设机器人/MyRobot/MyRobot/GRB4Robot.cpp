@@ -349,8 +349,8 @@ bool CGRB4Robot::FullForwardKinematics(void)
 	t3 = m_JointArray[3].CurrentJointPositon * pi / 180;
 
 
-	for (int i = 0; i<3; i++)
-		for (int j = 0; j<4; j++)
+	for (int i = 0; i < 3; i++)
+		for (int j = 0; j < 4; j++)
 			m_HandCurrTn[i][j] = 0;
 
 	m_HandCurrTn[0][0] = cos(t0 + t1 + t3);
@@ -362,7 +362,7 @@ bool CGRB4Robot::FullForwardKinematics(void)
 
 	m_HandCurrTn[0][3] = l2 * cos(t0 + t1) + l1 * cos(t0);////求X位置
 	m_HandCurrTn[1][3] = l2 * sin(t0 + t1) + l1 * sin(t0);////求Y位置
-	m_HandCurrTn[2][3] = t2-l3;
+	m_HandCurrTn[2][3] = t2 - l3 + l4;
 
 
 	////m_HandCurrTn[3][3]=t3;
