@@ -18,7 +18,8 @@ public:
 	HANDLE m_hControlThread;
 	bool m_RunningFlag;   //正在运行阻抗控制标志位
 	CRobotBase *m_Robot;    //机器人对象
-	double m_M[4], m_K[4], m_B[4];
+	double m_M[4], m_K[4], m_B[4];     //关节坐标空间阻抗参数
+	double m_xM[4], m_xK[4], m_xB[4];  //直角坐标空间阻抗参数
 	double ForceSensor[6];   //这个力传感器是转化了坐标系之后，相对于机器人基坐标系的值
 	double ExtTorque[4];    //机器人每个关节收到的外力矩
 	ImpedancePara m_FImpedPara, m_xImpedPara[4], m_vImpedPara[4];   //该结构体里面储存了做阻抗控制时，需要用到的参数，力参数，笛卡尔坐标空间的位置和力；
@@ -29,7 +30,7 @@ public:
 	CVelFliter JointVelFilter[4];  ///定义速度的卡尔曼滤波器
 
 	 CForceSensor* ATIForceSensor;
-	
+	 double restPosition[4];
 
 public:
 	CImpedance(CRobotBase *Robot);

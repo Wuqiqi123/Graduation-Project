@@ -74,7 +74,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 				}
 
 #endif
-				pImpedence->GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile();  //计算下一个时刻的关节的角度和角速度并执行
+				pImpedence->GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile();  //计算下一个时刻的关节的角度和角速度并执行
 
 				////下面是TCP/IP传输
 				memset(&MyRobotData, 0, sizeof(MyRobotData));
@@ -124,18 +124,30 @@ CImpedance::CImpedance(CRobotBase *Robot)
 			m_M[i]= 0;
 			m_K[i]= 0.05;   //单位是 N/mm  0.2
 			m_B[i] = 0.03;
+/////////////////////////////////
+			m_xM[i] = 0;
+			m_xK[i] = 0.5;   //单位是 N/mm  0.2
+			m_xB[i] = 0.1;
 		}
 		else if (i == 2)
 		{
 			m_M[i] = 0;
 			m_K[i] = 0.05;   //单位是 N/mm  0.2
 			m_B[i] = 0.1;
+			///////////////////////////////////
+			m_xM[i] = 0;
+			m_xK[i] = 0.2;   //单位是 N/mm  0.2
+			m_xB[i] = 0.05;
 		}
 		else
 		{
 			m_M[i] = 0;
 			m_K[i] = 0.001;   //单位是 N/mm  0.2
 			m_B[i] = 0.02;
+//////////////////////////
+			m_xM[i] = 0;
+			m_xK[i] = 0.1;   //单位是 N/mm  0.2
+			m_xB[i] = 0.5;
 		}
 
 	}
@@ -226,10 +238,10 @@ bool CImpedance::StartImpedanceController()
 	//ForceSensor[2] = ATIForceSensor->m_ForceScrew[2];
 
 /////////////////直角坐标系的信息
-	m_xImpedPara[0].Last = m_Robot->m_HandCurrTn[0][3];   //沿X轴线的位移
-	m_xImpedPara[1].Last = m_Robot->m_HandCurrTn[1][3];   //沿Y轴线的位移
-	m_xImpedPara[2].Last = m_Robot->m_HandCurrTn[2][3];   //沿z轴线的位移
-	m_xImpedPara[3].Last = m_Robot->m_HandCurrAlpha;   //由于SCARA只能有一个角度，所以只设计一个角度
+	restPosition[0] = m_xImpedPara[0].Last = m_Robot->m_HandCurrTn[0][3];   //沿X轴线的位移
+	restPosition[1] = m_xImpedPara[1].Last = m_Robot->m_HandCurrTn[1][3];   //沿Y轴线的位移
+	restPosition[2] = m_xImpedPara[2].Last = m_Robot->m_HandCurrTn[2][3];   //沿z轴线的位移
+	restPosition[3] = m_xImpedPara[3].Last = m_Robot->m_HandCurrAlpha;   //由于SCARA只能有一个角度，所以只设计一个角度
 
 //此处应该还有速度，需要添加
 
@@ -503,12 +515,128 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 	return true;
 }
 
-//////////////////现在求下一个时刻的位置并到达那个位置：不用速度的规划
+/*
+	函数参数为  theta 传入关节处的角度，
+			    getHandCurr 返回得到的笛卡尔空间的坐标系	
+*/
+int ForwardKinematicsforImpedance(double theta[4],double getHandCurr[4])
+{
+	double t0 = theta[0];
+	double t1 = theta[1];
+	double t2 = theta[2];
+	double t3 = theta[3];
+
+	getHandCurr[0] = l2 * cos(t0 + t1) + l1 * cos(t0);////求X位置
+	getHandCurr[1] = l2 * sin(t0 + t1) + l1 * sin(t0);////求Y位置
+	getHandCurr[2] = t2 - l3 + l4;                    ////求Y位置
+	getHandCurr[3] = t0 + t1 + t2 + t3;               ////求姿态
+
+	return 0;
+}
+
+bool CalculateDelte(double theta[4], double DeltaX[6], double Deltatheta[4])
+{
+	double t0, t1, t2, t3;
+	t0 = theta[0];
+	t1 = theta[1];
+	t2 = theta[2];
+	t3 = theta[3];
+
+	double iJ[4][6];
+	for (int i = 0; i < 4; i++)
+		for (int j = 0; j < 6; j++)
+			iJ[i][j] = 0;
+
+	iJ[0][0] = -l1 * sin(t0) - l2 * sin(t0 + t1);
+	iJ[1][0] = -l2 * sin(t0 + t1);
+	iJ[0][1] = l1 * cos(t0) + l2 * cos(t0 + t1);
+	iJ[1][1] = l2 * cos(t0 + t1);
+	iJ[2][2] = 1;
+	iJ[0][5] = 1;
+	iJ[1][5] = 1;
+	iJ[3][5] = 1;
+	for (int i = 0; i < 4; i++)
+		Deltatheta[i] = 0;
+
+	for (int i = 0; i < 4; i++)
+		for (int j = 0; j < 6; j++)
+			Deltatheta[i] = Deltatheta[i] + iJ[i][j] * DeltaX[j];
+
+	return true;
+}
+//////////////////现在求下一个时刻的位置并到达那个位置,采用逆运动学的方法求解
+
 bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile(void)
 {
 	
-	double F[6] = { 0, 0, 0, 0, 0, 0};   //仅仅是测试用，获得每个关节的力矩，只使用前三个关节的参数
+	double Fx = ForceSensor[0];
+	double Fy = ForceSensor[1];
+	double Fz = ForceSensor[2];
+	double Mz = ForceSensor[5];
 	
+	double theta[4];
+	theta[0] = m_thetaImpedPara[0].Now;
+	theta[1] = m_thetaImpedPara[1].Now;
+	theta[2] = m_thetaImpedPara[2].Now;
+	theta[3] = m_thetaImpedPara[3].Now;
+	////////////先求解需要的阻抗控制产生的位置信息
+	m_xImpedPara[0].Next = (m_xK[0] * T *restPosition[0] + Fx * T + m_xB[0] * m_xImpedPara[0].Now) / (m_xK[0] * T + m_xB[0]);
+	m_xImpedPara[1].Next = (m_xK[1] * T *restPosition[1] + Fy * T + m_xB[1] * m_xImpedPara[1].Now) / (m_xK[1] * T + m_xB[1]);
+	m_xImpedPara[2].Next = (m_xK[2] * T *restPosition[2] + Fz * T + m_xB[2] * m_xImpedPara[2].Now) / (m_xK[2] * T + m_xB[2]);
+	m_xImpedPara[3].Next = (m_xK[3] * T *restPosition[3] + Mz * T + m_xB[3] * m_xImpedPara[3].Now) / (m_xK[3] * T + m_xB[3]);
+
+#ifdef DEBUG  ////////////////////////////////调试时间代码开始
+
+	TRACE("m_xImpedPara[0].Next=%.3f\n", m_xImpedPara[0].Next);
+	TRACE("m_xImpedPara[1].Next=%.3f\n", m_xImpedPara[1].Next);
+	TRACE("m_xImpedPara[2].Next=%.3f\n", m_xImpedPara[2].Next);
+	TRACE("m_xImpedPara[3].Next=%.3f\n", m_xImpedPara[3].Next);
+#endif
+	////////////下面使用逆雅克比求解数值解
+	//初始化数据
+	double xtmp[4];
+	xtmp[0] = m_xImpedPara[0].Now;
+	xtmp[1] = m_xImpedPara[1].Now;
+	xtmp[2] = m_xImpedPara[2].Now;
+	xtmp[3] = m_xImpedPara[3].Now;
+	double Error[4] = { 0, 0, 0, 0 };
+	double VitualForce[6] = { 0, 0, 0, 0,0,0};
+	double Deltatheta[4] = { 0, 0, 0, 0 };
+	double GoalVel[4] = { 0, 0, 0, 0 };
+	int i = 0;
+	while (i < 20)
+	{
+		ForwardKinematicsforImpedance(theta, xtmp);
+		Error[0] = m_xImpedPara[0].Next - xtmp[0];
+		Error[1] = m_xImpedPara[1].Next - xtmp[1];
+		Error[2] = m_xImpedPara[2].Next - xtmp[2];
+		Error[3] = m_xImpedPara[3].Next - xtmp[3];
+		VitualForce[0] = 1 * Error[0];
+		VitualForce[1] = 1 * Error[1];
+		VitualForce[2] = 1 * Error[2];
+		VitualForce[5] = 1 * Error[3];
+
+
+		CalculateDelte(theta, VitualForce, Deltatheta);
+		theta[0] = Deltatheta[0] + theta[0];
+		theta[1] = Deltatheta[1] + theta[1];
+		theta[2] = Deltatheta[2] + theta[2];
+		theta[3] = Deltatheta[3] + theta[3];
+
+		i++;
+	}
+#ifdef DEBUG  ////////////////////////////////调试时间代码开始
+
+	TRACE("theta[0]=%.3f\n", theta[0]);
+	TRACE("theta[1]=%.3f\n", theta[1]);
+	TRACE("theta[2]=%.3f\n", theta[2]);
+	TRACE("theta[3]=%.3f\n", theta[3]);
+#endif
+	GoalVel[0] = m_Robot->OverallVelocityRate * m_Robot->m_JointArray[0].NormalJointVelocity;
+	GoalVel[1] = m_Robot->OverallVelocityRate * m_Robot->m_JointArray[1].NormalJointVelocity;
+	GoalVel[2] = m_Robot->OverallVelocityRate * m_Robot->m_JointArray[2].NormalJointVelocity;
+	GoalVel[3] = m_Robot->OverallVelocityRate * m_Robot->m_JointArray[3].NormalJointVelocity;
+	this->m_Robot->JointsTMove(theta, GoalVel);
 //	double Torque[6];
 //	//	Torque[0] = timenum / 100.0;
 //	//	Torque[1] = timenum / 100.0;

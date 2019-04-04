@@ -43,9 +43,10 @@ struct t_Tools{
 class CRobotBase :
 	public CObject
 {
-	double   OverallVelocityRate;	//总体速度倍率
+
 	HANDLE   m_ThreadHandle;   //The Update thread
 public:
+	double   OverallVelocityRate;	//总体速度倍率
 	CGTController *m_pController;	//控制器对象
 	CPlanner *m_pPlanner;			//规划器对象
 	double	m_MacroSamplePeriod;	//控制周期  Macro微距的

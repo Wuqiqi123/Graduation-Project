@@ -780,7 +780,7 @@ DWORD WINAPI ThreadForRecvFromServer(LPVOID lp)
 			else   //那么接受的是其他类型，判断是不是字符串类型的命令
 			{
 				str.Format("%s", recbuf);
-				dlg->update(str);
+				//dlg->update(str);
 #ifdef OPENVITUAL
 
 				if (str.Find("摇杆") != -1)
