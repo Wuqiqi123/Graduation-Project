@@ -126,18 +126,18 @@ CImpedance::CImpedance(CRobotBase *Robot)
 			m_B[i] = 0.03;
 /////////////////////////////////
 			m_xM[i] = 0;
-			m_xK[i] = 0.5;   //单位是 N/mm  0.2
-			m_xB[i] = 0.1;
+			m_xK[i] = 100;   //单位是 N/m  
+			m_xB[i] = 20;
 		}
 		else if (i == 2)
 		{
 			m_M[i] = 0;
-			m_K[i] = 0.05;   //单位是 N/mm  0.2
+			m_K[i] = 0.05;   //单位是 N/mm  
 			m_B[i] = 0.1;
 			///////////////////////////////////
 			m_xM[i] = 0;
-			m_xK[i] = 0.2;   //单位是 N/mm  0.2
-			m_xB[i] = 0.05;
+			m_xK[i] = 0.02;   //单位是 N/m  0.2
+			m_xB[i] = 0.01;
 		}
 		else
 		{
@@ -146,8 +146,8 @@ CImpedance::CImpedance(CRobotBase *Robot)
 			m_B[i] = 0.02;
 //////////////////////////
 			m_xM[i] = 0;
-			m_xK[i] = 0.1;   //单位是 N/mm  0.2
-			m_xB[i] = 0.5;
+			m_xK[i] = 0.02;   //单位是 N/mm  0.2
+			m_xB[i] = 0.01;
 		}
 
 	}
@@ -376,7 +376,7 @@ bool CImpedance::GetCurrentState(void)
 	m_xImpedPara[0].Now = m_Robot->m_HandCurrTn[0][3];   //沿X轴线的位移
 	m_xImpedPara[1].Now = m_Robot->m_HandCurrTn[1][3];   //沿Y轴线的位移
 	m_xImpedPara[2].Now = m_Robot->m_HandCurrTn[2][3];   //沿z轴线的位移
-	m_xImpedPara[3].Now = m_Robot->m_HandCurrAlpha;
+	m_xImpedPara[3].Now = m_Robot->m_HandCurrAlpha;      //角度
 
 	//此处应该还有直角坐标空间的速度，需要用到雅克比矩阵，但是机器人类中添加，但是我这里还没有定义
 
@@ -585,6 +585,50 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile(v
 	m_xImpedPara[2].Next = (m_xK[2] * T *restPosition[2] + Fz * T + m_xB[2] * m_xImpedPara[2].Now) / (m_xK[2] * T + m_xB[2]);
 	m_xImpedPara[3].Next = (m_xK[3] * T *restPosition[3] + Mz * T + m_xB[3] * m_xImpedPara[3].Now) / (m_xK[3] * T + m_xB[3]);
 
+	double px, py, pz, toltheta;
+	px = m_xImpedPara[0].Next;
+	py = m_xImpedPara[1].Next;
+	pz = m_xImpedPara[2].Next;
+	toltheta = m_xImpedPara[3].Next;
+
+	double costheta2, sintheta2_1, sintheta2_2, theta2_1, theta2_2;
+	costheta2 = (px*px + py * py - l1 * l1 - l2 * l2) / (2 * l1*l2);
+	sintheta2_1 = sqrt(1 - costheta2 * costheta2);
+	sintheta2_2 = -sqrt(1 - costheta2 * costheta2);
+	theta2_1 = atan2(sintheta2_1, costheta2)*180/pi;
+	theta2_2 = atan2(sintheta2_2, costheta2)*180/pi;
+
+	double costheta1_1, costheta1_2, sintheta1_1, sintheta1_2, theta1_1, theta1_2;
+	sintheta1_1 = ((l1 + l2 * costheta2) * py - l2 * sintheta2_1 * px) / (px * px + py * py);
+	costheta1_1 = ((l1 + l2 * costheta2) * px - l2 * sintheta2_1 * py) / (px * px + py * py);
+
+	sintheta1_2 = ((l1 + l2 * costheta2) * py - l2 * sintheta2_2 * px) / (px * px + py * py);
+	costheta1_2 = ((l1 + l2 * costheta2) * px - l2 * sintheta2_2 * py) / (px * px + py * py);
+
+	theta1_1 = atan2(sintheta1_1, costheta1_1) * 180 / pi;
+	theta1_2 = atan2(sintheta1_2, costheta1_2) * 180 / pi;
+
+
+	double costheta4_1, costheta4_2, sintheta4_1, sintheta4_2, theta4_1, theta4_2;
+	theta4_1 = toltheta - theta2_1 - theta1_1;
+	theta4_2 = toltheta - theta2_2 - theta1_2;
+	
+	if (abs(theta1_1 - theta[0]) < abs(theta1_2 - theta[0]))
+	{
+			theta[0] = theta1_1;
+			theta[1] = theta2_1;
+			theta[2] = pz - l4 + l3;
+			theta[3] = theta4_1;
+	}
+	else
+	{
+			theta[0] = theta1_2;
+			theta[1] = theta1_2;
+			theta[2] = pz - l4 + l3;
+			theta[3] = theta4_2;
+	}
+
+
 #ifdef DEBUG  ////////////////////////////////调试时间代码开始
 
 	TRACE("m_xImpedPara[0].Next=%.3f\n", m_xImpedPara[0].Next);
@@ -592,39 +636,39 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile(v
 	TRACE("m_xImpedPara[2].Next=%.3f\n", m_xImpedPara[2].Next);
 	TRACE("m_xImpedPara[3].Next=%.3f\n", m_xImpedPara[3].Next);
 #endif
-	////////////下面使用逆雅克比求解数值解
-	//初始化数据
-	double xtmp[4];
-	xtmp[0] = m_xImpedPara[0].Now;
-	xtmp[1] = m_xImpedPara[1].Now;
-	xtmp[2] = m_xImpedPara[2].Now;
-	xtmp[3] = m_xImpedPara[3].Now;
-	double Error[4] = { 0, 0, 0, 0 };
-	double VitualForce[6] = { 0, 0, 0, 0,0,0};
-	double Deltatheta[4] = { 0, 0, 0, 0 };
-	double GoalVel[4] = { 0, 0, 0, 0 };
-	int i = 0;
-	while (i < 20)
-	{
-		ForwardKinematicsforImpedance(theta, xtmp);
-		Error[0] = m_xImpedPara[0].Next - xtmp[0];
-		Error[1] = m_xImpedPara[1].Next - xtmp[1];
-		Error[2] = m_xImpedPara[2].Next - xtmp[2];
-		Error[3] = m_xImpedPara[3].Next - xtmp[3];
-		VitualForce[0] = 1 * Error[0];
-		VitualForce[1] = 1 * Error[1];
-		VitualForce[2] = 1 * Error[2];
-		VitualForce[5] = 1 * Error[3];
+	//////////////下面使用逆雅克比求解数值解
+	////初始化数据
+	//double xtmp[4];
+	//xtmp[0] = m_xImpedPara[0].Now;
+	//xtmp[1] = m_xImpedPara[1].Now;
+	//xtmp[2] = m_xImpedPara[2].Now;
+	//xtmp[3] = m_xImpedPara[3].Now;
+	//double Error[4] = { 0, 0, 0, 0 };
+	//double VitualForce[6] = { 0, 0, 0, 0,0,0};
+	//double Deltatheta[4] = { 0, 0, 0, 0 };
+	//double GoalVel[4] = { 0, 0, 0, 0 };
+	//int i = 0;
+	//while (i < 20)
+	//{
+	//	ForwardKinematicsforImpedance(theta, xtmp);
+	//	Error[0] = m_xImpedPara[0].Next - xtmp[0];
+	//	Error[1] = m_xImpedPara[1].Next - xtmp[1];
+	//	Error[2] = m_xImpedPara[2].Next - xtmp[2];
+	//	Error[3] = m_xImpedPara[3].Next - xtmp[3];
+	//	VitualForce[0] = 1 * Error[0];
+	//	VitualForce[1] = 1 * Error[1];
+	//	VitualForce[2] = 1 * Error[2];
+	//	VitualForce[5] = 1 * Error[3];
 
 
-		CalculateDelte(theta, VitualForce, Deltatheta);
-		theta[0] = Deltatheta[0] + theta[0];
-		theta[1] = Deltatheta[1] + theta[1];
-		theta[2] = Deltatheta[2] + theta[2];
-		theta[3] = Deltatheta[3] + theta[3];
+	//	CalculateDelte(theta, VitualForce, Deltatheta);
+	//	theta[0] = Deltatheta[0] + theta[0];
+	//	theta[1] = Deltatheta[1] + theta[1];
+	//	theta[2] = Deltatheta[2] + theta[2];
+	//	theta[3] = Deltatheta[3] + theta[3];
 
-		i++;
-	}
+	//	i++;
+	//}
 #ifdef DEBUG  ////////////////////////////////调试时间代码开始
 
 	TRACE("theta[0]=%.3f\n", theta[0]);
@@ -632,6 +676,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile(v
 	TRACE("theta[2]=%.3f\n", theta[2]);
 	TRACE("theta[3]=%.3f\n", theta[3]);
 #endif
+	double GoalVel[4] = { 0, 0, 0, 0 };
 	GoalVel[0] = m_Robot->OverallVelocityRate * m_Robot->m_JointArray[0].NormalJointVelocity;
 	GoalVel[1] = m_Robot->OverallVelocityRate * m_Robot->m_JointArray[1].NormalJointVelocity;
 	GoalVel[2] = m_Robot->OverallVelocityRate * m_Robot->m_JointArray[2].NormalJointVelocity;
