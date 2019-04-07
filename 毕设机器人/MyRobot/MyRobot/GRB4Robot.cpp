@@ -222,9 +222,9 @@ bool CGRB4Robot::ForwardKinematics()
 	m_HandCurrTn[1][0] = sin(t0 + t1);
 	m_HandCurrTn[0][1] = -m_HandCurrTn[1][0];
 
-	m_HandCurrTn[0][3] = l2 * cos(t0 + t1) + l1 * cos(t0);////求X位置
-	m_HandCurrTn[1][3] = l2 * sin(t0 + t1) + l1 * sin(t0);////求Y位置
-	m_HandCurrTn[2][3] = t2;
+	m_HandCurrTn[0][3] = (l2 * cos(t0 + t1) + l1 * cos(t0))*1000;////求X位置,单位是mm
+	m_HandCurrTn[1][3] = (l2 * sin(t0 + t1) + l1 * sin(t0))*1000;////求Y位置,单位是mm
+	m_HandCurrTn[2][3] = t2*1000;                                ////求Z位置,单位是mm             
 
 
 	////m_HandCurrTn[3][3]=t3;

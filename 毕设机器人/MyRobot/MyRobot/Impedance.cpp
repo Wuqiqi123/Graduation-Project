@@ -126,23 +126,23 @@ CImpedance::CImpedance(CRobotBase *Robot)
 			m_B[i] = 0.03;
 /////////////////////////////////
 			m_xM[i] = 0;
-			m_xK[i] = 100;   //单位是 N/m  
-			m_xB[i] = 20;
+			m_xK[i] =200;   //单位是 N/m  
+			m_xB[i] = 50;
 		}
 		else if (i == 2)
 		{
 			m_M[i] = 0;
-			m_K[i] = 0.05;   //单位是 N/mm  
-			m_B[i] = 0.1;
+			m_K[i] = 50;   //单位是 N/mm  
+			m_B[i] = 10;
 			///////////////////////////////////
 			m_xM[i] = 0;
-			m_xK[i] = 0.02;   //单位是 N/m  0.2
-			m_xB[i] = 0.01;
+			m_xK[i] = 100;   //单位是 N/m  0.2
+			m_xB[i] = 50;
 		}
 		else
 		{
 			m_M[i] = 0;
-			m_K[i] = 0.001;   //单位是 N/mm  0.2
+			m_K[i] = 0.1;   //单位是 N/mm  0.2
 			m_B[i] = 0.02;
 //////////////////////////
 			m_xM[i] = 0;
@@ -573,12 +573,22 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile(v
 	double Fy = ForceSensor[1];
 	double Fz = ForceSensor[2];
 	double Mz = ForceSensor[5];
+
 	
 	double theta[4];
 	theta[0] = m_thetaImpedPara[0].Now;
 	theta[1] = m_thetaImpedPara[1].Now;
 	theta[2] = m_thetaImpedPara[2].Now;
 	theta[3] = m_thetaImpedPara[3].Now;
+
+
+#ifdef DEBUG  ////////////////////////////////调试时间代码开始
+
+	TRACE("Fx=%.3f\n", Fx);
+	TRACE("Fy=%.3f\n", Fy);
+	TRACE("Fz=%.3f\n", Fz);
+	TRACE("Mz=%.3f\n", Mz);
+#endif
 	////////////先求解需要的阻抗控制产生的位置信息
 	m_xImpedPara[0].Next = (m_xK[0] * T *restPosition[0] + Fx * T + m_xB[0] * m_xImpedPara[0].Now) / (m_xK[0] * T + m_xB[0]);
 	m_xImpedPara[1].Next = (m_xK[1] * T *restPosition[1] + Fy * T + m_xB[1] * m_xImpedPara[1].Now) / (m_xK[1] * T + m_xB[1]);
@@ -623,7 +633,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile(v
 	else
 	{
 			theta[0] = theta1_2;
-			theta[1] = theta1_2;
+			theta[1] = theta2_2;
 			theta[2] = pz - l4 + l3;
 			theta[3] = theta4_2;
 	}
