@@ -438,11 +438,11 @@ void CMyRobotDlg::OnToolDataShow()    //直角坐标系中的状态显示
 {
 	CString str;
 	//直角坐标区的信息显示，保留小数点后4位有效数字
-	str.Format(_T("%.4f"), Robot->m_HandCurrTn[0][3]);   //取机器人缓存区里面m_Robot直角坐标系当前的X的坐标
+	str.Format(_T("%.4f"), Robot->m_HandCurrTn[0][3]*1000);   //取机器人缓存区里面m_Robot直角坐标系当前的X的坐标
 	SetDlgItemText(IDC_STATIC_XPOS, str);
-	str.Format(_T("%.4f"), Robot->m_HandCurrTn[1][3]);   //取机器人缓存区里面直角坐标系当前的Y的坐标
+	str.Format(_T("%.4f"), Robot->m_HandCurrTn[1][3]*1000);   //取机器人缓存区里面直角坐标系当前的Y的坐标
 	SetDlgItemText(IDC_STATIC_YPOS, str);
-	str.Format(_T("%.4f"), Robot->m_HandCurrTn[2][3]);       //取机器人缓存区里面直角坐标系当前的Z的坐标
+	str.Format(_T("%.4f"), Robot->m_HandCurrTn[2][3]*1000);       //取机器人缓存区里面直角坐标系当前的Z的坐标
 	SetDlgItemText(IDC_STATIC_ZPOS, str);
 	str.Format(_T("%.4f"), Robot->m_HandCurrAlpha);  //原来的 Robot->m_JointArray[3].CurrentJointPositon);
 	SetDlgItemText(IDC_STATIC_GRIPPER_JOINT, str);

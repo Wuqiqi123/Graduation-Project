@@ -12,7 +12,7 @@
 
 extern SOCKET sockClient; //全局变量，客户端的套接字
 //////定义定时周期
-#define Tms (15)   
+#define Tms (10)   
 #define T (Tms*0.001)
 ////////////////////////
 int testNUM = 0;
@@ -83,6 +83,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 					MyRobotData.JointsNow[i] = pImpedence->m_thetaImpedPara[i].Now;
 					MyRobotData.JointsVelNow[i] = pImpedence->m_angularVelImpedPara[i].Now;
 					MyRobotData.JointsTorque[i] = pImpedence->ExtTorque[i];
+					MyRobotData.CartesianPositionNext[i] = pImpedence->m_xImpedPara[i].Next;
 				}
 				for (int i = 0; i < 6; i++)
 				{
@@ -126,7 +127,7 @@ CImpedance::CImpedance(CRobotBase *Robot)
 			m_B[i] = 0.03;
 /////////////////////////////////
 			m_xM[i] = 0;
-			m_xK[i] =200;   //单位是 N/m  
+			m_xK[i] =150;   //单位是 N/m  
 			m_xB[i] = 50;
 		}
 		else if (i == 2)
@@ -137,7 +138,7 @@ CImpedance::CImpedance(CRobotBase *Robot)
 			///////////////////////////////////
 			m_xM[i] = 0;
 			m_xK[i] = 100;   //单位是 N/m  0.2
-			m_xB[i] = 50;
+			m_xB[i] = 10;
 		}
 		else
 		{
@@ -146,7 +147,7 @@ CImpedance::CImpedance(CRobotBase *Robot)
 			m_B[i] = 0.02;
 //////////////////////////
 			m_xM[i] = 0;
-			m_xK[i] = 0.02;   //单位是 N/mm  0.2
+			m_xK[i] = 0.01;   //单位是 N/mm  0.2
 			m_xB[i] = 0.01;
 		}
 
@@ -253,7 +254,7 @@ bool CImpedance::StartImpedanceController()
 	{
 		AfxMessageBox(_T("创建定时器句柄失败!"), MB_OK);
 	}
-	GT_SetIntrTm(75);  //设置定时器的定时长度为75*200us = 15ms
+	GT_SetIntrTm(50);  //设置定时器的定时长度为50*200us = 10ms
 	GT_TmrIntr();   //向主机申请定时中断
 	//GT_GetIntr(&Status);   //这个windows环境下面禁用这个函数 
 //	if (&Status != 0)
@@ -627,14 +628,14 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile(v
 	{
 			theta[0] = theta1_1;
 			theta[1] = theta2_1;
-			theta[2] = pz - l4 + l3;
+			theta[2] = (pz - l4 + l3)*1000;
 			theta[3] = theta4_1;
 	}
 	else
 	{
 			theta[0] = theta1_2;
 			theta[1] = theta2_2;
-			theta[2] = pz - l4 + l3;
+			theta[2] = (pz - l4 + l3)*1000;
 			theta[3] = theta4_2;
 	}
 
