@@ -535,7 +535,7 @@ short CGTController::AxisCaptHomeWithoutLimit(int axisno, double vel)     //####
 	}
 	GT_ZeroPos();    //将这个位置设置成零点
 
-
+	StartUsingSProfile();
 	////固高在这里还使用了等待互斥量来等待ghEventCanVisit释放，在函数的最后释放这个互斥量
 
 	return 0;

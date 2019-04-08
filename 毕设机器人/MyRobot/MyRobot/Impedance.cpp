@@ -147,8 +147,8 @@ CImpedance::CImpedance(CRobotBase *Robot)
 			m_B[i] = 0.02;
 //////////////////////////
 			m_xM[i] = 0;
-			m_xK[i] = 0.01;   //单位是 N/mm  0.2
-			m_xB[i] = 0.01;
+			m_xK[i] = 0.0002;   //单位是 N/mm  0.2
+			m_xB[i] = 0.001;
 		}
 
 	}
@@ -296,7 +296,7 @@ bool CImpedance::StopImpedanceController()
 			vel1 = this->m_Robot->m_JointArray[0].NormalJointVelocity;
 			//加速度直接传过去，单位一直是Pulse/ST^2
 			acc = this->m_Robot->m_JointArray[0].NormalJointAcc;
-			if (this->m_Robot->m_pController->AxisMoveToWithTProfile(1, pos, vel1, acc) != 0)  //单轴梯形运动模式
+			if (this->m_Robot->m_pController->AxisMoveToWithSProfile(1, pos) != 0)  //单轴S形运动模式
 				return false;
 			this->m_Robot->m_pController->wait_motion_finished(1);  //等待轴运动完成后停止
 			this->m_Robot->m_isGapCorrespond = true;     //现在匹配上了

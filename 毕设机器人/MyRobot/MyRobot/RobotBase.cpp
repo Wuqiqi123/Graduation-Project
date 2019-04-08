@@ -101,7 +101,7 @@ short CRobotBase::JointDrive(short jointNo, double goalPos, double vel,double st
 	vel1 = vel * m_JointArray[jointNo - 1].PulsePerMmOrDegree * 2 * 0.0001;  //******@wqq我感觉固高写错了固高是0.000001
 	//加速度直接传过去，单位一直是Pulse/ST^2
 	acc = m_JointArray[jointNo - 1].NormalJointAcc;
-	if (m_pController->AxisMoveToWithTProfile(jointNo, pos, vel1, acc) != 0)  //单轴梯形运动模式
+	if (m_pController->AxisMoveToWithSProfile(jointNo, pos) != 0)  //单轴S形运动模式
 		return -1;
 	m_pController->wait_motion_finished(jointNo);  //等待轴运动完成后停止
 		UpdateJointArray();			//@wqq师弟在这里加的
@@ -126,7 +126,7 @@ short CRobotBase::JointJogGapDeal(short axisNo, double& goalPos,const double& st
 				vel1 = m_JointArray[axisNo - 1].NormalJointVelocity;
 				//加速度直接传过去，单位一直是Pulse/ST^2
 				acc = m_JointArray[axisNo - 1].NormalJointAcc;
-				if (m_pController->AxisMoveToWithTProfile(axisNo, pos, vel1, acc) != 0)  //单轴梯形运动模式
+				if (m_pController->AxisMoveToWithSProfile(axisNo, pos) != 0)  //单轴S形运动模式
 					return -1;
 				m_pController->wait_motion_finished(axisNo);  //等待轴运动完成后停止
 				m_isGapCorrespond = false;
@@ -152,7 +152,7 @@ short CRobotBase::JointJogGapDeal(short axisNo, double& goalPos,const double& st
 				vel1 = m_JointArray[axisNo - 1].NormalJointVelocity;
 				//加速度直接传过去，单位一直是Pulse/ST^2
 				acc = m_JointArray[axisNo - 1].NormalJointAcc;
-				if (m_pController->AxisMoveToWithTProfile(axisNo, pos, vel1, acc) != 0)  //单轴梯形运动模式
+				if (m_pController->AxisMoveToWithSProfile(axisNo, pos) != 0)  //单轴S形运动模式
 					return -1;
 				m_pController->wait_motion_finished(axisNo);  //等待轴运动完成后停止
 				m_isGapCorrespond = true;
@@ -242,7 +242,7 @@ short CRobotBase::JointsTMove(double goalPos[], double goalVel[])
 				///这里使用最大的加速度，以在阻抗控制是的误差
 				acc = m_JointArray[0].NormalJointAcc;
 				//acc = m_JointArray[0].NormalJointAcc;
-				if (m_pController->AxisMoveToWithTProfile(1, pos, vel1, acc) != 0)  //单轴梯形运动模式
+				if (m_pController->AxisMoveToWithSProfile(1, pos) != 0)  //单轴S形运动模式
 					return -1;
 				m_pController->wait_motion_finished(1);  //等待轴运动完成后停止
 				m_isGapCorrespond = false;
@@ -270,7 +270,7 @@ short CRobotBase::JointsTMove(double goalPos[], double goalVel[])
 				vel1 = m_JointArray[0].NormalJointVelocity;
 				//加速度直接传过去，单位一直是Pulse/ST^2
 				acc = m_JointArray[0].NormalJointAcc;
-				if (m_pController->AxisMoveToWithTProfile(1, pos, vel1, acc) != 0)  //单轴梯形运动模式
+				if (m_pController->AxisMoveToWithSProfile(1, pos) != 0)  //单轴S形运动模式
 					return -1;
 				m_pController->wait_motion_finished(1);  //等待轴运动完成后停止
 				m_isGapCorrespond = true;
@@ -297,7 +297,7 @@ short CRobotBase::JointsTMove(double goalPos[], double goalVel[])
 		vel[i] = goalVel[i] * m_JointArray[i].PulsePerMmOrDegree * 2 * 0.0001; //转化为板卡识别的速度：PLUSE/ST  ******@wqq 我觉得固高写错了 固高写的是0.000001
 		acc[i] = m_JointArray[i].MaxJointAcceleration;
 	}
-	m_pController->MoveToWithTProfile(pos, vel, acc);
+	m_pController->MoveToWithSProfile(pos);
 	//	UpdateJointArray();   // @wqq  这个是师弟编写的刷新函数
 	return 0;
 
