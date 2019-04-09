@@ -127,8 +127,8 @@ CImpedance::CImpedance(CRobotBase *Robot)
 			m_B[i] = 0.03;
 /////////////////////////////////
 			m_xM[i] = 0;
-			m_xK[i] =5000;   //单位是 N/m  
-			m_xB[i] = 200;
+			m_xK[i] =200;   //单位是 N/m  
+			m_xB[i] = 20;
 		}
 		else if (i == 2)
 		{

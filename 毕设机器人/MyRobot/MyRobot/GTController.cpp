@@ -632,12 +632,25 @@ bool CGTController::StartUsingSProfile()
 	short rtn;
 	for (int i = 1; i <= 4; i++)
 	{
-		GT_Axis(i);
-		rtn = GT_PrflS();
-		rtn = GT_SetJerk(0.1);
-		rtn = GT_SetMAcc(5);
-		rtn = GT_SetVel(5);
-		GT_Update();
+		if (i == 1 || i == 2)
+		{
+			GT_Axis(i);
+			rtn = GT_PrflS();
+			rtn = GT_SetJerk(0.05);
+			rtn = GT_SetMAcc(0.1);
+			rtn = GT_SetVel(4);
+			GT_Update();
+		}
+		else
+		{
+			GT_Axis(i);
+			rtn = GT_PrflS();
+			rtn = GT_SetJerk(0.1);
+			rtn = GT_SetMAcc(5);
+			rtn = GT_SetVel(5);
+			GT_Update();
+		}
+
 	}
 	//GT_MltiUpdt(0xF); //同时刷新多轴状态
 	return true;
