@@ -188,6 +188,7 @@ short CGRB4Robot::Home()
 			m_JointGap[i].GapToNegative = m_JointGap[i].GapLength - m_JointGap[i].GapToPositive;
 	}
 	m_isGapCorrespond = true;  //板卡的脉冲与机器人的关节是对应的
+
 	return 1;
 }
 

@@ -223,8 +223,13 @@ short CRobotBase::JointsTMove(double goalPos[], double goalVel[])
 	double acc[4];
 	long pos[4];
 	double vel[4];
+	double gP[4] ;
+	gP[0] = goalPos[0];
+	gP[1] = goalPos[1];
+	gP[2] = goalPos[2];
+	gP[3] = goalPos[3];
 ///////////***********************间隙补偿算法开始	
-	if (goalPos[0] < m_JointArray[0].CurrentJointPositon)   //目前只考虑第一根轴的间隙，如果后面再加其他轴的间隙需要修改 
+	if (gP[0] < m_JointArray[0].CurrentJointPositon)   //目前只考虑第一根轴的间隙，如果后面再加其他轴的间隙需要修改 
 	{
 		if (m_JointGap[0].GapToNegative != 0)
 		{
@@ -254,7 +259,7 @@ short CRobotBase::JointsTMove(double goalPos[], double goalVel[])
 			}
 		}
 	}
-	if (goalPos[0] > m_JointArray[0].CurrentJointPositon)   //正向运动
+	if (gP[0] > m_JointArray[0].CurrentJointPositon)   //正向运动
 	{
 		if (m_JointGap[0].GapToPositive != 0)
 		{
@@ -284,7 +289,7 @@ short CRobotBase::JointsTMove(double goalPos[], double goalVel[])
 	}
 	if (!m_isGapCorrespond)
 	{
-		goalPos[0] = goalPos[0] - m_JointGap[0].GapLength;
+		gP[0] = gP[0] - m_JointGap[0].GapLength;
 	}
 
 
@@ -293,8 +298,8 @@ short CRobotBase::JointsTMove(double goalPos[], double goalVel[])
 	int i;
 	for (i = 0; i<m_JointNumber; i++)
 	{
-		pos[i] = (long)(goalPos[i] * m_JointArray[i].PulsePerMmOrDegree);
-		vel[i] = goalVel[i] * m_JointArray[i].PulsePerMmOrDegree * 2 * 0.0001; //转化为板卡识别的速度：PLUSE/ST  ******@wqq 我觉得固高写错了 固高写的是0.000001
+		pos[i] = (long)(gP[i] * m_JointArray[i].PulsePerMmOrDegree);
+		vel[i] = gP[i] * m_JointArray[i].PulsePerMmOrDegree * 2 * 0.0001; //转化为板卡识别的速度：PLUSE/ST  ******@wqq 我觉得固高写错了 固高写的是0.000001
 		acc[i] = m_JointArray[i].MaxJointAcceleration;
 	}
 	m_pController->MoveToWithSProfile(pos);

@@ -379,7 +379,7 @@ double Mode_Zero(int T_Head)
 double Mode_1(int T_Head)
 {
 	double Force = 0;
-	Force = T_Head*0.05;
+	Force = T_Head*0.00;
 	return Force;
 }
 double Mode_2(int T_Head)

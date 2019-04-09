@@ -12,7 +12,7 @@
 
 extern SOCKET sockClient; //全局变量，客户端的套接字
 //////定义定时周期
-#define Tms (10)   
+#define Tms (100)   
 #define T (Tms*0.001)
 ////////////////////////
 int testNUM = 0;
@@ -127,8 +127,8 @@ CImpedance::CImpedance(CRobotBase *Robot)
 			m_B[i] = 0.03;
 /////////////////////////////////
 			m_xM[i] = 0;
-			m_xK[i] =150;   //单位是 N/m  
-			m_xB[i] = 50;
+			m_xK[i] =5000;   //单位是 N/m  
+			m_xB[i] = 200;
 		}
 		else if (i == 2)
 		{
@@ -147,8 +147,8 @@ CImpedance::CImpedance(CRobotBase *Robot)
 			m_B[i] = 0.02;
 //////////////////////////
 			m_xM[i] = 0;
-			m_xK[i] = 0.0002;   //单位是 N/mm  0.2
-			m_xB[i] = 0.001;
+			m_xK[i] = 0.00002;   //单位是 N/mm  0.2
+			m_xB[i] = 0;
 		}
 
 	}
@@ -254,7 +254,7 @@ bool CImpedance::StartImpedanceController()
 	{
 		AfxMessageBox(_T("创建定时器句柄失败!"), MB_OK);
 	}
-	GT_SetIntrTm(50);  //设置定时器的定时长度为50*200us = 10ms
+	GT_SetIntrTm(500);  //设置定时器的定时长度为50*200us = 10ms
 	GT_TmrIntr();   //向主机申请定时中断
 	//GT_GetIntr(&Status);   //这个windows环境下面禁用这个函数 
 //	if (&Status != 0)
@@ -604,6 +604,7 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithoutSpeedWithTProfile(v
 
 	double costheta2, sintheta2_1, sintheta2_2, theta2_1, theta2_2;
 	costheta2 = (px*px + py * py - l1 * l1 - l2 * l2) / (2 * l1*l2);
+	if (costheta2 >= 1) costheta2 = 1;
 	sintheta2_1 = sqrt(1 - costheta2 * costheta2);
 	sintheta2_2 = -sqrt(1 - costheta2 * costheta2);
 	theta2_1 = atan2(sintheta2_1, costheta2)*180/pi;

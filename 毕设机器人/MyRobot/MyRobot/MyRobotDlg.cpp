@@ -301,34 +301,34 @@ void CMyRobotDlg::OnBnClickedButtonTest()
 	// TODO:  在此添加控件通知处理程序代码
 	CWaitCursor wc;
 	short rtn;
-	long pos[4];
+	double pos[4] = {0.4,0,0.195,30};
 	double vel[4];
 	unsigned short sta[4];
-
-	for (int i = 1; i <= 4; i++)
-	{
-		GT_Axis(i);///选择第i根轴
-		rtn = GT_GetAtlPos(&pos[i-1]);   //获取第i根轴的实际位置
-		if (rtn != 0)
-		{
-			AfxMessageBox(_T("调用函数GT_GetAtlPos获取实际位置失败!"), MB_OK);
-		}
-		rtn = GT_GetAtlVel(&vel[i-1]);    //获取第i根轴的实际速度
-		if (rtn != 0)
-		{
-			AfxMessageBox(_T("调用函数GT_GetAtlVel获取实际速度失败!"), MB_OK);
-		}
-		rtn = GT_GetSts(&sta[i-1]);        //获取第i根轴的实际状态
-		if (rtn != 0)
-		{
-			AfxMessageBox(_T("调用函数GT_GetSts获取实际状态失败!"), MB_OK);
-		}
-	}
-	AllocConsole();//注意检查返回值
-	_cprintf("pos0=%d\n", pos[0]);
-	_cprintf("pos1=%d\n", pos[1]);
-	_cprintf("pos2=%d\n", pos[2]);
-	_cprintf("pos3=%d\n", pos[3]);
+	Robot->JointsTMove(pos, vel);
+	//for (int i = 1; i <= 4; i++)
+	//{
+	//	GT_Axis(i);///选择第i根轴
+	//	rtn = GT_GetAtlPos(&pos[i-1]);   //获取第i根轴的实际位置
+	//	if (rtn != 0)
+	//	{
+	//		AfxMessageBox(_T("调用函数GT_GetAtlPos获取实际位置失败!"), MB_OK);
+	//	}
+	//	rtn = GT_GetAtlVel(&vel[i-1]);    //获取第i根轴的实际速度
+	//	if (rtn != 0)
+	//	{
+	//		AfxMessageBox(_T("调用函数GT_GetAtlVel获取实际速度失败!"), MB_OK);
+	//	}
+	//	rtn = GT_GetSts(&sta[i-1]);        //获取第i根轴的实际状态
+	//	if (rtn != 0)
+	//	{
+	//		AfxMessageBox(_T("调用函数GT_GetSts获取实际状态失败!"), MB_OK);
+	//	}
+	//}
+	//AllocConsole();//注意检查返回值
+	//_cprintf("pos0=%d\n", pos[0]);
+	//_cprintf("pos1=%d\n", pos[1]);
+	//_cprintf("pos2=%d\n", pos[2]);
+	//_cprintf("pos3=%d\n", pos[3]);
 //	TRACE("x   =   %d   and   y   =   %d/n", pos[0], pos[1]);
 //	FreeConsole();
 

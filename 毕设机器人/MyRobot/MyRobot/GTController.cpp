@@ -407,7 +407,6 @@ short CGTController::AxisCaptHomeWithLimit(int axisno, long offset, double vel) 
 	GT_ZeroPos();
 
 	////固高在这里还使用了等待互斥量来等待ghEventCanVisit释放，在函数的最后释放这个互斥量
-
 	return 1;
 }
 
@@ -535,9 +534,9 @@ short CGTController::AxisCaptHomeWithoutLimit(int axisno, double vel)     //####
 	}
 	GT_ZeroPos();    //将这个位置设置成零点
 
-	StartUsingSProfile();
-	////固高在这里还使用了等待互斥量来等待ghEventCanVisit释放，在函数的最后释放这个互斥量
 
+	////固高在这里还使用了等待互斥量来等待ghEventCanVisit释放，在函数的最后释放这个互斥量
+	StartUsingSProfile();
 	return 0;
 }
 
@@ -631,14 +630,16 @@ void CGTController::wait_motion_finished(int AxisNo)     //###################注
 bool CGTController::StartUsingSProfile()
 {
 	short rtn;
-	for (int i = 0; i < 4; i++)
+	for (int i = 1; i <= 4; i++)
 	{
+		GT_Axis(i);
 		rtn = GT_PrflS();
-		rtn = GT_SetJerk(0.000002);
-		rtn = GT_SetMAcc(0.004);
-		rtn = GT_SetVel(4);
+		rtn = GT_SetJerk(0.1);
+		rtn = GT_SetMAcc(5);
+		rtn = GT_SetVel(5);
+		GT_Update();
 	}
-	GT_MltiUpdt(0xF); //同时刷新多轴状态
+	//GT_MltiUpdt(0xF); //同时刷新多轴状态
 	return true;
 }
 
