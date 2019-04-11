@@ -147,8 +147,8 @@ CImpedance::CImpedance(CRobotBase *Robot)
 			m_B[i] = 0.02;
 //////////////////////////
 			m_xM[i] = 0;
-			m_xK[i] = 0.00002;   //单位是 N/mm  0.2
-			m_xB[i] = 0;
+			m_xK[i] = 0.01;   //单位是 N/mm  0.2
+			m_xB[i] = 0.005;
 		}
 
 	}
