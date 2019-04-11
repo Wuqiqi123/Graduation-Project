@@ -123,7 +123,7 @@ CImpedance::CImpedance(CRobotBase *Robot)
 		{
 			m_M[i]= 0;
 			m_K[i]= 0.5;   //单位是 N/mm  0.2
-			m_B[i] = 1;
+			m_B[i] = 5;
 		}
 		else if (i == 2)
 		{
@@ -378,7 +378,8 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendence(void)
 	
 }
 
-
+double detB = 0;
+double omiga = 0;
 bool CImpedance::CalculateTorque(void)
 {
 	/////*屏蔽掉原来的计算关节力矩的函数*/////
@@ -403,7 +404,8 @@ bool CImpedance::CalculateTorque(void)
 	/////*继续新的关节力矩的函数*////
 	for (int i = 0; i < 4; i++)
 		ExtTorque[i] = 0;
-	double desiredF = -50;
+	double desiredF = -100;
+
 	if (ForceSensor[1] == 0)
 	{
 		ExtTorque[1] = -desiredF;
@@ -413,7 +415,10 @@ bool CImpedance::CalculateTorque(void)
 	{
 		ExtTorque[1] = -desiredF + ForceSensor[1];
 		m_K[1] = 0;
-		m_B[1] = 0.01;
+		omiga = omiga + 0.001*(-ExtTorque[1]) / m_B[1];
+		detB = omiga * m_B[1] / m_angularVelImpedPara[1].Now;
+		
+	//	m_B[1] = 0.5;
 
 	}
 
@@ -467,11 +472,11 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendenceWithSpeedWithTProfile(void
 
 	for (int i = 0; i < 4; i++)
 	{
-		if ( i==1 || i==2 ||i == 3)
+		if ( i==1 )
 		{
-			m_angularVelImpedPara[i].Next = (Torque[i] - m_K[i]*m_thetaImpedPara[i].Now) / (m_K[i]*T + m_B[i]);
+			m_angularVelImpedPara[i].Next = (Torque[i] + m_K[i] * 22 - m_K[i] * m_thetaImpedPara[i].Now) / (m_K[i] * T + (m_B[i] + detB));
 			//m_thetaImpedPara[i].Next = m_thetaImpedPara[i].Now + m_angularVelImpedPara[i].Next*T;
-			m_thetaImpedPara[i].Next = m_B[i]*m_thetaImpedPara[i].Now / (m_K[i]*T + m_B[i]) + T*Torque[i] / (m_K[i]*T + m_B[i]);
+			m_thetaImpedPara[i].Next = (detB+m_B[i]) * m_thetaImpedPara[i].Now / (m_K[i] * T + (m_B[i] + detB)) + T*Torque[i] / (m_K[i] * T + (m_B[i] + detB));
 		}
 		
 	}
