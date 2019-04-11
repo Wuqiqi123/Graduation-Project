@@ -122,8 +122,8 @@ CImpedance::CImpedance(CRobotBase *Robot)
 		if (i == 0 || i == 1 )
 		{
 			m_M[i]= 0;
-			m_K[i]= 0.05;   //单位是 N/mm  0.2
-			m_B[i] = 0.03;
+			m_K[i]= 0.5;   //单位是 N/mm  0.2
+			m_B[i] = 1;
 		}
 		else if (i == 2)
 		{
@@ -403,7 +403,21 @@ bool CImpedance::CalculateTorque(void)
 	/////*继续新的关节力矩的函数*////
 	for (int i = 0; i < 4; i++)
 		ExtTorque[i] = 0;
-	ExtTorque[1] = ForceSensor[1];
+	double desiredF = -50;
+	if (ForceSensor[1] == 0)
+	{
+		ExtTorque[1] = -desiredF;
+		m_K[1] = 0.5;
+	}
+	else
+	{
+		ExtTorque[1] = -desiredF + ForceSensor[1];
+		m_K[1] = 0;
+		m_B[1] = 0.1;
+
+	}
+
+
 	return true;
 }
 

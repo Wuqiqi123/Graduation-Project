@@ -238,7 +238,7 @@ void CForceSensor::ForceBaseAxia(CRobotBase *Robot)
 		t2 = Robot->m_JointArray[2].CurrentJointPositon;
 		t3 = Robot->m_JointArray[3].CurrentJointPositon ;
 		m_ForceScrewBase[0] = 0;
-		m_ForceScrewBase[1] = t1 > 20 ? 0.1*(20-t1):0 ;
+		m_ForceScrewBase[1] = t1 > 20 ? 5*(20-t1):0 ;
 		m_ForceScrewBase[2] = 0;
 		m_ForceScrewBase[3] = 0;
 		m_ForceScrewBase[4] = 0;
