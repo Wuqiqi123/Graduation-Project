@@ -393,6 +393,11 @@ double NOTFUNC(int T_Head)
 	return Force;
 }
 
+double Mode_ForceControl()
+{
+
+}
+
 extern HANDLE RecData_hMutex; //互斥量句柄
 extern MiniRecvData recvDataFromServer;  //从服务器接受的力信息
 /*摇杆和键盘都是由服务器产生的虚拟力，从数据格式上都是一样的，所以在这里就直接使用一个函数*/
