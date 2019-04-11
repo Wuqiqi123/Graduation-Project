@@ -381,24 +381,29 @@ bool CImpedance::GetNextStateUsingJointSpaceImpendence(void)
 
 bool CImpedance::CalculateTorque(void)
 {
-	m_Robot->CalculateJacobiMatrix();  ///计算雅克比矩阵
-	
+	/////*屏蔽掉原来的计算关节力矩的函数*/////
+	//m_Robot->CalculateJacobiMatrix();  ///计算雅克比矩阵
+	//
+	//for (int i = 0; i < 4; i++)
+	//	ExtTorque[i] = 0;
+
+	//double InverseJacobiTn[4][6];
+	//for (int i = 0; i < 4; i++)
+	//	for (int j = 0; j < 6; j++)
+	//		InverseJacobiTn[i][j] = m_Robot->m_JacobiTn[j][i];
+
+	//for (int i = 0; i < 4; i++)    // t=J^T * F
+	//	for (int j = 0; j < 6; j++)
+	//		ExtTorque[i] = ExtTorque[i] + InverseJacobiTn[i][j] * ForceSensor[j];
+
+	//if (abs(ExtTorque[1]) < 0.2) ExtTorque[1] = 0;
+	//if (abs(ExtTorque[2]) < 0.2) ExtTorque[2] = 0;
+	//if (abs(ExtTorque[3]) < 0.05) ExtTorque[3] = 0;
+
+	/////*继续新的关节力矩的函数*////
 	for (int i = 0; i < 4; i++)
 		ExtTorque[i] = 0;
-
-	double InverseJacobiTn[4][6];
-	for (int i = 0; i < 4; i++)
-		for (int j = 0; j < 6; j++)
-			InverseJacobiTn[i][j] = m_Robot->m_JacobiTn[j][i];
-
-	for (int i = 0; i < 4; i++)    // t=J^T * F
-		for (int j = 0; j < 6; j++)
-			ExtTorque[i] = ExtTorque[i] + InverseJacobiTn[i][j] * ForceSensor[j];
-
-	if (abs(ExtTorque[1]) < 0.2) ExtTorque[1] = 0;
-	if (abs(ExtTorque[2]) < 0.2) ExtTorque[2] = 0;
-	if (abs(ExtTorque[3]) < 0.05) ExtTorque[3] = 0;
-
+	ExtTorque[1] = ForceSensor[1];
 	return true;
 }
 

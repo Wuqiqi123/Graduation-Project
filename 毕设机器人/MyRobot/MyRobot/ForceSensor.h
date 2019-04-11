@@ -87,5 +87,6 @@ double Mode_1(int T_Head);
 double Mode_2(int T_Head);
 double NOTFUNC(int T_Head);
 double Mode_Zero(int T_Head);
+double Mode_ForceControl(int T_Head);
 
 #endif
