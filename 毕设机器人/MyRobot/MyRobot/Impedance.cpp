@@ -413,7 +413,7 @@ bool CImpedance::CalculateTorque(void)
 	{
 		ExtTorque[1] = -desiredF + ForceSensor[1];
 		m_K[1] = 0;
-		m_B[1] = 0.1;
+		m_B[1] = 0.01;
 
 	}
 
