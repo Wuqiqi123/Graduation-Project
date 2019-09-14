@@ -1,0 +1,17 @@
+diff a/毕设机器人/MyRobot/MyRobot/Impedance.cpp b/毕设机器人/MyRobot/MyRobot/Impedance.cpp	(rejected hunks)
+@@ -351,13 +351,13 @@
+ 	ForceSensor[3] = ATIForceSensor->m_ForceScrewBase[3];
+ 	ForceSensor[4] = ATIForceSensor->m_ForceScrewBase[4];
+ 	ForceSensor[5] = ATIForceSensor->m_ForceScrewBase[5];
+-	for (int i = 0; i <= 6; i++)
++	for (int i = 0; i < 6; i++)
+ 	{
+ 		if (i<3&&abs(ForceSensor[i]) < 0.5)
+ 		{
+ 			ForceSensor[i] = 0;
+ 		}
+-		if (i>3 && abs(ForceSensor[i]) < 0.1)
++		if (i>=3 && abs(ForceSensor[i]) < 0.001)
+ 		{
+ 			ForceSensor[i] = 0;
+ 		}
