@@ -30,3 +30,6 @@
 
 ## 上位机
 由于项目很小，只是作为服务器接受数据，具体项目见[这里](https://github.com/Wuqiqi123/ShowRobotServer)
+
+## 视频
+[见这里](https://pan.baidu.com/s/1_2lUaeX89RkUC1hVcD5VOg)
